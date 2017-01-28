@@ -1,4 +1,12 @@
+#Local Files
+build.local.sh
+
+#Projects Files
 *.class
+.classpath
+.project
+.settings/
+target/
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
