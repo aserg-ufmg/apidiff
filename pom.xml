@@ -1,23 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>br.ufmg.dcc.labsoft</groupId>
-  <artifactId>APIDiff</artifactId>
-  <version>2.0.0-SNAPSHOT</version>
-  <build>
-    <sourceDirectory>src</sourceDirectory>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.3</version>
-        <configuration>
-          <source/>
-          <target/>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-	<dependencies>
-	
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>br.ufmg.dcc.labsoft</groupId>
+    <artifactId>APIDiff</artifactId>
+    <version>2.0.0</version>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+    </properties>
+    
+    <dependencies>
 		<dependency>
 			<groupId>org.eclipse.core</groupId>
 			<artifactId>contenttype</artifactId>
@@ -66,8 +59,44 @@
 		    <version>3.10.2.v20150203-1939</version>
 		</dependency>
 		
-		
-		
-		
-	</dependencies>
+		<dependency>
+		    <groupId>org.apache.maven.plugins</groupId>
+		    <artifactId>maven-compiler-plugin</artifactId>
+		    <version>3.6.1</version>
+		</dependency>
+
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+	                  <archive>
+	                    <manifest>
+	                      <mainClass>br.ufmg.dcc.labsoft.apidiff.Main</mainClass>
+	                    </manifest>
+	                  </archive>
+	                  
+	                  <descriptorRefs>
+	                    <descriptorRef>jar-with-dependencies</descriptorRef>
+	                  </descriptorRefs>
+	                  
+	                  <finalName>APIDiff</finalName>
+	                  <appendAssemblyId>false</appendAssemblyId>
+                </configuration>
+            </plugin>
+            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
+                  <configuration>
+                      <finalName>APIDiff</finalName>                   
+                 </configuration>
+            </plugin>    
+        </plugins>
+        
+    </build>
+    
 </project>
