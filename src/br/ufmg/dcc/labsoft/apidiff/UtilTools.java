@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -16,7 +17,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import br.ufmg.dcc.labsoft.apidiff.detect.exception.BindingException;
 
-public class Utils {
+public class UtilTools {
 	public static boolean isEqualMethod(MethodDeclaration method1, MethodDeclaration method2){
 		if(!method1.getName().toString().equals(method2.getName().toString()))
 			return false;
@@ -110,5 +111,29 @@ public class Utils {
 			}	
 	}
 	
+	/**
+	 * 
+	 * @return Retorna o  path da classe/nó. Exemplo: io.reactivex.annotations.BackpressureKind
+	 * 		   String vazia se não foi possível ler o binding.
+	 */
+	public static  String getNameNode(final AbstractTypeDeclaration node){
+		return ((node == null) || (node.resolveBinding().getQualifiedName() == null))?"":node.resolveBinding().getQualifiedName();
+	}
+	
+	/**
+	 * Verifica se a classe é interface estável. 
+	 * Interfaces instáveis podem ser APIs internas, experimentais, ou pacotes de testes.
+	 * @param node
+	 * @return
+	 */
+	public static Boolean isInterfaceStable(AbstractTypeDeclaration node){
+		String nameNode = UtilTools.getNameNode(node).toLowerCase();
+		
+		if("".equals(nameNode) || nameNode.contains("test") || nameNode.contains("example") || nameNode.contains(".internal.") || nameNode.contains(".experimental.") ){
+			return false;
+		}
+
+		return true;
+	}
 
 }

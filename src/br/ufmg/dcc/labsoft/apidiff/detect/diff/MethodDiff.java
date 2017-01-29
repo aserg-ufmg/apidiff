@@ -7,7 +7,7 @@ import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-import br.ufmg.dcc.labsoft.apidiff.Utils;
+import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class MethodDiff {
@@ -69,9 +69,9 @@ public class MethodDiff {
 		for(TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()){
 			if(version2.contaisAccessibleType(typeVersion1)){
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
-					if(!Utils.isPrivate(methodVersion1)){
+					if(!UtilTools.isPrivate(methodVersion1)){
 						MethodDeclaration methodVersion2 = version2.getEqualVersionMethod(methodVersion1, typeVersion1);
-						if(methodVersion2 != null && !Utils.isPrivate(methodVersion2)){
+						if(methodVersion2 != null && !UtilTools.isPrivate(methodVersion2)){
 							List<SimpleType> exceptionsVersion1 = methodVersion1.thrownExceptionTypes();
 							List<SimpleType> exceptionsVersion2 = methodVersion2.thrownExceptionTypes();
 
@@ -124,12 +124,12 @@ public class MethodDiff {
 			if(version2.contaisAccessibleType(typeVersion1)){
 
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
-					if(!Utils.isPrivate(methodVersion1)){
+					if(!UtilTools.isPrivate(methodVersion1)){
 						if(version2.getEqualVersionMethod(methodVersion1, typeVersion1) == null){
 							ArrayList<MethodDeclaration> methodsVersion2 = version2.
 									getAllEqualMethodsByName(methodVersion1, typeVersion1);
 							for(MethodDeclaration methodVersion2: methodsVersion2){
-								if(!Utils.isPrivate(methodVersion2) && version1.getEqualVersionMethod(methodVersion2, typeVersion1) == null){
+								if(!UtilTools.isPrivate(methodVersion2) && version1.getEqualVersionMethod(methodVersion2, typeVersion1) == null){
 									int smallerSize = methodVersion1.parameters().size();
 									if(methodVersion1.parameters().size() > methodVersion2.parameters().size()){
 										smallerSize = methodVersion2.parameters().size();
@@ -175,9 +175,9 @@ public class MethodDiff {
 		for(TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()){
 			if(version2.contaisAccessibleType(typeVersion1)){
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
-					if(!Utils.isPrivate(methodVersion1)){
+					if(!UtilTools.isPrivate(methodVersion1)){
 						MethodDeclaration methodVersion2 = version2.getEqualVersionMethod(methodVersion1, typeVersion1);
-						if(methodVersion2 != null && !Utils.isPrivate(methodVersion2)){
+						if(methodVersion2 != null && !UtilTools.isPrivate(methodVersion2)){
 							if(methodVersion1.getReturnType2() != null && methodVersion2.getReturnType2() != null && 
 									!methodVersion1.getReturnType2().toString().equals(methodVersion2.getReturnType2().toString())){
 								this.methodBreakingChange++;
@@ -200,10 +200,10 @@ public class MethodDiff {
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
 					MethodDeclaration methodVersion2 = version2.getEqualVersionMethod(methodVersion1, typeVersion1);
 					if(methodVersion2 != null){
-						if(Utils.isPrivate(methodVersion1) && !Utils.isPrivate(methodVersion2)){
+						if(UtilTools.isPrivate(methodVersion1) && !UtilTools.isPrivate(methodVersion2)){
 							this.methodNonBreakingChange++; //gained visibility
 						}
-						else if(!Utils.isPrivate(methodVersion1) && Utils.isPrivate(methodVersion2)){
+						else if(!UtilTools.isPrivate(methodVersion1) && UtilTools.isPrivate(methodVersion2)){
 							if(methodVersion1.resolveBinding() != null && 
 									methodVersion1.resolveBinding().isDeprecated()){
 								this.methodNonBreakingChange++; //lost visibility deprecated
@@ -228,9 +228,9 @@ public class MethodDiff {
 		for (TypeDeclaration typeInVersion1 : version1.getApiAcessibleTypes()) {
 			if(version2.contaisAccessibleType(typeInVersion1)){
 				for(MethodDeclaration methodInVersion1 : typeInVersion1.getMethods()){
-					if(!Utils.isPrivate(methodInVersion1)){
+					if(!UtilTools.isPrivate(methodInVersion1)){
 						MethodDeclaration methodInVersion2 = version2.getEqualVersionMethod(methodInVersion1, typeInVersion1);
-						if(methodInVersion2 != null && !Utils.isPrivate(methodInVersion2)){
+						if(methodInVersion2 != null && !UtilTools.isPrivate(methodInVersion2)){
 							if(methodInVersion1.resolveBinding() != null && methodInVersion2.resolveBinding() != null){
 								if(!methodInVersion1.resolveBinding().isDeprecated() && methodInVersion2.resolveBinding().isDeprecated()){
 									this.methodNonBreakingChange++;
@@ -244,7 +244,7 @@ public class MethodDiff {
 
 		for(TypeDeclaration typeInVersion2 : version2.getApiAcessibleTypes()){
 			for(MethodDeclaration methodInVersion2 : typeInVersion2.getMethods()){
-				if(!Utils.isPrivate(methodInVersion2)){
+				if(!UtilTools.isPrivate(methodInVersion2)){
 					MethodDeclaration methodInVersion1 = version1.getEqualVersionMethod(methodInVersion2, typeInVersion2);
 					if(methodInVersion1 == null && methodInVersion2.resolveBinding() != null && 
 							methodInVersion2.resolveBinding().isDeprecated()){
@@ -260,7 +260,7 @@ public class MethodDiff {
 		for (TypeDeclaration typeInVersion1 : version1.getApiAcessibleTypes()) {
 			if(version2.contaisAccessibleType(typeInVersion1)){
 				for (MethodDeclaration methodInVersion1 : typeInVersion1.getMethods()) {
-					if(!Utils.isPrivate(methodInVersion1)){
+					if(!UtilTools.isPrivate(methodInVersion1)){
 						MethodDeclaration methodInVersion2 = version2.getEqualVersionMethod(methodInVersion1, typeInVersion1);
 						if(methodInVersion2 == null){
 							if(methodInVersion1.resolveBinding() != null && 
@@ -280,7 +280,7 @@ public class MethodDiff {
 				}
 			} else{
 				for (MethodDeclaration methodInVersion1 : typeInVersion1.getMethods()) {
-					if(!Utils.isPrivate(methodInVersion1)){
+					if(!UtilTools.isPrivate(methodInVersion1)){
 						if(methodInVersion1.resolveBinding() != null && 
 								methodInVersion1.resolveBinding().isDeprecated()){
 							this.methodNonBreakingChange++; //removed deprecated
@@ -304,7 +304,7 @@ public class MethodDiff {
 		for (TypeDeclaration typeInVersion2 : version2.getApiAcessibleTypes()) {
 			if(version1.contaisAccessibleType(typeInVersion2)){
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){
-					if(!Utils.isPrivate(methodInVersion2)){
+					if(!UtilTools.isPrivate(methodInVersion2)){
 						MethodDeclaration methodInVersion1 = version1.getEqualVersionMethod(methodInVersion2, typeInVersion2);
 						if(methodInVersion1 == null){
 							this.methodNonBreakingChange++;
@@ -314,7 +314,7 @@ public class MethodDiff {
 				}
 			} else {
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){
-					if(!Utils.isPrivate(methodInVersion2)){
+					if(!UtilTools.isPrivate(methodInVersion2)){
 						this.methodNonBreakingChange++;
 						this.methodAdd++;
 					}

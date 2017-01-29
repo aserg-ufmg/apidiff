@@ -2,7 +2,7 @@ package br.ufmg.dcc.labsoft.apidiff.detect.diff;
 import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 
-import br.ufmg.dcc.labsoft.apidiff.Utils;
+import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class EnumConstantDiff {
@@ -65,9 +65,9 @@ public class EnumConstantDiff {
 
 	private void findAddedConstant(APIVersion version1, APIVersion version2) {
 		for(EnumDeclaration enumVersion2 : version2.getApiAccessibleEnums()){
-			if(!Utils.isPrivate(enumVersion2)){
+			if(!UtilTools.isPrivate(enumVersion2)){
 				EnumDeclaration enumVersion1 = version1.getVersionAccessibleEnum(enumVersion2);
-				if(enumVersion1 != null && !Utils.isPrivate(enumVersion1)){
+				if(enumVersion1 != null && !UtilTools.isPrivate(enumVersion1)){
 					for(Object constant : enumVersion2.enumConstants()){
 						if(version1.getEqualVersionConstant((EnumConstantDeclaration) constant, enumVersion2) == null){
 							this.nonBreakingChange++;
@@ -87,9 +87,9 @@ public class EnumConstantDiff {
 
 	private void findRemovedConstant(APIVersion version1, APIVersion version2) {
 		for(EnumDeclaration enumVersion1 : version1.getApiAccessibleEnums()){
-			if(!Utils.isPrivate(enumVersion1)){
+			if(!UtilTools.isPrivate(enumVersion1)){
 				EnumDeclaration enumVersion2 = version2.getVersionAccessibleEnum(enumVersion1);
-				if(enumVersion2 != null && !Utils.isPrivate(enumVersion2)){
+				if(enumVersion2 != null && !UtilTools.isPrivate(enumVersion2)){
 					for(Object constantVersion1 : enumVersion1.enumConstants()){
 						if(version2.getEqualVersionConstant((EnumConstantDeclaration) constantVersion1, enumVersion1) == null){
 							if(((EnumConstantDeclaration)constantVersion1).resolveVariable() != null &&
@@ -128,9 +128,9 @@ public class EnumConstantDiff {
 
 	private void addedDeprecatedConstant(APIVersion version1, APIVersion version2) {
 		for(EnumDeclaration enumVersion1 : version1.getApiAccessibleEnums()){
-			if(!Utils.isPrivate(enumVersion1)){
+			if(!UtilTools.isPrivate(enumVersion1)){
 				EnumDeclaration enumVersion2 = version2.getVersionAccessibleEnum(enumVersion1);
-				if(enumVersion2 != null && !Utils.isPrivate(enumVersion2)){
+				if(enumVersion2 != null && !UtilTools.isPrivate(enumVersion2)){
 					for(Object constantVersion2 : enumVersion2.enumConstants()){
 						if(((EnumConstantDeclaration) constantVersion2).resolveVariable() != null &&
 								((EnumConstantDeclaration) constantVersion2).resolveVariable().isDeprecated()){

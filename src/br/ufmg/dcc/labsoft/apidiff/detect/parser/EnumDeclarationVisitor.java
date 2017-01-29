@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 
-import br.ufmg.dcc.labsoft.apidiff.Utils;
+import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 
 public class EnumDeclarationVisitor extends ASTVisitor{
 	private ArrayList<EnumDeclaration> acessibleEnums = new ArrayList<EnumDeclaration>();
@@ -18,23 +18,10 @@ public class EnumDeclarationVisitor extends ASTVisitor{
 		return nonAcessibleEnums;
 	}
 
-	private boolean isConsiderable(EnumDeclaration node){
-		if (node.resolveBinding().getQualifiedName() != null){
-			boolean notTestFilterLower = !node.resolveBinding().getQualifiedName().contains("test");
-			boolean notTestFilterUpper = !node.resolveBinding().getQualifiedName().contains("Test");
-			boolean notExampleFilterLower = !node.resolveBinding().getQualifiedName().contains("example");
-			boolean notExampleFilterUpper = !node.resolveBinding().getQualifiedName().contains("Example");
-
-			return notExampleFilterLower && notExampleFilterUpper && notTestFilterLower && notTestFilterUpper;
-		}
-		
-		return false;
-	}
-
 	@Override
 	public boolean visit(EnumDeclaration node){
-		if(isConsiderable(node)){
-			if(Utils.isPrivate(node)){
+		if(UtilTools.isInterfaceStable(node)){
+			if(UtilTools.isPrivate(node)){
 				this.nonAcessibleEnums.add(node);
 			} else {
 				this.acessibleEnums.add(node);

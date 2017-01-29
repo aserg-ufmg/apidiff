@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-import br.ufmg.dcc.labsoft.apidiff.Utils;
+import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 
 public class TypeDeclarationVisitor extends ASTVisitor{
 	private ArrayList<TypeDeclaration> acessibleTypes = new ArrayList<TypeDeclaration>();
@@ -25,22 +25,11 @@ public class TypeDeclarationVisitor extends ASTVisitor{
 	public void addNonAcessibleTypes(TypeDeclaration type) {
 		this.nonAcessibleTypes.add(type);
 	}
-	private boolean isConsiderable(TypeDeclaration node){
-		if(node.resolveBinding() != null) {
-			boolean notTestFilterLower = !node.resolveBinding().getQualifiedName().contains("test");
-			boolean notTestFilterUpper = !node.resolveBinding().getQualifiedName().contains("Test");
-			boolean notExampleFilterLower = !node.resolveBinding().getQualifiedName().contains("example");
-			boolean notExampleFilterUpper = !node.resolveBinding().getQualifiedName().contains("Example");
-
-			return notExampleFilterLower && notExampleFilterUpper && notTestFilterLower && notTestFilterUpper;
-		}
-		return false;
-	}
 
 	@Override
 	public boolean visit(TypeDeclaration node) {
-		if(isConsiderable(node)){
-			if(Utils.isPrivate(node)){
+		if(UtilTools.isInterfaceStable(node)){
+			if(UtilTools.isPrivate(node)){
 				this.addNonAcessibleTypes(node);
 			} else {
 				this.addAcessibleType(node);

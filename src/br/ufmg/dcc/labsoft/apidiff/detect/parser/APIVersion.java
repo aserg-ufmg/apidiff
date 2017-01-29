@@ -14,7 +14,7 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-import br.ufmg.dcc.labsoft.apidiff.Utils;
+import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 import br.ufmg.dcc.labsoft.apidiff.detect.exception.BindingException;
 
 public class APIVersion {
@@ -40,7 +40,7 @@ public class APIVersion {
 	public void parseFilesInDir(File file) throws IOException {
 		if (file.isFile()) {
 			if (file.getName().endsWith(".java")) {
-				this.parse(Utils.readFileToString(file.getAbsolutePath()), file);		
+				this.parse(UtilTools.readFileToString(file.getAbsolutePath()), file);		
 			}
 		} else {
 			for (File f : file.listFiles()) {
@@ -167,8 +167,8 @@ public class APIVersion {
 		for (TypeDeclaration versionType : this.apiAccessibleTypes) {
 			if(versionType.getName().toString().equals(type.getName().toString())){
 				for (FieldDeclaration versionField : versionType.getFields()) {
-					String name1 = Utils.getFieldName(versionField);
-					String name2  = Utils.getFieldName(field);
+					String name1 = UtilTools.getFieldName(versionField);
+					String name2  = UtilTools.getFieldName(field);
 					if(name1 != null && name2 != null && name1.equals(name2)){
 						return versionField;
 					}
@@ -194,7 +194,7 @@ public class APIVersion {
 
 	public MethodDeclaration getEqualVersionMethod(MethodDeclaration method, TypeDeclaration type){
 		for(MethodDeclaration methodInThisVersion : this.getAllEqualMethodsByName(method, type)){
-			if(Utils.isEqualMethod(method, methodInThisVersion))
+			if(UtilTools.isEqualMethod(method, methodInThisVersion))
 				return methodInThisVersion;
 		}
 
