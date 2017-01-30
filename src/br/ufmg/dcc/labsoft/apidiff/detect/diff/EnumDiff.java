@@ -1,51 +1,44 @@
 package br.ufmg.dcc.labsoft.apidiff.detect.diff;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class EnumDiff {
 	
+	private final String CATEGORY_LOST_VISIBILITY = "LOST_VISIBILITY";
+	private final String CATEGORY_REMOVED_ENUM = "REMOVED ENUM";
+	
+	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
 	private int enumBreakingChange;
 	private int enumNonBreakingChange;
-	
 	private int enumAdd;
 	private int enumRemoval;
 	private int enumModif;
-	private int enumDeprecatedOp;
-	private String library;
+	private int enumDeprecated;
 
-	public EnumDiff(){
-		this.enumBreakingChange = 0;
-		this.enumNonBreakingChange = 0;
+	public Result calculateDiff(final APIVersion version1, final APIVersion version2) {
 		
-		this.enumAdd = 0;
-		this.enumRemoval = 0;
-		this.enumModif = 0;
-		this.enumDeprecatedOp = 0;
-	}
-
-	public int getEnunAdd() {
-		return enumAdd;
-	}
-
-	public int getEnumRemoval() {
-		return enumRemoval;
-	}
-
-	public int getEnumModif() {
-		return enumModif;
-	}
-
-	public int getEnumDeprecatedOp() {
-		return enumDeprecatedOp;
-	}
-
-	public void calculateDiff(String library, APIVersion version1, APIVersion version2) {
-		this.library = library;
-		this.findAddedEnums(version1, version2);
+		//Adiciona lista de Breaking Changes.
 		this.findRemovedEnums(version1, version2);
 		this.findChangedVisibilityEnums(version1, version2);
+		
+		//Conta non-Breaking Changes.
+		this.findAddedEnums(version1, version2);
 		this.findAddedDeprecatedEnums(version1, version2);
+		
+		Result result = new Result();
+		result.setElementAdd(this.enumAdd);
+		result.setElementDeprecated(this.enumDeprecated);
+		result.setElementModified(this.enumModif);
+		result.setElementRemoved(this.enumRemoval);
+		result.setBreakingChange(this.enumBreakingChange);
+		result.setNonBreakingChange(this.enumNonBreakingChange);
+		result.setListBreakingChange(this.listBreakingChange);
+		return result;
 	}
 
 	private void findAddedDeprecatedEnums(APIVersion version1, APIVersion version2) {
@@ -56,27 +49,26 @@ public class EnumDiff {
 				if(accessibleEnumVersion1 == null){
 					this.enumNonBreakingChange++;
 				} else {
-					if(accessibleEnumVersion1.resolveBinding() != null && 
-							!accessibleEnumVersion1.resolveBinding().isDeprecated())
+					if(accessibleEnumVersion1.resolveBinding() != null && !accessibleEnumVersion1.resolveBinding().isDeprecated()){
 						this.enumNonBreakingChange++;
+					}
 				}
 			}
 		}
 	}
 
 	private void findChangedVisibilityEnums(APIVersion version1, APIVersion version2) {
+		
 		for(EnumDeclaration acessibleEnumVersion1 : version1.getApiAccessibleEnums()){
 			if(version2.contaisNonAccessibleEnum(acessibleEnumVersion1)){
 				if(acessibleEnumVersion1.resolveBinding() != null &&
 						acessibleEnumVersion1.resolveBinding().isDeprecated()){
 					this.enumNonBreakingChange++;
-					this.enumDeprecatedOp++;
+					this.enumDeprecated++;
 				} else {
 					this.enumBreakingChange++;
 					this.enumModif++;
-					
-					System.out.println(this.library + ";" + acessibleEnumVersion1.resolveBinding().getQualifiedName() + 
-							";" + acessibleEnumVersion1.getName() + ";" + "LOST VISIBILITY");
+					this.listBreakingChange.add(new BreakingChange(acessibleEnumVersion1.resolveBinding().getQualifiedName(), acessibleEnumVersion1.getName().toString(), this.CATEGORY_LOST_VISIBILITY));
 				}
 			}
 		}
@@ -99,29 +91,20 @@ public class EnumDiff {
 	}
 
 	private void findRemovedEnums(APIVersion version1, APIVersion version2){
+		
 		for(EnumDeclaration enumVersion1 : version1.getApiAccessibleEnums()){
 			if(version2.getVersionAccessibleEnum(enumVersion1) == null && 
 					version2.getVersionNonAccessibleEnum(enumVersion1) == null){
 				if(enumVersion1.resolveBinding() != null && 
 						enumVersion1.resolveBinding().isDeprecated()){
 					this.enumNonBreakingChange++;
-					this.enumDeprecatedOp++;
+					this.enumDeprecated++;
 				} else{
 					this.enumBreakingChange++;
 					this.enumRemoval++;
-					
-					System.out.println(this.library + ";" + enumVersion1.resolveBinding().getQualifiedName() + 
-							";" + enumVersion1.getName() + ";" + "REMOVED ENUM");
+					this.listBreakingChange.add(new BreakingChange(enumVersion1.resolveBinding().getQualifiedName(), enumVersion1.getName().toString(), this.CATEGORY_REMOVED_ENUM));
 				}
 			}
 		}
-	}
-
-	public int getEnumBreakingChange() {
-		return enumBreakingChange;
-	}
-
-	public int getEnumNonBreakingChange() {
-		return enumNonBreakingChange;
 	}
 }

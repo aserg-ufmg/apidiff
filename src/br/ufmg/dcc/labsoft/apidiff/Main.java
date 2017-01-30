@@ -24,9 +24,8 @@ public class Main {
 				
 		APIVersion version1 = new APIVersion(path1);
 		APIVersion version2 = new APIVersion(path2);
-		
-		System.out.println("Library;ChangedType;StructureName;Category");
 		APIDiff diff = new APIDiff(library, version1, version2); //versao mais antiga - versao mais nova
+		diff.calculateDiff();
 	}
 
 }

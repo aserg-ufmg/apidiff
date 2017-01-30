@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import br.ufmg.dcc.labsoft.apidiff.detect.exception.BindingException;
 
 public class UtilTools {
+	
 	public static boolean isEqualMethod(MethodDeclaration method1, MethodDeclaration method2){
 		if(!method1.getName().toString().equals(method2.getName().toString()))
 			return false;
@@ -121,7 +122,7 @@ public class UtilTools {
 	}
 	
 	/**
-	 * Verifica se a classe é interface estável. 
+	 * Verifica se a classe é uma interface estável. 
 	 * Interfaces instáveis podem ser APIs internas, experimentais, ou pacotes de testes.
 	 * @param node
 	 * @return
@@ -129,7 +130,8 @@ public class UtilTools {
 	public static Boolean isInterfaceStable(AbstractTypeDeclaration node){
 		String nameNode = UtilTools.getNameNode(node).toLowerCase();
 		
-		if("".equals(nameNode) || nameNode.contains("test") || nameNode.contains("example") || nameNode.contains(".internal.") || nameNode.contains(".experimental.") ){
+//		if("".equals(nameNode) || nameNode.contains("test") || nameNode.contains("example") || nameNode.contains(".internal.") || nameNode.contains(".experimental.") ){
+		if("".equals(nameNode) || nameNode.contains("test") || nameNode.contains("example")){
 			return false;
 		}
 

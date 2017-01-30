@@ -3,46 +3,51 @@ package br.ufmg.dcc.labsoft.apidiff.detect.diff;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class APIDiff {
-	private TypeDiff typediff = new TypeDiff();
-	private FieldDiff fieldDiff  = new FieldDiff();
-	private MethodDiff methodDiff = new MethodDiff();
-	private EnumDiff enumDiff = new EnumDiff();
-	private EnumConstantDiff enumConstantDiff = new EnumConstantDiff();
+	
+
 	private String library;
+	private APIVersion version1;
+	private APIVersion version2;
+	
+	private Result resultType; 
+	private Result resultFild;
+	private Result resultMethod;
+	private Result resultEnum;
+	private Result resultEnumConstant;
 
-
-	public APIDiff(String library, APIVersion version1, APIVersion version2) {
+	public APIDiff(final String library, final APIVersion version1, final APIVersion version2) {
 		this.library = library;
-		this.calculateDiff(version1, version2);
+		this.version1 = version1;
+		this.version2 = version2;
 	}
 
-	private void calculateDiff(APIVersion version1, APIVersion version2) {
-		this.typediff.calculateDiff(library, version1, version2);
-		this.fieldDiff.calculateDiff(library, version1, version2);
-		this.methodDiff.calculateDiff(library, version1, version2);
-		this.enumDiff.calculateDiff(library, version1, version2);
-		this.enumConstantDiff.calculateDiff(library, version1, version2);
+	public void calculateDiff() {
+		
+		TypeDiff typediff = new TypeDiff();
+		FieldDiff fieldDiff  = new FieldDiff();
+		MethodDiff methodDiff = new MethodDiff();
+		EnumDiff enumDiff = new EnumDiff();
+		EnumConstantDiff enumConstantDiff = new EnumConstantDiff();
+		
+		this.resultType = typediff.calculateDiff(this.version1, this.version2);
+		this.resultFild = fieldDiff.calculateDiff(this.version1, this.version2);
+		this.resultMethod = methodDiff.calculateDiff(this.version1, this.version2);
+		this.resultEnum = enumDiff.calculateDiff(this.version1, this.version2);
+		this.resultEnumConstant = enumConstantDiff.calculateDiff(this.version1, this.version2);
+		
+		this.printOutput(resultType);
+		this.printOutput(resultFild);
+		this.printOutput(resultMethod);
+		this.printOutput(resultEnum);
+		this.printOutput(resultEnumConstant);
 	}
 	
-	public EnumConstantDiff getEnumConstantDiff() {
-		return this.enumConstantDiff;
-	}
-
-	public TypeDiff getTypeDiff(){
-		return this.typediff;
-	}
 	
-	public FieldDiff getFieldDiff(){
-		return this.fieldDiff;
-	}
-	
-
-	public MethodDiff getMethodDiff() {
-		return this.methodDiff;
-	}
-	
-	public EnumDiff getEnumDiff() {
-		return this.enumDiff;
+	public void printOutput(Result r){
+		System.out.println("Library;ChangedType;StructureName;Category");
+		for(BreakingChange bc: r.getListBreakingChange()){
+			System.out.println(this.library  + ";" + bc.getPath() + ";" + bc.getStruture() + ";" + bc.getCategory());
+		}
 	}
 
 }

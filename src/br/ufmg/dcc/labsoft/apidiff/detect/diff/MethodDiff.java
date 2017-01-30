@@ -4,68 +4,54 @@ import java.util.List;
 
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class MethodDiff {
+	
+	private final String CATEGORY_CHANGED_EXCEPTION = "CHANGED EXCEPTION";
+	private final String CATEGORY_CHANGED_PARAMETERS = "CHANGED PARAMETERS";
+	private final String CATEGORY_CHANGED_RETURN_TYPE = "CHANGED RETURN TYPE";
+	private final String CATEGORY_LOST_VISIBILITY = "LOST VISIBILITY";
+	private final String CATEGORY_REMOVED_METHOD = "REMOVED METHOD";
+	
+	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
 	private int methodBreakingChange;
 	private int methodNonBreakingChange;
-	
 	private int methodAdd;
 	private int methodRemoval;
 	private int methodModif;
 	private int methodDeprecatedOp;
-	private String library;
 
-	public int getMethodAdd() {
-		return methodAdd;
-	}
-
-	public int getMethodRemoval() {
-		return methodRemoval;
-	}
-
-	public int getMethodModif() {
-		return methodModif;
-	}
-
-	public int getMethodDeprecatedOp() {
-		return methodDeprecatedOp;
-	}
-
-	public MethodDiff() {
-		this.methodBreakingChange = 0;
-		this.methodNonBreakingChange = 0;
+	public Result calculateDiff(final APIVersion version1, final APIVersion version2) {
 		
-		this.methodAdd = 0;
-		this.methodRemoval = 0;
-		this.methodModif = 0;
-		this.methodDeprecatedOp = 0;
-	}
-
-	public int getMethodBreakingChange() {
-		return methodBreakingChange;
-	}
-
-	public int getMethodNonBreakingChange() {
-		return methodNonBreakingChange;
-	}
-
-	public void calculateDiff(String library, APIVersion version1, APIVersion version2) {
-		this.library = library;
-		this.findAddedMethods(version1, version2);
+		//Lista breaking Change.
 		this.findRemovedMethods(version1, version2);
-		this.findAddedDeprecatedMethods(version1, version2);
 		this.findChangedVisibilityMethods(version1, version2);
 		this.findChangedReturnTypeMethods(version1, version2);
 		this.findChangedParametersMethods(version1, version2);
 		this.findChangedExceptionTypeMethods(version1, version2);
+		
+		//Lista breaking Change.
+		this.findAddedMethods(version1, version2);
+		this.findAddedDeprecatedMethods(version1, version2);
+		
+		Result result = new Result();
+		result.setBreakingChange(this.methodBreakingChange);
+		result.setNonBreakingChange(this.methodNonBreakingChange);
+		result.setElementAdd(this.methodAdd);
+		result.setElementDeprecated(this.methodDeprecatedOp);
+		result.setElementModified(this.methodModif);
+		result.setElementRemoved(this.methodRemoval);
+		result.setListBreakingChange(this.listBreakingChange);
+		return result;
 	}
 
 	private void findChangedExceptionTypeMethods(APIVersion version1, APIVersion version2) {
+		
+		
 		for(TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()){
 			if(version2.contaisAccessibleType(typeVersion1)){
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
@@ -79,15 +65,13 @@ public class MethodDiff {
 								this.methodBreakingChange++; //added exception type
 								this.methodModif++;
 								
-								System.out.println(this.library + ";" + typeVersion1.resolveBinding().getQualifiedName() + 
-										";" + methodVersion1.getName() + ";" + "CHANGED EXCEPTION");
+								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_EXCEPTION));
 								
 							} else if(exceptionsVersion1.size() > exceptionsVersion2.size()){
 								this.methodBreakingChange++; //removed exception type
 								this.methodModif++;
 								
-								System.out.println(this.library + ";" + typeVersion1.resolveBinding().getQualifiedName() + 
-										";" + methodVersion1.getName() + ";" + "CHANGED EXCEPTION");
+								this.listBreakingChange.add(new BreakingChange( typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_EXCEPTION));
 								
 							} 
 							for(SimpleType exceptionVersion1 : exceptionsVersion1){
@@ -103,23 +87,20 @@ public class MethodDiff {
 									this.methodBreakingChange++; //changed exception type;
 									this.methodModif++;
 									
-									System.out.println(this.library + ";" + typeVersion1.resolveBinding().getQualifiedName() + 
-											";" + methodVersion1.getName() + ";" + "CHANGED EXCEPTION");
+									this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_EXCEPTION));
 									
 									break;
 								}
 							}
-
-
 						}
 					}
 				}
 			}
 		}
-
 	}
 
 	private void findChangedParametersMethods(APIVersion version1, APIVersion version2) {
+		
 		for(TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()){
 			if(version2.contaisAccessibleType(typeVersion1)){
 
@@ -135,17 +116,12 @@ public class MethodDiff {
 										smallerSize = methodVersion2.parameters().size();
 										this.methodBreakingChange++; //removed parameter
 										this.methodModif++;
-										
-										System.out.println(this.library + ";" + typeVersion1.resolveBinding().getQualifiedName() + 
-												";" + methodVersion1.getName() + ";" + "CHANGED PARAMETERS");
+										this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_PARAMETERS));
 										
 									} else if (methodVersion1.parameters().size() < methodVersion2.parameters().size()){
 										this.methodBreakingChange++; //added parameter
 										this.methodModif++;
-										
-										System.out.println(this.library + ";" + typeVersion1.resolveBinding().getQualifiedName() + 
-												";" + methodVersion1.getName() + ";" + "CHANGED PARAMETERS");
-										
+										this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_PARAMETERS));
 									} 
 									
 									for(int i = 0; i < smallerSize; i++){
@@ -156,8 +132,7 @@ public class MethodDiff {
 											this.methodBreakingChange++; //changed parameter
 											this.methodModif++;
 											
-											System.out.println(this.library + ";" + typeVersion1.resolveBinding().getQualifiedName() + 
-													";" + methodVersion1.getName() + ";" + "CHANGED PARAMETERS");
+											this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_PARAMETERS));
 											
 											break;
 										}
@@ -172,6 +147,7 @@ public class MethodDiff {
 	}
 
 	private void findChangedReturnTypeMethods(APIVersion version1, APIVersion version2) {
+		
 		for(TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()){
 			if(version2.contaisAccessibleType(typeVersion1)){
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
@@ -182,10 +158,7 @@ public class MethodDiff {
 									!methodVersion1.getReturnType2().toString().equals(methodVersion2.getReturnType2().toString())){
 								this.methodBreakingChange++;
 								this.methodModif++;
-								
-								System.out.println(this.library + ";" + typeVersion1.resolveBinding().getQualifiedName() + 
-										";" + methodVersion1.getName() + ";" + "CHANGED RETURN TYPE");
-								
+								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_RETURN_TYPE));
 							}
 						}
 					}
@@ -195,6 +168,7 @@ public class MethodDiff {
 	}
 
 	private void findChangedVisibilityMethods(APIVersion version1, APIVersion version2) {
+		
 		for(TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()){
 			if(version2.contaisAccessibleType(typeVersion1)){
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
@@ -211,17 +185,13 @@ public class MethodDiff {
 							} else {
 								this.methodBreakingChange++; //lost visibility
 								this.methodModif++;
-								
-								System.out.println(this.library + ";" + typeVersion1.resolveBinding().getQualifiedName() + 
-										";" + methodVersion1.getName() + ";" + "LOST VISIBILITY");
-								
+								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_LOST_VISIBILITY));
 							}
 						}
 					}
 				}
 			}
 		}
-
 	}
 
 	private void findAddedDeprecatedMethods(APIVersion version1, APIVersion version2) {
@@ -257,6 +227,7 @@ public class MethodDiff {
 	}
 
 	private void findRemovedMethods(APIVersion version1, APIVersion version2) {
+		
 		for (TypeDeclaration typeInVersion1 : version1.getApiAcessibleTypes()) {
 			if(version2.contaisAccessibleType(typeInVersion1)){
 				for (MethodDeclaration methodInVersion1 : typeInVersion1.getMethods()) {
@@ -271,8 +242,7 @@ public class MethodDiff {
 								this.methodBreakingChange++; // removed
 								this.methodRemoval++;
 								
-								System.out.println(this.library + ";" + typeInVersion1.resolveBinding().getQualifiedName() + 
-										";" + methodInVersion1.getName() + ";" + "REMOVED METHOD");
+								this.listBreakingChange.add(new BreakingChange(typeInVersion1.resolveBinding().getQualifiedName(), methodInVersion1.getName().toString(), this.CATEGORY_REMOVED_METHOD));
 								
 							}
 						}
@@ -288,19 +258,16 @@ public class MethodDiff {
 						} else {
 							this.methodBreakingChange++; //removed
 							this.methodRemoval++;
-							
-							System.out.println(this.library + ";" + typeInVersion1.resolveBinding().getQualifiedName() + 
-									";" + methodInVersion1.getName() + ";" + "REMOVED METHOD");
-							
+							this.listBreakingChange.add(new BreakingChange(typeInVersion1.resolveBinding().getQualifiedName(), methodInVersion1.getName().toString(), this.CATEGORY_REMOVED_METHOD));
 						}
 					}
 				}
 			}
 		}
-
 	}
 
 	private void findAddedMethods(APIVersion version1, APIVersion version2) {
+		
 		for (TypeDeclaration typeInVersion2 : version2.getApiAcessibleTypes()) {
 			if(version1.contaisAccessibleType(typeInVersion2)){
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){

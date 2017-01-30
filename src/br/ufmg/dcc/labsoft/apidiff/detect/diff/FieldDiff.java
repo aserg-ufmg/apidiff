@@ -1,4 +1,5 @@
 package br.ufmg.dcc.labsoft.apidiff.detect.diff;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.Expression;
@@ -12,52 +13,44 @@ import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class FieldDiff {
 	
+	private final String CATEGORY_CHANGED_DEFAULT_VALUE = "CHANGED DEFAULT VALUE";
+	private final String CATEGORY_CHANGED_TYPE_FIELD = "CHANGED TYPE FIELD";
+	private final String CATEGORY_LOST_VISIBILITY = "LOST VISIBILITY";
+	private final String CATEGORY_REMOVED_FIELD = "REMOVED FIELD";
+	
+	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
 	private int fieldBreakingChange;
 	private int fieldNonBreakingChange;
-	
 	private int fieldAdd;
 	private int fieldRemoval;
 	private int fieldModif;
-	private int fieldDeprecatedOp;
-	private String library;
-
-	public int getFieldAdd() {
-		return fieldAdd;
-	}
-
-	public int getFieldRemoval() {
-		return fieldRemoval;
-	}
-
-	public int getFieldModif() {
-		return fieldModif;
-	}
-
-	public int getFieldDeprecatedOp() {
-		return fieldDeprecatedOp;
-	}
-
-	public FieldDiff() {
-		this.fieldBreakingChange = 0;
-		this.fieldNonBreakingChange = 0;
-		
-		this.fieldAdd = 0;
-		this.fieldRemoval = 0;
-		this.fieldModif = 0;
-		this.fieldDeprecatedOp = 0;
-	}
+	private int fieldDeprecated;
 	
-	public void calculateDiff(String library, APIVersion version1, APIVersion version2){
-		this.library = library;
+	public Result calculateDiff(final APIVersion version1, final APIVersion version2){
+		
+		//Lista breacking Change.
+		this.findDefaultValueFields(version1, version2);
+		this.findChangedTypeFields(version1, version2);
 		this.findRemovedFields(version1, version2);
+		this.findChangedVisibilityFields(version1, version2);
+		
+		//Conta non-Breaking Change.
 		this.findAddedFields(version1, version2);
 		this.findAddedDeprecatedFields(version1, version2);
-		this.findChangedVisibilityFields(version1, version2);
-		this.findChangedTypeFields(version1, version2);
-		this.findDefaultValueFields(version1, version2);
+		
+		Result result = new Result();
+		result.setBreakingChange(fieldBreakingChange);
+		result.setNonBreakingChange(fieldNonBreakingChange);
+		result.setElementDeprecated(this.fieldDeprecated);
+		result.setElementModified(this.fieldModif);
+		result.setElementRemoved(this.fieldRemoval);
+		result.setElementAdd(this.fieldAdd);
+		result.setListBreakingChange(this.listBreakingChange);
+		return result;
 	}
 
 	private void findDefaultValueFields(APIVersion version1, APIVersion version2){
+		
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
 			if(version2.contaisAccessibleType(type)){
 
@@ -87,8 +80,7 @@ public class FieldDiff {
 								this.fieldBreakingChange++;
 								this.fieldModif++;
 								try {
-									System.out.println(this.library + ";" + type.resolveBinding().getQualifiedName() + 
-											";" + UtilTools.getFieldName(fieldInVersion2) + ";" + "CHANGED DEFAULT VALUE");
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_CHANGED_DEFAULT_VALUE));
 								} catch (BindingException e) {
 									continue;
 								}
@@ -97,8 +89,7 @@ public class FieldDiff {
 								this.fieldModif++;
 								this.fieldBreakingChange++;
 								try {
-									System.out.println(this.library + ";" + type.resolveBinding().getQualifiedName() + 
-											";" + UtilTools.getFieldName(fieldInVersion2) + ";" + "CHANGED DEFAULT VALUE");
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_CHANGED_DEFAULT_VALUE));
 								} catch (BindingException e) {
 									continue;
 								}
@@ -108,11 +99,10 @@ public class FieldDiff {
 									this.fieldModif++;
 									this.fieldBreakingChange++;
 									try {
-										System.out.println(this.library + ";" + type.resolveBinding().getQualifiedName() + 
-												";" + UtilTools.getFieldName(fieldInVersion2) + ";" + "CHANGED DEFAULT VALUE");
+										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_CHANGED_DEFAULT_VALUE));
 									} catch (BindingException e) {
 										continue;
-									}
+								}
 							}
 						}
 					}
@@ -122,6 +112,7 @@ public class FieldDiff {
 	}
 
 	private void findChangedTypeFields(APIVersion version1, APIVersion version2) {
+		
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
 			if(version2.contaisAccessibleType(type)){
 
@@ -138,8 +129,7 @@ public class FieldDiff {
 								this.fieldBreakingChange++;
 								this.fieldModif++;
 								try {
-									System.out.println(this.library + ";" + type.resolveBinding().getQualifiedName() + 
-											";" + UtilTools.getFieldName(fieldInVersion2) + ";" + "CHANGED TYPE FIELD");
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_CHANGED_TYPE_FIELD));
 								} catch (BindingException e) {
 									continue;
 								}
@@ -149,10 +139,10 @@ public class FieldDiff {
 				}
 			}
 		}
-
 	}
 
 	private void findChangedVisibilityFields(APIVersion version1, APIVersion version2) {
+		
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
 			if(version2.contaisAccessibleType(type)){
 
@@ -169,13 +159,12 @@ public class FieldDiff {
 						} else if(!UtilTools.isPrivate(fieldInVersion1) && UtilTools.isPrivate(fieldInVersion2)){
 							if(UtilTools.isDeprecatedField(fieldInVersion1)){
 								this.fieldNonBreakingChange++;
-								this.fieldDeprecatedOp++;
+								this.fieldDeprecated++;
 							} else {
 								this.fieldBreakingChange++;
 								this.fieldModif++;
 								try {
-									System.out.println(this.library + ";" + type.resolveBinding().getQualifiedName() + 
-											";" + UtilTools.getFieldName(fieldInVersion2) + ";" + "LOST VISIBILITY");
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_LOST_VISIBILITY));
 								} catch (BindingException e) {
 									continue;
 								}
@@ -267,6 +256,7 @@ public class FieldDiff {
 	}
 
 	private void findRemovedFields(APIVersion version1, APIVersion version2) {
+		
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
 			if(version2.contaisAccessibleType(type)){
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
@@ -281,13 +271,12 @@ public class FieldDiff {
 						if(fieldInVersion2 == null){
 							if(UtilTools.isDeprecatedField(fieldInVersion1)){
 								this.fieldNonBreakingChange++; //removed deprecated field
-								this.fieldDeprecatedOp++;
+								this.fieldDeprecated++;
 							} else{
 								this.fieldBreakingChange++; //removed field
 								this.fieldRemoval++;
 								try {
-									System.out.println(this.library + ";" + type.resolveBinding().getQualifiedName() + 
-											";" + UtilTools.getFieldName(fieldInVersion1) + ";" + "REMOVED FIELD");
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_REMOVED_FIELD));
 								} catch (BindingException e) {
 									continue;
 								}
@@ -302,13 +291,12 @@ public class FieldDiff {
 					if(!UtilTools.isPrivate(fieldInVersion1)){
 						if(UtilTools.isDeprecatedField(fieldInVersion1)){
 							this.fieldNonBreakingChange++; //removed deprecated field
-							this.fieldDeprecatedOp++;
+							this.fieldDeprecated++;
 						} else{
 							this.fieldBreakingChange++; //removed field
 							this.fieldRemoval++;
 							try {
-								System.out.println(this.library + ";" + type.resolveBinding().getQualifiedName() + 
-										";" + UtilTools.getFieldName(fieldInVersion1) + ";" + "REMOVED FIELD");
+								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_REMOVED_FIELD));
 							} catch (BindingException e) {
 								continue;
 							}
@@ -318,4 +306,5 @@ public class FieldDiff {
 			}
 		}
 	}
+	
 }

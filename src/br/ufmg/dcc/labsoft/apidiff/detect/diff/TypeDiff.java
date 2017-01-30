@@ -1,66 +1,47 @@
 package br.ufmg.dcc.labsoft.apidiff.detect.diff;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class TypeDiff {
-
-	public int getTypeBreakingChange() {
-		return typeBreakingChange;
-	}
-
-	public int getTypeNonBreakingChange() {
-		return typeNonBreakingChange;
-	}
-
+	
+	private final String CATEGORY_CHANGED_SUPER_TYPE = "CHANGED SUPER TYPE";
+	private final String CATEGORY_LOST_VISIBILITY = "LOST VISIBILITY";
+	private final String CATEGORY_REMOVED_TYPE = "REMOVED TYPE";
+	
+	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
 	private int typeBreakingChange;
 	private int typeNonBreakingChange;
-	
 	private int typeAdd;
 	private int typeRemoval;
 	private int typeModif;
 	private int typeDeprecatedOp;
-	private String library;
-
-	public TypeDiff() {
-		this.typeBreakingChange = 0;
-		this.typeNonBreakingChange = 0;
-		
-		this.typeAdd = 0;
-		this.typeRemoval = 0;
-		this.typeModif = 0;
-		this.typeDeprecatedOp = 0;
-	}
-
-	public int getTypeAdd() {
-		return typeAdd;
-	}
-
-	public int getTypeRemoval() {
-		return typeRemoval;
-	}
-
-	public int getTypeModif() {
-		return typeModif;
-	}
-
-	public int getTypeDeprecatedOp() {
-		return typeDeprecatedOp;
-	}
 
 	/**
 	 * Calculates the diff for classes
 	 * @param version1 older version of an API
 	 * @param version2 newer version of an API
 	 */
-	public void calculateDiff(String library, APIVersion version1, APIVersion version2) {
-		this.library = library;
+	public Result calculateDiff(final APIVersion version1, final APIVersion version2) {
 		this.findRemovedTypes(version1, version2);
 		this.findAddedTypes(version1, version2);
 		this.findChangedVisibilityTypes(version1, version2);
 		this.findAddedDeprecated(version1, version2);
 		this.changedSuperTypes(version1, version2);
+		
+		Result result = new Result();
+		result.setElementAdd(this.typeAdd);
+		result.setElementDeprecated(this.typeDeprecatedOp);
+		result.setElementModified(this.typeModif);
+		result.setElementRemoved(this.typeRemoval);
+		result.setListBreakingChange(this.listBreakingChange);
+		result.setBreakingChange(typeBreakingChange);
+		result.setNonBreakingChange(typeNonBreakingChange);
+		return result;
 	}
 
 	private void changedSuperTypes(APIVersion version1, APIVersion version2) {
@@ -80,8 +61,7 @@ public class TypeDiff {
 				if(super1 != null && super2 != null && !super1.equals(super2)){
 					this.typeBreakingChange++; //changed super type
 					this.typeModif++;
-					System.out.println(this.library + ";" + accessibleTypeVersion1.resolveBinding().getQualifiedName() + 
-							";" + accessibleTypeVersion1.getName() + ";" + "CHANGED SUPER TYPE");
+					this.listBreakingChange.add(new BreakingChange(accessibleTypeVersion1.resolveBinding().getQualifiedName(), accessibleTypeVersion1.getName().toString(), this.CATEGORY_CHANGED_SUPER_TYPE));
 				}
 			}
 		}
@@ -116,8 +96,7 @@ public class TypeDiff {
 				} else {
 					this.typeBreakingChange++; //lost visibility
 					this.typeModif++;
-					System.out.println(this.library + ";" + acessibleTypeVersion1.resolveBinding().getQualifiedName() + 
-							";" + acessibleTypeVersion1.getName() + ";" + "LOST VISIBILITY");
+					this.listBreakingChange.add(new BreakingChange(acessibleTypeVersion1.resolveBinding().getQualifiedName(), acessibleTypeVersion1.getName().toString(), this.CATEGORY_LOST_VISIBILITY));
 				}
 			}
 		}
@@ -147,8 +126,7 @@ public class TypeDiff {
 				}else{
 					this.typeBreakingChange++; //removed
 					this.typeRemoval++;
-					System.out.println(this.library + ";" + type.resolveBinding().getQualifiedName() + 
-							";" + type.getName() + ";" + "REMOVED TYPE");
+					this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), type.getName().toString(), this.CATEGORY_REMOVED_TYPE));
 				}
 			}
 		}
