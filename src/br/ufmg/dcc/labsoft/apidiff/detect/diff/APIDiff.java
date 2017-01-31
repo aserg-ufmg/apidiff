@@ -43,8 +43,8 @@ public class APIDiff {
 		System.out.println("Method Enuns Constant... (Wait)");
 		this.resultEnumConstant = new EnumConstantDiff().calculateDiff(this.version1, this.version2);
 		
-		System.out.println("Finished processing, check the output file <" + this.nameFile + ">");
 		this.print();//Escreve saída em arquivo.
+		System.out.println("Finished processing. Check the output file <" + this.nameFile + ">");
 	}
 	
 	/**

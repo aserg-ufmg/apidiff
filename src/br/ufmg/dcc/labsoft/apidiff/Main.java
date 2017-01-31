@@ -17,12 +17,9 @@ public class Main {
 		File path2 = new File(args[2]);
 		String library = args[0];
 		
-//		File path1 = new File("/media/aline/Dados/Aline/projetos/wsc_ufmg/wsc_apiBreakingChange/APIChangeTypeFinderSanner/scripts/result/rq1/result/RxJava_older");
-//		File path2 = new File("/media/aline/Dados/Aline/projetos/wsc_ufmg/wsc_apiBreakingChange/APIChangeTypeFinderSanner/scripts/result/rq1/dataset/RxJava");
-//		String library = "RxJava";
-		
-				
+		System.out.println("Reading the old version... (Wait)");
 		APIVersion version1 = new APIVersion(path1);
+		System.out.println("Reading the new version ... (Wait)");
 		APIVersion version2 = new APIVersion(path2);
 		APIDiff diff = new APIDiff(library, version1, version2); //versao mais antiga - versao mais nova
 		diff.calculateDiff();
