@@ -7,7 +7,6 @@ The code has been developed by [Laerte Xavier](https://github.com/xavierlaerte) 
 ### Requirements
 
 * [Java 1.7+](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
-
 * [Maven 3.1+](https://maven.apache.org/download.cgi)
 
 ### Build aplication.
