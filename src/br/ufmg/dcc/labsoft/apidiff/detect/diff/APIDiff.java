@@ -1,10 +1,16 @@
 package br.ufmg.dcc.labsoft.apidiff.detect.diff;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import br.ufmg.dcc.labsoft.apidiff.UtilFile;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class APIDiff {
 	
 
+	private final String nameFile = "output.csv";
+	
 	private String library;
 	private APIVersion version1;
 	private APIVersion version2;
@@ -22,32 +28,65 @@ public class APIDiff {
 	}
 
 	public void calculateDiff() {
+		System.out.println("Processing Types... (Wait)");
+		this.resultType = new TypeDiff().calculateDiff(this.version1, this.version2);
 		
-		TypeDiff typediff = new TypeDiff();
-		FieldDiff fieldDiff  = new FieldDiff();
-		MethodDiff methodDiff = new MethodDiff();
-		EnumDiff enumDiff = new EnumDiff();
-		EnumConstantDiff enumConstantDiff = new EnumConstantDiff();
+		System.out.println("Processing Filds... (Wait)");
+		this.resultFild = new FieldDiff().calculateDiff(this.version1, this.version2);
 		
-		this.resultType = typediff.calculateDiff(this.version1, this.version2);
-		this.resultFild = fieldDiff.calculateDiff(this.version1, this.version2);
-		this.resultMethod = methodDiff.calculateDiff(this.version1, this.version2);
-		this.resultEnum = enumDiff.calculateDiff(this.version1, this.version2);
-		this.resultEnumConstant = enumConstantDiff.calculateDiff(this.version1, this.version2);
+		System.out.println("Processing Methods... (Wait)");
+		this.resultMethod = new MethodDiff().calculateDiff(this.version1, this.version2);
 		
-		this.printOutput(resultType);
-		this.printOutput(resultFild);
-		this.printOutput(resultMethod);
-		this.printOutput(resultEnum);
-		this.printOutput(resultEnumConstant);
+		System.out.println("Method Enums... (Wait)");
+		this.resultEnum = new EnumDiff().calculateDiff(this.version1, this.version2);
+		
+		System.out.println("Method Enuns Constant... (Wait)");
+		this.resultEnumConstant = new EnumConstantDiff().calculateDiff(this.version1, this.version2);
+		
+		System.out.println("Finished processing, check the output file <" + this.nameFile + ">");
+		this.print();//Escreve saída em arquivo.
 	}
 	
+	/**
+	 * Imprime resultado em um arquivo CSV.
+	 */
+	private void print(){
+		
+		List<String> result =  new ArrayList<String>();
+		
+		//Breaking changes e non-breaking changes contabilizadas.
+		result.add("Structure;Added;Removed;Modified;Depreciated");
+		result.add(this.printCount(this.resultEnum, "Enum"));
+		result.add(this.printCount(this.resultEnumConstant, "EnumConstant"));
+		result.add(this.printCount(this.resultFild, "Fild"));
+		result.add(this.printCount(this.resultMethod, "Method"));
+		result.add(this.printCount(this.resultType, "Type"));
+		
+		//Lista de Breaking Changes.
+		result.add("Library;ChangedType;StructureName;Category");
+		result.addAll(this.printListBreakingChange(this.resultType));
+		result.addAll(this.printListBreakingChange(this.resultFild));
+		result.addAll(this.printListBreakingChange(this.resultMethod));
+		result.addAll(this.printListBreakingChange(this.resultEnum));
+		result.addAll(this.printListBreakingChange(this.resultEnumConstant));
+		
+		UtilFile.writeFile(this.nameFile, result);
+	}
 	
-	public void printOutput(Result r){
-		System.out.println("Library;ChangedType;StructureName;Category");
+	/**
+	 * Imprime lista de breaking change detectadas.
+	 * @param r
+	 */
+	private List<String> printListBreakingChange(Result r){
+		List<String> list =  new ArrayList<String>();
 		for(BreakingChange bc: r.getListBreakingChange()){
-			System.out.println(this.library  + ";" + bc.getPath() + ";" + bc.getStruture() + ";" + bc.getCategory());
+			list.add(this.library  + ";" + bc.getPath() + ";" + bc.getStruture() + ";" + bc.getCategory());
 		}
+		return list;
+	}
+	
+	private String printCount(final Result result, final String struture){
+		return struture + ";" + result.getElementAdd() + ";" + result.getElementRemoved() + ";" +result.getElementModified() + ";" +  result.getElementDeprecated();
 	}
 
 }

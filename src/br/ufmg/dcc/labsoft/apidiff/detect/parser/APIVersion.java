@@ -53,8 +53,7 @@ public class APIVersion {
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
 		parser.setSource(str.toCharArray());
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-		String[] classpath = java.lang.System.getProperty("java.class.path")
-				.split(";");
+		String[] classpath = java.lang.System.getProperty("java.class.path").split(";");
 		String[] sources = { source.getParentFile().getAbsolutePath() };
 
 		Hashtable<String, String> options = JavaCore.getOptions();

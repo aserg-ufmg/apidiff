@@ -1,5 +1,6 @@
 #Local Files
 build.local.sh
+output.csv
 
 #Projects Files
 *.class

@@ -130,8 +130,7 @@ public class UtilTools {
 	public static Boolean isInterfaceStable(AbstractTypeDeclaration node){
 		String nameNode = UtilTools.getNameNode(node).toLowerCase();
 		
-//		if("".equals(nameNode) || nameNode.contains("test") || nameNode.contains("example") || nameNode.contains(".internal.") || nameNode.contains(".experimental.") ){
-		if("".equals(nameNode) || nameNode.contains("test") || nameNode.contains("example")){
+		if("".equals(nameNode) || nameNode.contains("test") || nameNode.contains("example") || nameNode.contains(".internal.") || nameNode.contains(".experimental.") ){
 			return false;
 		}
 
