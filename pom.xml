@@ -11,6 +11,19 @@
     </properties>
     
     <dependencies>
+
+    	<dependency>
+		    <groupId>com.jcabi</groupId>
+		    <artifactId>jcabi-github</artifactId>
+		    <version>0.29</version>
+		</dependency>
+
+		<dependency>
+		    <groupId>org.eclipse.jgit</groupId>
+		    <artifactId>org.eclipse.jgit</artifactId>
+		    <version>4.6.0.201612231935-r</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.eclipse.core</groupId>
 			<artifactId>contenttype</artifactId>
