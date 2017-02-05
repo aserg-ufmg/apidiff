@@ -39,6 +39,7 @@ public class APIVersion {
 
 	public void parseFilesInDir(File file) throws IOException {
 		if (file.isFile()) {
+			//TODO: Incluir teste, se é uma arquivo java e sofreu uma modificação entre os commits.
 			if (file.getName().endsWith(".java")) {
 				this.parse(UtilTools.readFileToString(file.getAbsolutePath()), file);		
 			}
