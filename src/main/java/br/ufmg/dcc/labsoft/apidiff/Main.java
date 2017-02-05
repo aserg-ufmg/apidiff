@@ -2,7 +2,6 @@ package br.ufmg.dcc.labsoft.apidiff;
 import java.io.File;
 
 import br.ufmg.dcc.labsoft.apidiff.detect.diff.APIDiff;
-import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class Main {
 
@@ -17,11 +16,7 @@ public class Main {
 		File path2 = new File(args[2]);
 		String library = args[0];
 		
-		System.out.println("Reading the old version... (Wait)");
-		APIVersion version1 = new APIVersion(path1);
-		System.out.println("Reading the new version ... (Wait)");
-		APIVersion version2 = new APIVersion(path2);
-		APIDiff diff = new APIDiff(library, version1, version2); //versao mais antiga - versao mais nova
+		APIDiff diff = new APIDiff(library, path1, path2); //versao mais antiga - versao mais nova
 		diff.calculateDiff();
 		
 	}

@@ -1,5 +1,6 @@
 package br.ufmg.dcc.labsoft.apidiff.detect.diff;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,16 +16,26 @@ public class APIDiff {
 	private APIVersion version1;
 	private APIVersion version2;
 	
+	private File fileOld;
+	private File fileNew;
+	
 	private Result resultType; 
 	private Result resultFild;
 	private Result resultMethod;
 	private Result resultEnum;
 	private Result resultEnumConstant;
 
-	public APIDiff(final String library, final APIVersion version1, final APIVersion version2) {
+	public APIDiff(final String library, final File fileOld, final File fileNew) {
+		
 		this.library = library;
-		this.version1 = version1;
-		this.version2 = version2;
+		this.fileNew = fileNew;
+		this.fileOld = fileOld;
+		
+		System.out.println("Reading the old version... (Wait)");
+		this.version1 = new APIVersion(this.fileOld);
+		System.out.println("Reading the new version ... (Wait)");
+		this.version2 = new APIVersion(this.fileNew);
+
 	}
 
 	public void calculateDiff() {
