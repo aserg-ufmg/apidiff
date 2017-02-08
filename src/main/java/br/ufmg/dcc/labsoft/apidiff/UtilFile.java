@@ -16,7 +16,7 @@ public class UtilFile {
 	 */
 	public static void writeFile(final String nameFile, final List<String> listMsg){
 		try {
-			Writer writer = new BufferedWriter(new OutputStreamWriter (new FileOutputStream(nameFile), "utf-8"));
+			Writer writer = new BufferedWriter(new OutputStreamWriter (new FileOutputStream(nameFile, true), "utf-8"));
 			for(String msg: listMsg){
 				writer.write(msg + "\n");
 			}

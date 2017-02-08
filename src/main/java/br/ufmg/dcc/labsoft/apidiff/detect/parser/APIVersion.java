@@ -2,7 +2,10 @@ package br.ufmg.dcc.labsoft.apidiff.detect.parser;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
@@ -13,24 +16,41 @@ import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jgit.diff.DiffEntry.ChangeType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.UtilTools;
+import br.ufmg.dcc.labsoft.apidiff.detect.diff.service.git.GitFile;
 import br.ufmg.dcc.labsoft.apidiff.detect.exception.BindingException;
 
 public class APIVersion {
 
-	private ArrayList<TypeDeclaration> apiAccessibleTypes;
-	private ArrayList<TypeDeclaration> apiNonAccessibleTypes;
-	private ArrayList<EnumDeclaration> apiAccessibleEnums;
-	private ArrayList<EnumDeclaration> apiNonAccessibleEnums;
+	private ArrayList<TypeDeclaration> apiAccessibleTypes = new ArrayList<TypeDeclaration>();;
+	private ArrayList<TypeDeclaration> apiNonAccessibleTypes = new ArrayList<TypeDeclaration>();;
+	private ArrayList<EnumDeclaration> apiAccessibleEnums = new ArrayList<EnumDeclaration>();
+	private ArrayList<EnumDeclaration> apiNonAccessibleEnums = new ArrayList<EnumDeclaration>();
+	private Map<ChangeType, List<GitFile>> mapModifications = new HashMap<ChangeType, List<GitFile>>();
+	private List<String> listFilesMofify = new ArrayList<String>();
+	
+	private Logger logger = LoggerFactory.getLogger(APIVersion.class);
 
-	public APIVersion(File path) {
-		this.apiAccessibleTypes = new ArrayList<TypeDeclaration>();
-		this.apiNonAccessibleTypes = new ArrayList<TypeDeclaration>();
-		this.apiAccessibleEnums = new ArrayList<EnumDeclaration>();
-		this.apiNonAccessibleEnums = new ArrayList<EnumDeclaration>();
-
+	public APIVersion(final File path, final Map<ChangeType, List<GitFile>> mapModifications) {
+		
 		try {
+			this.mapModifications = mapModifications;
+			
+	    	String prefix = UtilTools.getPathProjects();
+			for(ChangeType changeType : this.mapModifications.keySet()){
+				for(GitFile file: mapModifications.get(changeType)){
+					if(file.getPathOld()!= null){
+						this.listFilesMofify.add(prefix + file.getPathOld());
+					}
+					if(file.getPathNew() != null && !file.getPathNew().equals(file.getPathOld())){
+						this.listFilesMofify.add(prefix + file.getPathNew());
+					}
+				}
+			}
 			this.parseFilesInDir(path);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -39,7 +59,6 @@ public class APIVersion {
 
 	public void parseFilesInDir(File file) throws IOException {
 		if (file.isFile()) {
-			//TODO: Incluir teste, se é uma arquivo java e sofreu uma modificação entre os commits.
 			if (file.getName().endsWith(".java")) {
 				this.parse(UtilTools.readFileToString(file.getAbsolutePath()), file);		
 			}
@@ -51,6 +70,11 @@ public class APIVersion {
 	}
 
 	public void parse(String str, File source) throws IOException {
+		
+		if(this.mapModifications.size() > 0 && !this.isFileModification(source)){
+			return;
+		}
+		
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
 		parser.setSource(str.toCharArray());
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
@@ -59,19 +83,16 @@ public class APIVersion {
 
 		Hashtable<String, String> options = JavaCore.getOptions();
 		options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_8);
-		options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM,
-				JavaCore.VERSION_1_8);
+		options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_8);
 		options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_8);
 		parser.setUnitName(source.getAbsolutePath());
 
 		parser.setCompilerOptions(options);
-		parser.setEnvironment(classpath, sources, new String[] { "UTF-8" },
-				true);
+		parser.setEnvironment(classpath, sources, new String[] { "UTF-8" },	true);
 		parser.setResolveBindings(true);
 		parser.setBindingsRecovery(true);
 
 		final CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
-
 
 		TypeDeclarationVisitor visitorType = new TypeDeclarationVisitor();
 		EnumDeclarationVisitor visitorEnum = new EnumDeclarationVisitor();
@@ -81,6 +102,20 @@ public class APIVersion {
 		this.apiNonAccessibleTypes.addAll(visitorType.getNonAcessibleTypes());
 		this.apiAccessibleEnums.addAll(visitorEnum.getAcessibleEnums());
 		this.apiNonAccessibleEnums.addAll(visitorEnum.getNonAcessibleEnums());
+	}
+	
+	/**
+	 * Retorna verdadeiro se o arquivo está na lista de arquivos modificados na última versão.
+	 * Falso caso contrário.
+	 * @param source
+	 * @return
+	 */
+	private Boolean isFileModification(final File source){
+		String path = source.getAbsolutePath();
+		if(this.listFilesMofify.contains(path)){
+			return true;
+		}
+		return false;
 	}
 
 	public ArrayList<EnumDeclaration> getApiAccessibleEnums() {

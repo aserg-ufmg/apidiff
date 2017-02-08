@@ -2,9 +2,11 @@ package br.ufmg.dcc.labsoft.apidiff;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
@@ -129,12 +131,31 @@ public class UtilTools {
 	 */
 	public static Boolean isInterfaceStable(AbstractTypeDeclaration node){
 		String nameNode = UtilTools.getNameNode(node).toLowerCase();
+		if("".equals(nameNode)){
+			System.err.println(node.getName());
+		}
 		
 		if("".equals(nameNode) || nameNode.contains("test") || nameNode.contains("example") || nameNode.contains(".internal.") || nameNode.contains(".experimental.") ){
 			return false;
 		}
 
 		return true;
+	}
+	
+	public static Properties getProperties() throws IOException{
+		try {
+			Properties prop = new Properties();
+	    	InputStream input = Main.class.getClassLoader().getResourceAsStream("config.properties");
+    		prop.load(input);
+    		return prop;
+		} catch (IOException e) {
+			throw new IOException("Path project not found, check the properties file.");
+		}
+	}
+	
+	public static String getPathProjects() throws IOException{
+		Properties properties = UtilTools.getProperties();
+		return properties.getProperty("PATH_PROJECT");
 	}
 
 }

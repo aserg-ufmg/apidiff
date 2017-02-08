@@ -1,19 +1,15 @@
 package br.ufmg.dcc.labsoft.apidiff.detect.diff.service.git;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.diff.RenameDetector;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectReader;
@@ -30,7 +26,7 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import br.ufmg.dcc.labsoft.apidiff.Main;
+import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 
 public class GitServiceImpl implements GitService {
 	
@@ -40,22 +36,14 @@ public class GitServiceImpl implements GitService {
 	
 	private Logger logger = LoggerFactory.getLogger(GitServiceImpl.class);
 	
-	private String path;
-	
-	public GitServiceImpl() {
-		Properties prop = new Properties();
-    	InputStream input = Main.class.getClassLoader().getResourceAsStream("config.properties");
-    	try {
-    		prop.load(input);
-    		this.path = prop.getProperty("PATH_PROJECT");
-		} catch (IOException e) {
-			this.logger.error("Path project not found, check the properties file.");
-		}
-	}
 	
 	private class DefaultCommitsFilter extends RevFilter {
 		@Override
 		public final boolean include(final RevWalk walker, final RevCommit c) {
+			//Se c.getParentCount() > 1, temos um merge de branches. TODO: confirmar com testes.
+			if(c.getParentCount() > 1){
+				logger.info("Merge branches deleted. [commitId="+c.getId().getName()+"]");
+			}
 			return c.getParentCount() == 1 && !isCommitAnalyzed(c.getName());
 		}
 
@@ -81,7 +69,7 @@ public class GitServiceImpl implements GitService {
 	
 	@Override
 	public Repository openRepositoryAndCloneIfNotExists(String projectName, String cloneUrl) throws Exception {
-		File folder = new File(this.path + "/" + projectName);
+		File folder = new File(UtilTools.getPathProjects() + "/" + projectName);
 		Repository repository = null;
 		//Se repositório existe, carrega as propriedades.
 		if (folder.exists()) {
@@ -157,7 +145,7 @@ public class GitServiceImpl implements GitService {
 	public Integer countCommits(Repository repository, String branch) throws Exception {
 		RevWalk walk = new RevWalk(repository);
 		try {
-			Ref ref = repository.getRef(REMOTE_REFS_PREFIX + branch);
+			Ref ref = repository.findRef(REMOTE_REFS_PREFIX + branch);
 			ObjectId objectId = ref.getObjectId();
 			RevCommit start = walk.parseCommit(objectId);
 			walk.setRevFilter(RevFilter.NO_MERGES);
@@ -170,9 +158,9 @@ public class GitServiceImpl implements GitService {
 	@Override
 	public Map<ChangeType, List<GitFile>> fileTreeDiff(Repository repository, RevCommit commitNew) throws Exception {
 	       
-		ObjectId headOld = commitNew.getParent(0).getTree();
+		ObjectId headOld = commitNew.getParent(0).getTree(); //Commit pai no grafo.
        
-		ObjectId headNew = commitNew.getTree();
+		ObjectId headNew = commitNew.getTree(); //Commit corrente.
 
         // prepare the two iterators to compute the diff between
 		ObjectReader reader = repository.newObjectReader();
@@ -189,6 +177,7 @@ public class GitServiceImpl implements GitService {
 		                    .setOldTree(treeRepositoryOld)
 		                    .setShowNameAndStatusOnly(true)
 		                    .call();
+		
 		Map<ChangeType, List<GitFile>> mapDiff = new HashMap<ChangeType, List<GitFile>>();
 		mapDiff.put(ChangeType.ADD, new ArrayList<>());
 		mapDiff.put(ChangeType.COPY, new ArrayList<>());
@@ -199,7 +188,9 @@ public class GitServiceImpl implements GitService {
         for (DiffEntry entry : diffs) {
         	//TODO: Remover interfaces instáveis da árvore (internas, testes, experimentais).
         	if(this.isJavafile(entry.getOldPath()) || this.isJavafile(entry.getNewPath())) {
-        		GitFile file = new GitFile(entry.getOldPath(), entry.getNewPath(), entry.getChangeType());
+        		String pathNew =  "/dev/null".equals(entry.getNewPath())?null:entry.getNewPath();
+        		String pathOld =  "/dev/null".equals(entry.getOldPath())?null:entry.getOldPath();
+        		GitFile file = new GitFile(pathOld, pathNew, entry.getChangeType());
         		mapDiff.get(entry.getChangeType()).add(file);
         	}
         }

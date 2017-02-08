@@ -8,10 +8,6 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
-/**
- * Simple service to make git related tasks easier.  
- *
- */
 public interface GitService {
 
 	/**

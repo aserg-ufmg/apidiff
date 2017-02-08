@@ -2,9 +2,23 @@ package br.ufmg.dcc.labsoft.apidiff.detect.diff;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+
+import org.eclipse.jgit.diff.DiffEntry.ChangeType;
+import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.UtilFile;
+import br.ufmg.dcc.labsoft.apidiff.UtilTools;
+import br.ufmg.dcc.labsoft.apidiff.detect.diff.service.git.GitFile;
+import br.ufmg.dcc.labsoft.apidiff.detect.diff.service.git.GitService;
+import br.ufmg.dcc.labsoft.apidiff.detect.diff.service.git.GitServiceImpl;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class APIDiff {
@@ -12,74 +26,95 @@ public class APIDiff {
 
 	private final String nameFile = "output.csv";
 	
-	private String library;
-	private APIVersion version1;
-	private APIVersion version2;
-	
-	private File fileOld;
-	private File fileNew;
+	private String nameProject;
+	private String url;
+	private APIVersion versionOld;
+	private APIVersion versionNew;
 	
 	private Result resultType; 
 	private Result resultFild;
 	private Result resultMethod;
 	private Result resultEnum;
 	private Result resultEnumConstant;
+	
+	private Logger logger = LoggerFactory.getLogger(APIDiff.class);
 
-	public APIDiff(final String library, final File fileOld, final File fileNew) {
-		
-		this.library = library;
-		this.fileNew = fileNew;
-		this.fileOld = fileOld;
-		
-		System.out.println("Reading the old version... (Wait)");
-		this.version1 = new APIVersion(this.fileOld);
-		System.out.println("Reading the new version ... (Wait)");
-		this.version2 = new APIVersion(this.fileNew);
-
+	public APIDiff(final String nameProject, final String url) {
+		this.url = url;
+		this.nameProject = nameProject;
 	}
+	
 
 	public void calculateDiff() {
-		System.out.println("Processing Types... (Wait)");
-		this.resultType = new TypeDiff().calculateDiff(this.version1, this.version2);
+
+		try {
+			GitService service = new GitServiceImpl();
+			File projectFolder = new File(UtilTools.getPathProjects() + "/" + this.nameProject);
+			Repository repository = service.openRepositoryAndCloneIfNotExists(this.nameProject, this.url);
 		
-		System.out.println("Processing Filds... (Wait)");
-		this.resultFild = new FieldDiff().calculateDiff(this.version1, this.version2);
+			RevWalk revWalk = service.fetchAndCreateNewRevsWalk(repository, null);
+			
+			//Itera sobre os commits.
+			Iterator<RevCommit> i = revWalk.iterator();
+			while(i.hasNext()){
+				
+				RevCommit currentCommit = i.next();
+				
+				//Busca a lista de arquivos modificados entre o commit atual e o commit pai.
+				Map<ChangeType, List<GitFile>> mapModifications = service.fileTreeDiff(repository, currentCommit);
+				
+				//Informações do autor.
+				PersonIdent personIdent = currentCommit.getAuthorIdent();
+				
+				//versao atual
+				String commitId = currentCommit.getId().getName();
+				service.checkout(repository, commitId);
+				this.versionNew = new APIVersion(projectFolder, mapModifications);
+				
+				//versao antiga
+				String parentCommit = currentCommit.getParent(0).getName();
+				service.checkout(repository, parentCommit);
+				this.versionOld = new APIVersion(projectFolder, mapModifications);
+				
+				System.out.println("Processing Types... (Wait)");
+				this.resultType = new TypeDiff().calculateDiff(this.versionOld, this.versionNew);
+				
+				System.out.println("Processing Filds... (Wait)");
+				this.resultFild = new FieldDiff().calculateDiff(this.versionOld, this.versionNew);
+				
+				System.out.println("Processing Methods... (Wait)");
+				this.resultMethod = new MethodDiff().calculateDiff(this.versionOld, this.versionNew);
+				
+				System.out.println("Method Enums... (Wait)");
+				this.resultEnum = new EnumDiff().calculateDiff(this.versionOld, this.versionNew);
+				
+				System.out.println("Method Enuns Constant... (Wait)");
+				this.resultEnumConstant = new EnumConstantDiff().calculateDiff(this.versionOld, this.versionNew);
+				
+				this.print(personIdent);//Escreve saída em arquivo.
+			}
 		
-		System.out.println("Processing Methods... (Wait)");
-		this.resultMethod = new MethodDiff().calculateDiff(this.version1, this.version2);
+		} catch (Exception e) {
+			this.logger.error("Error in calculating commitn diff ", e);
+		}
 		
-		System.out.println("Method Enums... (Wait)");
-		this.resultEnum = new EnumDiff().calculateDiff(this.version1, this.version2);
-		
-		System.out.println("Method Enuns Constant... (Wait)");
-		this.resultEnumConstant = new EnumConstantDiff().calculateDiff(this.version1, this.version2);
-		
-		this.print();//Escreve saída em arquivo.
 		System.out.println("Finished processing. Check the output file <" + this.nameFile + ">");
 	}
 	
 	/**
 	 * Imprime resultado em um arquivo CSV.
 	 */
-	private void print(){
-		
+	private void print(final PersonIdent personIdent){
 		List<String> result =  new ArrayList<String>();
 		
-		//Breaking changes e non-breaking changes contabilizadas.
-		result.add("Structure;Added;Removed;Modified;Depreciated");
-		result.add(this.printCount(this.resultEnum, "Enum"));
-		result.add(this.printCount(this.resultEnumConstant, "EnumConstant"));
-		result.add(this.printCount(this.resultFild, "Fild"));
-		result.add(this.printCount(this.resultMethod, "Method"));
-		result.add(this.printCount(this.resultType, "Type"));
-		
 		//Lista de Breaking Changes.
-		result.add("Library;ChangedType;StructureName;Category");
-		result.addAll(this.printListBreakingChange(this.resultType));
-		result.addAll(this.printListBreakingChange(this.resultFild));
-		result.addAll(this.printListBreakingChange(this.resultMethod));
-		result.addAll(this.printListBreakingChange(this.resultEnum));
-		result.addAll(this.printListBreakingChange(this.resultEnumConstant));
+		result.add(";;;;");//Quebra de Linha.
+		result.add("Author;E-mail;Library;ChangedType;StructureName;Category");
+		result.addAll(this.printListBreakingChange(this.resultType, personIdent));
+		result.addAll(this.printListBreakingChange(this.resultFild, personIdent));
+		result.addAll(this.printListBreakingChange(this.resultMethod, personIdent));
+		result.addAll(this.printListBreakingChange(this.resultEnum, personIdent));
+		result.addAll(this.printListBreakingChange(this.resultEnumConstant, personIdent));
 		
 		UtilFile.writeFile(this.nameFile, result);
 	}
@@ -88,16 +123,22 @@ public class APIDiff {
 	 * Imprime lista de breaking change detectadas.
 	 * @param r
 	 */
-	private List<String> printListBreakingChange(Result r){
+	private List<String> printListBreakingChange(final Result r, final PersonIdent personIdent){
 		List<String> list =  new ArrayList<String>();
-		for(BreakingChange bc: r.getListBreakingChange()){
-			list.add(this.library  + ";" + bc.getPath() + ";" + bc.getStruture() + ";" + bc.getCategory());
+		if(r != null){
+			for(BreakingChange bc: r.getListBreakingChange()){
+				list.add(personIdent.getName() + ";" + personIdent.getEmailAddress() + ";" + this.nameProject  + ";" + bc.getPath() + ";" + bc.getStruture() + ";" + bc.getCategory());
+			}
 		}
 		return list;
 	}
 	
 	private String printCount(final Result result, final String struture){
-		return struture + ";" + result.getElementAdd() + ";" + result.getElementRemoved() + ";" +result.getElementModified() + ";" +  result.getElementDeprecated();
+		if(result!=null){
+			return struture + ";" + result.getElementAdd() + ";" + result.getElementRemoved() + ";" +result.getElementModified() + ";" +  result.getElementDeprecated();	
+		}
+		return "";
+		
 	}
 
 }
