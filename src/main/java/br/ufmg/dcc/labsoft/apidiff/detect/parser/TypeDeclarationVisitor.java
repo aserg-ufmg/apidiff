@@ -28,12 +28,10 @@ public class TypeDeclarationVisitor extends ASTVisitor{
 
 	@Override
 	public boolean visit(TypeDeclaration node) {
-		if(UtilTools.isInterfaceStable(node)){
-			if(UtilTools.isPrivate(node)){
-				this.addNonAcessibleTypes(node);
-			} else {
-				this.addAcessibleType(node);
-			}
+		if(UtilTools.isPrivate(node)){
+			this.addNonAcessibleTypes(node);
+		} else {
+			this.addAcessibleType(node);
 		}
 
 		return super.visit(node);

@@ -186,8 +186,7 @@ public class GitServiceImpl implements GitService {
 		mapDiff.put(ChangeType.RENAME, new ArrayList<>());
 		
         for (DiffEntry entry : diffs) {
-        	//TODO: Remover interfaces instáveis da árvore (internas, testes, experimentais).
-        	if(this.isJavafile(entry.getOldPath()) || this.isJavafile(entry.getNewPath())) {
+        	if(UtilTools.isJavaFile(entry.getOldPath()) || UtilTools.isJavaFile(entry.getNewPath())) {
         		String pathNew =  "/dev/null".equals(entry.getNewPath())?null:entry.getNewPath();
         		String pathOld =  "/dev/null".equals(entry.getOldPath())?null:entry.getOldPath();
         		GitFile file = new GitFile(pathOld, pathNew, entry.getChangeType());
@@ -195,11 +194,6 @@ public class GitServiceImpl implements GitService {
         	}
         }
         return mapDiff;
-	}
-	
-	
-	private boolean isJavafile(String path) {
-		return path != null && path.endsWith(".java");
 	}
 	
 	@Override

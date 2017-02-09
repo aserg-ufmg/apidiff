@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
@@ -16,6 +18,8 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.detect.exception.BindingException;
 
@@ -140,6 +144,47 @@ public class UtilTools {
 		}
 
 		return true;
+	}
+	
+	/**
+	 * Verifica pelo caminho completo do arquivo, se ele está dentro de pacotes que indicam interfaces instáveis.
+	 * Exemplo: /project/tests/Util.java ou /project/internal/Util.java
+	 * @param pathCompleteFile - Caminho completo do arquivo no sistema. Exemplo: /home/user/projectsAPIBreakingChange/nameProject/src/main/java/br/com/api/Util.java
+	 * @return
+	 * @throws IOException
+	 */
+	public static Boolean isInterfaceStable(String pathCompleteFile) throws IOException{
+		
+	      String pathProjects = UtilTools.getPathProjects();
+	      String pattern = "^"+pathProjects+"(.*.)$";
+
+	      //Remove início do path, ou seja, o caminho até o path do projeto.
+	      Pattern r = Pattern.compile(pattern);
+	      Matcher m = r.matcher(pathCompleteFile);
+	      
+	      if (m.find( )) {
+	    	  String pathLibrary = m.group(1);
+	    	  if(("".equals(pathLibrary) ||
+    			  pathLibrary.contains("/test/") ||
+    			  pathLibrary.contains("/tests/") ||
+    			  pathLibrary.contains("/example/") ||
+    			  pathLibrary.contains("/examples/") ||
+    			  pathLibrary.contains("/internal/") ||
+    			  pathLibrary.contains("/experimental/"))){
+	  			return false;
+	    	  }
+	      }
+	      
+		return true;
+	}
+	
+	/**
+	 * Retorna verdadeiro se o arquivo termina com ".java". Falso caso contrário.
+	 * @param nameFile
+	 * @return
+	 */
+	public static Boolean isJavaFile(final String nameFile){
+		return (nameFile!=null && nameFile.endsWith(".java"))?true:false;
 	}
 	
 	public static Properties getProperties() throws IOException{

@@ -40,14 +40,14 @@ public class APIVersion {
 		try {
 			this.mapModifications = mapModifications;
 			
-	    	String prefix = UtilTools.getPathProjects();
+	    	String prefix = path.getAbsolutePath() + "/";
 			for(ChangeType changeType : this.mapModifications.keySet()){
-				for(GitFile file: mapModifications.get(changeType)){
-					if(file.getPathOld()!= null){
-						this.listFilesMofify.add(prefix + file.getPathOld());
+				for(GitFile gitFile: mapModifications.get(changeType)){
+					if(gitFile.getPathOld()!= null){
+						this.listFilesMofify.add(prefix + gitFile.getPathOld());
 					}
-					if(file.getPathNew() != null && !file.getPathNew().equals(file.getPathOld())){
-						this.listFilesMofify.add(prefix + file.getPathNew());
+					if(gitFile.getPathNew() != null && !gitFile.getPathNew().equals(gitFile.getPathOld())){
+						this.listFilesMofify.add(prefix + gitFile.getPathNew());
 					}
 				}
 			}
@@ -59,7 +59,7 @@ public class APIVersion {
 
 	public void parseFilesInDir(File file) throws IOException {
 		if (file.isFile()) {
-			if (file.getName().endsWith(".java")) {
+			if (UtilTools.isJavaFile(file.getName()) && UtilTools.isInterfaceStable(file.getAbsolutePath()) && this.isFileModification(file)) {
 				this.parse(UtilTools.readFileToString(file.getAbsolutePath()), file);		
 			}
 		} else {
@@ -74,7 +74,6 @@ public class APIVersion {
 		if(this.mapModifications.size() > 0 && !this.isFileModification(source)){
 			return;
 		}
-		
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
 		parser.setSource(str.toCharArray());
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);

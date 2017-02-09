@@ -20,12 +20,10 @@ public class EnumDeclarationVisitor extends ASTVisitor{
 
 	@Override
 	public boolean visit(EnumDeclaration node){
-		if(UtilTools.isInterfaceStable(node)){
-			if(UtilTools.isPrivate(node)){
-				this.nonAcessibleEnums.add(node);
-			} else {
-				this.acessibleEnums.add(node);
-			}
+		if(UtilTools.isPrivate(node)){
+			this.nonAcessibleEnums.add(node);
+		} else {
+			this.acessibleEnums.add(node);
 		}
 		return super.visit(node);
 	}
