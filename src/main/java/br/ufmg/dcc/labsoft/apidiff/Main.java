@@ -4,17 +4,22 @@ import br.ufmg.dcc.labsoft.apidiff.detect.diff.APIDiff;
 public class Main {
 
 	public static void main(String[] args) {
-		if(args.length < 2){
+		if(args.length < 3){
 			System.err.println("[ERROR] Missing input parameters.");
-			System.err.println("\nusage: java -jar APIDiff.jar <name of library> <path of the old library version> <path of the new library version>");
+			System.err.println("\nusage: java -jar APIDiff.jar <nameLibrary> <urlGitHub> <commitId>");
 			System.exit(0);;
 		}
 		
 		String nameLibray = args[0];
 		String url = args[1];
+		String commitId = args[2];
 		
-		//APIDiff diff = new APIDiff("api-breaking-changes-toy-example", "https://github.com/alinebrito/api-breaking-changes-toy-example.git");
-		APIDiff diff = new APIDiff(nameLibray, url);
+//		Testes
+//		String nameLibray = "api-breaking-changes-toy-example";
+//		String url = "https://github.com/alinebrito/api-breaking-changes-toy-example.git";
+//		String commitId = "";
+		
+		APIDiff diff = new APIDiff(nameLibray, url, commitId);
 		diff.calculateDiff();
 		
 	}

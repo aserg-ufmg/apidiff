@@ -28,6 +28,7 @@ public class APIDiff {
 	
 	private String nameProject;
 	private String url;
+	private String commitId;
 	private APIVersion versionOld;
 	private APIVersion versionNew;
 	
@@ -39,9 +40,10 @@ public class APIDiff {
 	
 	private Logger logger = LoggerFactory.getLogger(APIDiff.class);
 
-	public APIDiff(final String nameProject, final String url) {
+	public APIDiff(final String nameProject, final String url, final String commitId) {
 		this.url = url;
 		this.nameProject = nameProject;
+		this.commitId = commitId;
 	}
 	
 
