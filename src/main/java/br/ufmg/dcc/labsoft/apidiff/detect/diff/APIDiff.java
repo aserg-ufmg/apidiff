@@ -76,19 +76,19 @@ public class APIDiff {
 				service.checkout(repository, parentCommit);
 				this.versionOld = new APIVersion(projectFolder, mapModifications);
 				
-				System.out.println("Processing Types... (Wait)");
+				this.logger.info("Processing Types ...");
 				this.resultType = new TypeDiff().calculateDiff(this.versionOld, this.versionNew);
 				
-				System.out.println("Processing Filds... (Wait)");
+				this.logger.info("Processing Filds...");
 				this.resultFild = new FieldDiff().calculateDiff(this.versionOld, this.versionNew);
 				
-				System.out.println("Processing Methods... (Wait)");
+				this.logger.info("Processing Methods...");
 				this.resultMethod = new MethodDiff().calculateDiff(this.versionOld, this.versionNew);
 				
-				System.out.println("Method Enums... (Wait)");
+				this.logger.info("Processing Method Enums...");
 				this.resultEnum = new EnumDiff().calculateDiff(this.versionOld, this.versionNew);
 				
-				System.out.println("Method Enuns Constant... (Wait)");
+				this.logger.info("Processing Method Enuns Constant...");
 				this.resultEnumConstant = new EnumConstantDiff().calculateDiff(this.versionOld, this.versionNew);
 				
 				this.print(personIdent);//Escreve saída em arquivo.
