@@ -36,7 +36,6 @@ public class GitServiceImpl implements GitService {
 	
 	private Logger logger = LoggerFactory.getLogger(GitServiceImpl.class);
 	
-	
 	private class DefaultCommitsFilter extends RevFilter {
 		@Override
 		public final boolean include(final RevWalk walker, final RevCommit c) {
