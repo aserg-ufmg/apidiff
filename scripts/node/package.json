@@ -1,0 +1,25 @@
+{
+  "name": "APIDiff",
+  "version": "2.0.0",
+  "description": "Toy example project with known breaking changes.",
+  "author": {
+    "name": "Aline Brito",
+    "email": "nbrito.aline@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alinebrito/APIDiff"
+  },
+
+  "engines": {
+    "node": ">= 0.6.0",
+    "npm": ">= 1.0.0"
+  },
+
+  "dependencies": {
+    "mongodb": "~2.2.19",
+    "line-reader": "~0.3.0"
+  },
+
+  "private": true
+}

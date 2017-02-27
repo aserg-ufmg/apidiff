@@ -53,7 +53,6 @@ public class APIDiff {
 			GitService service = new GitServiceImpl();
 			File projectFolder = new File(UtilTools.getPathProjects() + "/" + this.nameProject);
 			Repository repository = service.openRepositoryAndCloneIfNotExists(this.nameProject, this.url);
-		
 			RevWalk revWalk = service.fetchAndCreateNewRevsWalk(repository, null);
 			
 			//Itera sobre os commits.
@@ -93,7 +92,7 @@ public class APIDiff {
 				this.logger.info("Processing Method Enuns Constant...");
 				this.resultEnumConstant = new EnumConstantDiff().calculateDiff(this.versionOld, this.versionNew);
 				
-				this.print(personIdent);//Escreve saída em arquivo.
+				this.print(currentCommit);//Escreve saída em arquivo.
 			}
 		
 		} catch (Exception e) {
@@ -106,17 +105,16 @@ public class APIDiff {
 	/**
 	 * Imprime resultado em um arquivo CSV.
 	 */
-	private void print(final PersonIdent personIdent){
+	private void print(final RevCommit currentCommit){
 		List<String> result =  new ArrayList<String>();
 		
 		//Lista de Breaking Changes.
-		result.add(";;;;");//Quebra de Linha.
-		result.add("Author;E-mail;Library;ChangedType;StructureName;Category");
-		result.addAll(this.printListBreakingChange(this.resultType, personIdent));
-		result.addAll(this.printListBreakingChange(this.resultFild, personIdent));
-		result.addAll(this.printListBreakingChange(this.resultMethod, personIdent));
-		result.addAll(this.printListBreakingChange(this.resultEnum, personIdent));
-		result.addAll(this.printListBreakingChange(this.resultEnumConstant, personIdent));
+		//result.add("Author;E-mail;Library;ChangedType;StructureName;Category");
+		result.addAll(this.printListBreakingChange(this.resultType, currentCommit));
+		result.addAll(this.printListBreakingChange(this.resultFild, currentCommit));
+		result.addAll(this.printListBreakingChange(this.resultMethod,currentCommit));
+		result.addAll(this.printListBreakingChange(this.resultEnum,currentCommit));
+		result.addAll(this.printListBreakingChange(this.resultEnumConstant, currentCommit));
 		
 		UtilFile.writeFile(this.nameFile, result);
 	}
@@ -125,11 +123,13 @@ public class APIDiff {
 	 * Imprime lista de breaking change detectadas.
 	 * @param r
 	 */
-	private List<String> printListBreakingChange(final Result r, final PersonIdent personIdent){
+	private List<String> printListBreakingChange(final Result r, final RevCommit currentCommit){
+		PersonIdent personIdent = currentCommit.getAuthorIdent();
 		List<String> list =  new ArrayList<String>();
 		if(r != null){
 			for(BreakingChange bc: r.getListBreakingChange()){
-				list.add(personIdent.getName() + ";" + personIdent.getEmailAddress() + ";" + this.nameProject  + ";" + bc.getPath() + ";" + bc.getStruture() + ";" + bc.getCategory());
+				list.add(personIdent.getName() + ";" + personIdent.getEmailAddress() + ";" + this.nameProject  + ";" + bc.getPath() + ";" + bc.getStruture() + ";" + bc.getCategory()
+				+ currentCommit.getId().getName() + ";" +currentCommit.getFullMessage() + ";" +currentCommit.getFullMessage() + ";" + currentCommit.getCommitTime());
 			}
 		}
 		return list;

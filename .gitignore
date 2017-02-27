@@ -1,6 +1,7 @@
 #Local Files
 build.local.sh
 output.csv
+scripts/node/node_modules
 
 #Projects Files
 *.class

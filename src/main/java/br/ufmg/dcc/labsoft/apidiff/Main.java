@@ -15,8 +15,8 @@ public class Main {
 		String commitId = args[2];
 		
 //		Testes
-//		String nameLibray = "api-breaking-changes-toy-example";
-//		String url = "https://github.com/alinebrito/api-breaking-changes-toy-example.git";
+//		String nameLibray = "APIDiffExamplesBreakingChange";
+//		String url = "https://github.com/alinebrito/APIDiffExamplesBreakingChange.git";
 //		String commitId = "";
 		
 		APIDiff diff = new APIDiff(nameLibray, url, commitId);
