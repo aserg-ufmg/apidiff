@@ -1,7 +1,9 @@
 package br.ufmg.dcc.labsoft.apidiff.detect.diff;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -97,7 +99,7 @@ public class APIDiff {
 			this.logger.error("Error in calculating commitn diff ", e);
 		}
 		
-		System.out.println("Finished processing. Check the output file <" + this.nameFile + ">");
+		this.logger.info("Finished processing. Check the output file <" + this.nameFile + ">");
 	}
 	
 	/**
@@ -105,14 +107,13 @@ public class APIDiff {
 	 */
 	private void print(final RevCommit currentCommit){
 		List<String> result =  new ArrayList<String>();
-		
 		//Lista de Breaking Changes.
-		//result.add("Author;E-mail;Library;ChangedType;StructureName;Category");
-		result.addAll(this.printListBreakingChange(this.resultType, currentCommit));
-		result.addAll(this.printListBreakingChange(this.resultFild, currentCommit));
-		result.addAll(this.printListBreakingChange(this.resultMethod,currentCommit));
-		result.addAll(this.printListBreakingChange(this.resultEnum,currentCommit));
-		result.addAll(this.printListBreakingChange(this.resultEnumConstant, currentCommit));
+		Date date = new Date();
+		result.addAll(this.printListBreakingChange(this.resultType, currentCommit, date));
+		result.addAll(this.printListBreakingChange(this.resultFild, currentCommit, date));
+		result.addAll(this.printListBreakingChange(this.resultMethod,currentCommit, date));
+		result.addAll(this.printListBreakingChange(this.resultEnum,currentCommit, date));
+		result.addAll(this.printListBreakingChange(this.resultEnumConstant, currentCommit, date));
 		
 		UtilFile.writeFile(this.nameFile, result);
 	}
@@ -121,13 +122,16 @@ public class APIDiff {
 	 * Imprime lista de breaking change detectadas.
 	 * @param r
 	 */
-	private List<String> printListBreakingChange(final Result r, final RevCommit currentCommit){
+	private List<String> printListBreakingChange(final Result r, final RevCommit currentCommit, Date date){
+		
+		//name developer; e-mail; project; path; struture; category; id commit; message commit; timestamp commit (milliseconds); timestamp process (milliseconds); formatted date process; is breaking change (boolean)
 		PersonIdent personIdent = currentCommit.getAuthorIdent();
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 		List<String> list =  new ArrayList<String>();
 		if(r != null){
 			for(BreakingChange bc: r.getListBreakingChange()){
 				list.add(personIdent.getName() + ";" + personIdent.getEmailAddress() + ";" + this.nameProject  + ";" + bc.getPath() + ";" + bc.getStruture() + ";" + bc.getCategory()
-				+ currentCommit.getId().getName() + ";" +currentCommit.getFullMessage() + ";" +currentCommit.getFullMessage() + ";" + currentCommit.getCommitTime());
+				+ ";" + currentCommit.getId().getName() + ";" + this.formatMessage(currentCommit.getFullMessage()) + ";" + currentCommit.getCommitTime() + "000" + ";" + date.getTime() + ";" + sdf.format(date) +  ";" + bc.isBreakingChange());
 			}
 		}
 		return list;
@@ -139,6 +143,10 @@ public class APIDiff {
 		}
 		return "";
 		
+	}
+	
+	private String formatMessage(String message){
+		return message.replace("\n", " ").replace(";", ",");
 	}
 
 }

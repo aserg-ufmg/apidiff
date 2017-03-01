@@ -16,10 +16,11 @@ public class Main {
 		if(args.length < 1){
 			System.err.println("[ERROR] Missing input parameters.");
 			System.err.println("\nusage: java -jar APIDiff.jar <CSV file>");
-			System.exit(0);;
+			System.exit(0);
 		}
 		
 		String nameFile = args[0];
+//		String nameFile = "/home/aline/utilitarios/workspaces/wsc_apiBreakingChange/APIDiff/src/main/resources/files/projects-tests.csv";
 		try {
 			Map<String, String> projects = UtilFile.readCSV(nameFile);
 			for(String nameLibray: projects.keySet()){

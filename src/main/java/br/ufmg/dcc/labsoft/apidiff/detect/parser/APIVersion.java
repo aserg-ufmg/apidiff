@@ -59,7 +59,7 @@ public class APIVersion {
 
 	public void parseFilesInDir(File file) throws IOException {
 		if (file.isFile()) {
-			if (UtilTools.isJavaFile(file.getName()) && UtilTools.isInterfaceStable(file.getAbsolutePath()) && this.isFileModification(file)) {
+			if (UtilTools.isJavaFile(file.getName()) && this.isFileModification(file)) {
 				this.parse(UtilTools.readFileToString(file.getAbsolutePath()), file);		
 			}
 		} else {

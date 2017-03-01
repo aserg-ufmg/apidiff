@@ -128,25 +128,6 @@ public class UtilTools {
 	}
 	
 	/**
-	 * Verifica se a classe é uma interface estável. 
-	 * Interfaces instáveis podem ser APIs internas, experimentais, ou pacotes de testes.
-	 * @param node
-	 * @return
-	 */
-	public static Boolean isInterfaceStable(AbstractTypeDeclaration node){
-		String nameNode = UtilTools.getNameNode(node).toLowerCase();
-		if("".equals(nameNode)){
-			System.err.println(node.getName());
-		}
-		
-		if("".equals(nameNode) || nameNode.contains("test") || nameNode.contains("example") || nameNode.contains(".internal.") || nameNode.contains(".experimental.") ){
-			return false;
-		}
-
-		return true;
-	}
-	
-	/**
 	 * Verifica pelo caminho completo do arquivo, se ele está dentro de pacotes que indicam interfaces instáveis.
 	 * Exemplo: /project/tests/Util.java ou /project/internal/Util.java
 	 * @param pathCompleteFile - Caminho completo do arquivo no sistema. Exemplo: /home/user/projectsAPIBreakingChange/nameProject/src/main/java/br/com/api/Util.java

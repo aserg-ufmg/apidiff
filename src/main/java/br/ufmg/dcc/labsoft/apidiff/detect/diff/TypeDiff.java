@@ -5,21 +5,30 @@ import java.util.List;
 
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
+import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class TypeDiff {
 	
-	private final String CATEGORY_CHANGED_SUPER_TYPE = "CHANGED SUPER TYPE";
-	private final String CATEGORY_LOST_VISIBILITY = "LOST VISIBILITY";
-	private final String CATEGORY_REMOVED_TYPE = "REMOVED TYPE";
+	private final String CATEGORY_TYPE_REMOVED_DEPRECIATED = "TYPE REMOVED DEPRECIATED"; //non-breaking change
+	private final String CATEGORY_TYPE_REMOVED = "TYPE REMOVED"; //breaking change
+	
+	private final String CATEGORY_TYPE_LOST_VISIBILIT_DEPRECIATED = "TYPE LOST VISIBILIT DEPRECIATED"; //non-breaking change
+	private final String CATEGORY_TYPE_LOST_VISIBILITY = "TYPE LOST VISIBILIT"; //breaking change
+	private final String CATEGORY_TYPE_GAIN_VISIBILITY = "TYPE GAIN VISIBILITY"; //non-breaking change
+	
+	private final String CATEGORY_TYPE_ADD = "TYPE ADDED"; //non-breaking change
+	
+	private final String CATEGORY_TYPE_DEPRECIATED = "TYPE DEPRECIATED"; //non-breaking change
+	
+	private final String CATEGORY_SUPER_TYPE_CHANGED_DEPRECIATED = "SUPER TYPE CHANGED DEPRECIATED"; //non-breaking change
+	private final String CATEGORY_SUPER_TYPE_CHANGED = "SUPER TYPE CHANGED"; //breaking changes
+	private final String CATEGORY_SUPER_TYPE_REMOVED_DEPRECIATED = "SUPER TYPE REMOVED DEPRECIATED"; //non-breaking change
+	private final String CATEGORY_SUPER_TYPE_REMOVED = "SUPER TYPE REMOVED"; //breaking change
+	private final String CATEGORY_SUPER_TYPE_ADD = "SUPER TYPE ADDED"; //non-breaking change
+	private final String CATEGORY_SUPER_TYPE_ADD_DEPRECIATED = "SUPER TYPE ADDED DEPRECIATED"; //non-breaking change
 	
 	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
-	private int typeBreakingChange;
-	private int typeNonBreakingChange;
-	private int typeAdd;
-	private int typeRemoval;
-	private int typeModif;
-	private int typeDeprecatedOp;
 
 	/**
 	 * Calculates the diff for classes
@@ -34,101 +43,159 @@ public class TypeDiff {
 		this.changedSuperTypes(version1, version2);
 		
 		Result result = new Result();
-		result.setElementAdd(this.typeAdd);
-		result.setElementDeprecated(this.typeDeprecatedOp);
-		result.setElementModified(this.typeModif);
-		result.setElementRemoved(this.typeRemoval);
 		result.setListBreakingChange(this.listBreakingChange);
-		result.setBreakingChange(typeBreakingChange);
-		result.setNonBreakingChange(typeNonBreakingChange);
 		return result;
 	}
 
+	/**
+	 * Busca sub classes que tiveram mudança de super classe.
+	 * 
+	 * Classes que tirevem a super classe removida, são breaking change [CATEGORY_SUPER_TYPE_REMOVED].
+	 * Classes que tirevem a super classe removida e estavam depreciadas na versão anterior são non-breaking change [CATEGORY_SUPER_TYPE_REMOVED_DEPRECIATED].
+	 * Classes que ganharam uma super classe são non-breaking change [CATEGORY_SUPER_TYPE_ADD].
+	 * Classes que tiver a super classe modificada são breaking change [CATEGORY_SUPER_TYPE_CHANGED].
+	 * Classes que tiver a super classe modificada  e estavam depreciadas na versão anterior são non-breaking change [CATEGORY_SUPER_TYPE_CHANGED_DEPRECIATED].
+	 * 
+	 * @param version1
+	 * @param version2
+	 */
 	private void changedSuperTypes(APIVersion version1, APIVersion version2) {
 		for(TypeDeclaration accessibleTypeVersion1 : version1.getApiAcessibleTypes()){
 			TypeDeclaration accessibleTypeVersion2 = version2.getVersionAccessibleType(accessibleTypeVersion1);
 			if(accessibleTypeVersion2 != null){
-				String super1 = null; 
-				String super2 = null;
-				if(accessibleTypeVersion1.resolveBinding() != null &&
-						accessibleTypeVersion1.resolveBinding().getSuperclass() != null){
-					super1 = accessibleTypeVersion1.resolveBinding().getSuperclass().getQualifiedName().toString();
-				}
-				if(accessibleTypeVersion2.resolveBinding() != null &&
-						accessibleTypeVersion2.resolveBinding().getSuperclass() != null){
-					super2 = accessibleTypeVersion2.resolveBinding().getSuperclass().getQualifiedName().toString();
-				}
-				if(super1 != null && super2 != null && !super1.equals(super2)){
-					this.typeBreakingChange++; //changed super type
-					this.typeModif++;
-					this.listBreakingChange.add(new BreakingChange(accessibleTypeVersion1.resolveBinding().getQualifiedName(), accessibleTypeVersion1.getName().toString(), this.CATEGORY_CHANGED_SUPER_TYPE));
+				String super1 = this.getNameSuperClass(accessibleTypeVersion1);  
+				String super2 = this.getNameSuperClass(accessibleTypeVersion2);
+				
+				if(super1 != null && super2 != null){
+					Boolean isBreakingChange = !this.isDeprecated(accessibleTypeVersion1);
+					
+					//Se tinha super classe, e foi removida.
+					if(this.containsSuperClass(accessibleTypeVersion1) && !this.containsSuperClass(accessibleTypeVersion2)){
+						String category = this.isDeprecated(accessibleTypeVersion1)? this.CATEGORY_SUPER_TYPE_REMOVED_DEPRECIATED: this.CATEGORY_SUPER_TYPE_REMOVED;
+						this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(accessibleTypeVersion1), accessibleTypeVersion1.getName().toString(), category, isBreakingChange));
+					}
+					//Se não tinha super classe, e foi adicionada.
+					if(!this.containsSuperClass(accessibleTypeVersion1) && this.containsSuperClass(accessibleTypeVersion2)){
+						String category = this.isDeprecated(accessibleTypeVersion1)? this.CATEGORY_SUPER_TYPE_ADD_DEPRECIATED: this.CATEGORY_SUPER_TYPE_ADD;
+						this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(accessibleTypeVersion2), accessibleTypeVersion2.getName().toString(), category, false));
+					}
+					//Se tinha super classe, e foi modificada.
+					if(this.containsSuperClass(accessibleTypeVersion1) && this.containsSuperClass(accessibleTypeVersion2) && !super1.equals(super2)){
+						String category = this.isDeprecated(accessibleTypeVersion1)? this.CATEGORY_SUPER_TYPE_CHANGED_DEPRECIATED: this.CATEGORY_SUPER_TYPE_CHANGED;
+						this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(accessibleTypeVersion2), accessibleTypeVersion2.getName().toString(), category, isBreakingChange));
+					}
 				}
 			}
 		}
 	}
 
+	/**
+	 * Busca classes que foram depreciadas [CATEGORY_TYPE_DEPRECIATED].
+	 * @param version1
+	 * @param version2
+	 */
 	private void findAddedDeprecated(APIVersion version1, APIVersion version2) {
+		//Se type não era depreciado na versão 1 e foi depreciado na versão 2.
 		for(TypeDeclaration accessibleTypeVersion1 : version1.getApiAcessibleTypes()){
 			TypeDeclaration accessibleTypeVersion2 = version2.getVersionAccessibleType(accessibleTypeVersion1);
 			if(accessibleTypeVersion2 != null){
-				if(accessibleTypeVersion1.resolveBinding() != null && accessibleTypeVersion2.resolveBinding() != null){
-					if(!accessibleTypeVersion1.resolveBinding().isDeprecated() && accessibleTypeVersion2.resolveBinding().isDeprecated())
-						this.typeNonBreakingChange++; //added deprecated
+				if(!this.isDeprecated(accessibleTypeVersion1) && this.isDeprecated(accessibleTypeVersion2)){
+					this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(accessibleTypeVersion1), accessibleTypeVersion1.getName().toString(), this.CATEGORY_TYPE_DEPRECIATED, false));
 				}
 			}
 		}
 
+		//Se type não existia na versão 1, e foi adicionado na versão 2 já depreciado.
 		for(TypeDeclaration accessibleTypeVersion2 : version2.getApiAcessibleTypes()){
-			if(!version1.contaisAccessibleType(accessibleTypeVersion2) && 
-					accessibleTypeVersion2.resolveBinding() != null &&
-					accessibleTypeVersion2.resolveBinding().isDeprecated())
-				this.typeNonBreakingChange++; //added deprecated
+			if(!version1.contaisAccessibleType(accessibleTypeVersion2) && this.isDeprecated(accessibleTypeVersion2)){
+				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(accessibleTypeVersion2), accessibleTypeVersion2.getName().toString(), this.CATEGORY_TYPE_DEPRECIATED, false));
+			}
 		}
 	}
 
+	/**
+	 * Busca classes que tiveram perda ou ganho de visibilidade.
+	 * Classes que perderam visibilidade são breaking changes [CATEGORY_LOST_VISIBILITY_TYPE].
+	 * Classes que perderam visibilidade mas estavam depreciadas na versão anterior são non-breaking changes [CATEGORY_LOST_DEPRECIATED_VISIBILITY_TYPE].
+	 * Classes que ganharam visibilidade são non-breaking changes [CATEGORY_GAIN_VISIBILITY_TYPE].
+	 * @param version1
+	 * @param version2
+	 */
 	private void findChangedVisibilityTypes(APIVersion version1, APIVersion version2) {
 		for(TypeDeclaration acessibleTypeVersion1 : version1.getApiAcessibleTypes()){
 			if(version2.contaisNonAccessibleType(acessibleTypeVersion1)){
-				if(acessibleTypeVersion1.resolveBinding() != null && 
-						acessibleTypeVersion1.resolveBinding().isDeprecated()){
-					this.typeNonBreakingChange++; //lost visibility deprecated
-					this.typeDeprecatedOp++;
-				} else {
-					this.typeBreakingChange++; //lost visibility
-					this.typeModif++;
-					this.listBreakingChange.add(new BreakingChange(acessibleTypeVersion1.resolveBinding().getQualifiedName(), acessibleTypeVersion1.getName().toString(), this.CATEGORY_LOST_VISIBILITY));
-				}
+				String category = this.isDeprecated(acessibleTypeVersion1)? this.CATEGORY_TYPE_LOST_VISIBILIT_DEPRECIATED: this.CATEGORY_TYPE_LOST_VISIBILITY;
+				Boolean isBreakingChange = this.isDeprecated(acessibleTypeVersion1)? false: true;
+				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(acessibleTypeVersion1), acessibleTypeVersion1.getName().toString(), category, isBreakingChange));
 			}
 		}
 
 		for(TypeDeclaration nonAcessibleTypeVersion1 : version1.getApiNonAcessibleTypes()){
-			if(version2.contaisAccessibleType(nonAcessibleTypeVersion1))
-				this.typeNonBreakingChange++; //gained visibility
+			if(version2.contaisAccessibleType(nonAcessibleTypeVersion1)){
+				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(nonAcessibleTypeVersion1), nonAcessibleTypeVersion1.getName().toString(), this.CATEGORY_TYPE_GAIN_VISIBILITY, false));
+			}
 		}
 	}
 
+	/**
+	 * Busca classes que foram adicionadas [CATEGORY_ADD_TYPE].
+	 * @param version1
+	 * @param version2
+	 */
 	private void findAddedTypes(APIVersion version1, APIVersion version2) {
 		for (TypeDeclaration type : version2.getApiAcessibleTypes()) {
 			if(!version1.contaisAccessibleType(type) && !version1.contaisNonAccessibleType(type)){
-				this.typeNonBreakingChange++; //added type
-				this.typeAdd++;
+				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(type), type.getName().toString(), this.CATEGORY_TYPE_ADD, false));
 			}
 		}
 	}
 
+	/**
+	 * Busca classes que foram removidas. 
+	 * Se a classe removida estava depreciada na versão anterior é uma non-breaking change [CATEGORY_REMOVED_DEPRECIATED_TYPE].
+	 * Caso contrário é uma breaking change [CATEGORY_REMOVED_TYPE] 
+	 * @param version1
+	 * @param version2
+	 */
 	private void findRemovedTypes(APIVersion version1, APIVersion version2) {
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
 			if(!version2.contaisAccessibleType(type) && !version2.contaisNonAccessibleType(type)){
-				if(type.resolveBinding() != null &&
-						type.resolveBinding().isDeprecated()){
-					this.typeNonBreakingChange++; //removed deprecated
-					this.typeDeprecatedOp++;
-				}else{
-					this.typeBreakingChange++; //removed
-					this.typeRemoval++;
-					this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), type.getName().toString(), this.CATEGORY_REMOVED_TYPE));
-				}
+				String category = this.isDeprecated(type)? this.CATEGORY_TYPE_REMOVED_DEPRECIATED: this.CATEGORY_TYPE_REMOVED;
+				Boolean isBreakingChange = this.isDeprecated(type)? false: true;
+				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(type), type.getName().toString(), category, isBreakingChange));
 			}
 		}
 	}
+	
+	/**
+	 * Retorna verdadeiro se é um type depreciado.
+	 * @param type
+	 * @return
+	 */
+	private Boolean isDeprecated(TypeDeclaration type){
+		return (type != null && type.resolveBinding() != null && type.resolveBinding().isDeprecated()) ? true: false;
+	}
+	
+	/**
+	 * Retorna nome da super classe. Se não existir retorna uma string vazia.
+	 * @param type
+	 * @return
+	 */
+	private String getNameSuperClass(TypeDeclaration type){
+		if(type.resolveBinding() != null && type.resolveBinding().getSuperclass() != null){
+			return type.resolveBinding().getSuperclass().getQualifiedName().toString();
+		}
+		return null;
+	}
+	
+	/**
+	 * Retorna verdadeiro se a classe herda de uma classe diferente do default (Object).
+	 * @param type
+	 * @return
+	 */
+	private boolean containsSuperClass(TypeDeclaration type){
+		String nameSuperClass = this.getNameSuperClass(type);
+		return (nameSuperClass != null && !"java.lang.Object".equals(nameSuperClass))?true:false;
+	}
+	
 }

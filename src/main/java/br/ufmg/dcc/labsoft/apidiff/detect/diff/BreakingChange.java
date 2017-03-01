@@ -7,6 +7,13 @@ package br.ufmg.dcc.labsoft.apidiff.detect.diff;
  */
 public class BreakingChange {
 	
+	public BreakingChange(final String path, final String struture, final String category, final Boolean isBreakingChange) {
+		this.path = path;
+		this.struture = struture;
+		this.category = category;
+		this.breakingChange = isBreakingChange;
+	}
+	
 	public BreakingChange(final String path, final String struture, final String category) {
 		this.path = path;
 		this.struture = struture;
@@ -27,6 +34,8 @@ public class BreakingChange {
 	 * Categoria da breaking change. 
 	 */
 	private String category;
+	
+	private Boolean breakingChange;
 
 	public String getPath() {
 		return path;
@@ -51,4 +60,13 @@ public class BreakingChange {
 	public void setCategory(String category) {
 		this.category = category;
 	}
+
+	public Boolean isBreakingChange() {
+		return breakingChange;
+	}
+
+	public void setBreakingChange(Boolean breakingChange) {
+		this.breakingChange = breakingChange;
+	}
+	
 }
