@@ -11,11 +11,23 @@ import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class MethodDiff {
 	
-	private final String CATEGORY_CHANGED_EXCEPTION = "CHANGED EXCEPTION";
-	private final String CATEGORY_CHANGED_PARAMETERS = "CHANGED PARAMETERS";
-	private final String CATEGORY_CHANGED_RETURN_TYPE = "CHANGED RETURN TYPE";
-	private final String CATEGORY_LOST_VISIBILITY = "LOST VISIBILITY";
-	private final String CATEGORY_REMOVED_METHOD = "REMOVED METHOD";
+	private final String CATEGORY_METHOD_CHANGED_EXCEPTION = "METHOD CHANGED EXCEPTION"; //breaking change
+	private final String CATEGORY_METHOD_CHANGED_EXCEPTION_DEPRECIATED = "METHOD CHANGED EXCEPTION DEPRECIATED"; //breaking change
+	
+	private final String CATEGORY_METHOD_CHANGED_PARAMETERS = "METHOD CHANGED PARAMETERS"; //breaking change
+	private final String CATEGORY_METHOD_CHANGED_PARAMETERS_DEPRECIATED = "METHOD CHANGED PARAMETERS DEPRECIATED"; //non-breaking change
+	
+	private final String CATEGORY_METHOD_CHANGED_RETURN_TYPE = "METHOD CHANGED RETURN TYPE"; //breaking change
+	private final String CATEGORY_METHOD_CHANGED_RETURN_TYPE_DEPRECIATED = "METHOD CHANGED RETURN TYPE DEPRECIATED"; //non-breaking change
+	
+	private final String CATEGORY_METHOD_REMOVED = "METHOD REMOVED"; //breaking change
+	private final String CATEGORY_METHOD_REMOVED_DEPRECIATED = "METHOD REMOVED DEPRECIATED"; //non-breaking change
+	
+	private final String CATEGORY_METHOD_ADDED = "METHOD ADDED"; //non-breaking change
+	
+	private final String CATEGORY_METHOD_LOST_VISIBILITY = "METHOD LOST VISIBILITY"; //breaking change
+	private final String CATEGORY_METHOD_LOST_VISIBILITY_DEPRECIATED = "METHOD LOST VISIBILITY DEPRECIATED"; //non-breaking change
+	private final String CATEGORY_METHOD_GAIN_VISIBILITY = "METHOD GAIN VISIBILITY"; //non-breaking change
 	
 	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
 	private int methodBreakingChange;
@@ -55,9 +67,9 @@ public class MethodDiff {
 		for(TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()){
 			if(version2.contaisAccessibleType(typeVersion1)){
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
-					if(!UtilTools.isPrivate(methodVersion1)){
+					if(!UtilTools.isVisibilityPrivate(methodVersion1)){
 						MethodDeclaration methodVersion2 = version2.getEqualVersionMethod(methodVersion1, typeVersion1);
-						if(methodVersion2 != null && !UtilTools.isPrivate(methodVersion2)){
+						if(methodVersion2 != null && !UtilTools.isVisibilityPrivate(methodVersion2)){
 							List<SimpleType> exceptionsVersion1 = methodVersion1.thrownExceptionTypes();
 							List<SimpleType> exceptionsVersion2 = methodVersion2.thrownExceptionTypes();
 
@@ -65,13 +77,13 @@ public class MethodDiff {
 								this.methodBreakingChange++; //added exception type
 								this.methodModif++;
 								
-								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_EXCEPTION));
+								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_METHOD_CHANGED_EXCEPTION));
 								
 							} else if(exceptionsVersion1.size() > exceptionsVersion2.size()){
 								this.methodBreakingChange++; //removed exception type
 								this.methodModif++;
 								
-								this.listBreakingChange.add(new BreakingChange( typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_EXCEPTION));
+								this.listBreakingChange.add(new BreakingChange( typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_METHOD_CHANGED_EXCEPTION));
 								
 							} 
 							for(SimpleType exceptionVersion1 : exceptionsVersion1){
@@ -87,7 +99,7 @@ public class MethodDiff {
 									this.methodBreakingChange++; //changed exception type;
 									this.methodModif++;
 									
-									this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_EXCEPTION));
+									this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_METHOD_CHANGED_EXCEPTION));
 									
 									break;
 								}
@@ -105,23 +117,23 @@ public class MethodDiff {
 			if(version2.contaisAccessibleType(typeVersion1)){
 
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
-					if(!UtilTools.isPrivate(methodVersion1)){
+					if(!UtilTools.isVisibilityPrivate(methodVersion1)){
 						if(version2.getEqualVersionMethod(methodVersion1, typeVersion1) == null){
 							ArrayList<MethodDeclaration> methodsVersion2 = version2.
 									getAllEqualMethodsByName(methodVersion1, typeVersion1);
 							for(MethodDeclaration methodVersion2: methodsVersion2){
-								if(!UtilTools.isPrivate(methodVersion2) && version1.getEqualVersionMethod(methodVersion2, typeVersion1) == null){
+								if(!UtilTools.isVisibilityPrivate(methodVersion2) && version1.getEqualVersionMethod(methodVersion2, typeVersion1) == null){
 									int smallerSize = methodVersion1.parameters().size();
 									if(methodVersion1.parameters().size() > methodVersion2.parameters().size()){
 										smallerSize = methodVersion2.parameters().size();
 										this.methodBreakingChange++; //removed parameter
 										this.methodModif++;
-										this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_PARAMETERS));
+										this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_METHOD_CHANGED_PARAMETERS));
 										
 									} else if (methodVersion1.parameters().size() < methodVersion2.parameters().size()){
 										this.methodBreakingChange++; //added parameter
 										this.methodModif++;
-										this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_PARAMETERS));
+										this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_METHOD_CHANGED_PARAMETERS));
 									} 
 									
 									for(int i = 0; i < smallerSize; i++){
@@ -132,7 +144,7 @@ public class MethodDiff {
 											this.methodBreakingChange++; //changed parameter
 											this.methodModif++;
 											
-											this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_PARAMETERS));
+											this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_METHOD_CHANGED_PARAMETERS));
 											
 											break;
 										}
@@ -151,14 +163,14 @@ public class MethodDiff {
 		for(TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()){
 			if(version2.contaisAccessibleType(typeVersion1)){
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
-					if(!UtilTools.isPrivate(methodVersion1)){
+					if(!UtilTools.isVisibilityPrivate(methodVersion1)){
 						MethodDeclaration methodVersion2 = version2.getEqualVersionMethod(methodVersion1, typeVersion1);
-						if(methodVersion2 != null && !UtilTools.isPrivate(methodVersion2)){
+						if(methodVersion2 != null && !UtilTools.isVisibilityPrivate(methodVersion2)){
 							if(methodVersion1.getReturnType2() != null && methodVersion2.getReturnType2() != null && 
 									!methodVersion1.getReturnType2().toString().equals(methodVersion2.getReturnType2().toString())){
 								this.methodBreakingChange++;
 								this.methodModif++;
-								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_CHANGED_RETURN_TYPE));
+								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_METHOD_CHANGED_RETURN_TYPE));
 							}
 						}
 					}
@@ -174,10 +186,10 @@ public class MethodDiff {
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
 					MethodDeclaration methodVersion2 = version2.getEqualVersionMethod(methodVersion1, typeVersion1);
 					if(methodVersion2 != null){
-						if(UtilTools.isPrivate(methodVersion1) && !UtilTools.isPrivate(methodVersion2)){
+						if(UtilTools.isVisibilityPrivate(methodVersion1) && !UtilTools.isVisibilityPrivate(methodVersion2)){
 							this.methodNonBreakingChange++; //gained visibility
 						}
-						else if(!UtilTools.isPrivate(methodVersion1) && UtilTools.isPrivate(methodVersion2)){
+						else if(!UtilTools.isVisibilityPrivate(methodVersion1) && UtilTools.isVisibilityPrivate(methodVersion2)){
 							if(methodVersion1.resolveBinding() != null && 
 									methodVersion1.resolveBinding().isDeprecated()){
 								this.methodNonBreakingChange++; //lost visibility deprecated
@@ -185,7 +197,7 @@ public class MethodDiff {
 							} else {
 								this.methodBreakingChange++; //lost visibility
 								this.methodModif++;
-								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_LOST_VISIBILITY));
+								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), this.CATEGORY_METHOD_LOST_VISIBILITY));
 							}
 						}
 					}
@@ -198,9 +210,9 @@ public class MethodDiff {
 		for (TypeDeclaration typeInVersion1 : version1.getApiAcessibleTypes()) {
 			if(version2.contaisAccessibleType(typeInVersion1)){
 				for(MethodDeclaration methodInVersion1 : typeInVersion1.getMethods()){
-					if(!UtilTools.isPrivate(methodInVersion1)){
+					if(!UtilTools.isVisibilityPrivate(methodInVersion1)){
 						MethodDeclaration methodInVersion2 = version2.getEqualVersionMethod(methodInVersion1, typeInVersion1);
-						if(methodInVersion2 != null && !UtilTools.isPrivate(methodInVersion2)){
+						if(methodInVersion2 != null && !UtilTools.isVisibilityPrivate(methodInVersion2)){
 							if(methodInVersion1.resolveBinding() != null && methodInVersion2.resolveBinding() != null){
 								if(!methodInVersion1.resolveBinding().isDeprecated() && methodInVersion2.resolveBinding().isDeprecated()){
 									this.methodNonBreakingChange++;
@@ -214,7 +226,7 @@ public class MethodDiff {
 
 		for(TypeDeclaration typeInVersion2 : version2.getApiAcessibleTypes()){
 			for(MethodDeclaration methodInVersion2 : typeInVersion2.getMethods()){
-				if(!UtilTools.isPrivate(methodInVersion2)){
+				if(!UtilTools.isVisibilityPrivate(methodInVersion2)){
 					MethodDeclaration methodInVersion1 = version1.getEqualVersionMethod(methodInVersion2, typeInVersion2);
 					if(methodInVersion1 == null && methodInVersion2.resolveBinding() != null && 
 							methodInVersion2.resolveBinding().isDeprecated()){
@@ -231,7 +243,7 @@ public class MethodDiff {
 		for (TypeDeclaration typeInVersion1 : version1.getApiAcessibleTypes()) {
 			if(version2.contaisAccessibleType(typeInVersion1)){
 				for (MethodDeclaration methodInVersion1 : typeInVersion1.getMethods()) {
-					if(!UtilTools.isPrivate(methodInVersion1)){
+					if(!UtilTools.isVisibilityPrivate(methodInVersion1)){
 						MethodDeclaration methodInVersion2 = version2.getEqualVersionMethod(methodInVersion1, typeInVersion1);
 						if(methodInVersion2 == null){
 							if(methodInVersion1.resolveBinding() != null && 
@@ -242,7 +254,7 @@ public class MethodDiff {
 								this.methodBreakingChange++; // removed
 								this.methodRemoval++;
 								
-								this.listBreakingChange.add(new BreakingChange(typeInVersion1.resolveBinding().getQualifiedName(), methodInVersion1.getName().toString(), this.CATEGORY_REMOVED_METHOD));
+								this.listBreakingChange.add(new BreakingChange(typeInVersion1.resolveBinding().getQualifiedName(), methodInVersion1.getName().toString(), this.CATEGORY_METHOD_REMOVED));
 								
 							}
 						}
@@ -250,7 +262,7 @@ public class MethodDiff {
 				}
 			} else{
 				for (MethodDeclaration methodInVersion1 : typeInVersion1.getMethods()) {
-					if(!UtilTools.isPrivate(methodInVersion1)){
+					if(!UtilTools.isVisibilityPrivate(methodInVersion1)){
 						if(methodInVersion1.resolveBinding() != null && 
 								methodInVersion1.resolveBinding().isDeprecated()){
 							this.methodNonBreakingChange++; //removed deprecated
@@ -258,7 +270,7 @@ public class MethodDiff {
 						} else {
 							this.methodBreakingChange++; //removed
 							this.methodRemoval++;
-							this.listBreakingChange.add(new BreakingChange(typeInVersion1.resolveBinding().getQualifiedName(), methodInVersion1.getName().toString(), this.CATEGORY_REMOVED_METHOD));
+							this.listBreakingChange.add(new BreakingChange(typeInVersion1.resolveBinding().getQualifiedName(), methodInVersion1.getName().toString(), this.CATEGORY_METHOD_REMOVED));
 						}
 					}
 				}
@@ -271,7 +283,7 @@ public class MethodDiff {
 		for (TypeDeclaration typeInVersion2 : version2.getApiAcessibleTypes()) {
 			if(version1.contaisAccessibleType(typeInVersion2)){
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){
-					if(!UtilTools.isPrivate(methodInVersion2)){
+					if(!UtilTools.isVisibilityPrivate(methodInVersion2)){
 						MethodDeclaration methodInVersion1 = version1.getEqualVersionMethod(methodInVersion2, typeInVersion2);
 						if(methodInVersion1 == null){
 							this.methodNonBreakingChange++;
@@ -281,7 +293,7 @@ public class MethodDiff {
 				}
 			} else {
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){
-					if(!UtilTools.isPrivate(methodInVersion2)){
+					if(!UtilTools.isVisibilityPrivate(methodInVersion2)){
 						this.methodNonBreakingChange++;
 						this.methodAdd++;
 					}

@@ -1,7 +1,9 @@
 package br.ufmg.dcc.labsoft.apidiff.detect.diff;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
@@ -114,6 +116,35 @@ public class TypeDiff {
 	}
 
 	/**
+	 * Retorna o type na lista com o mesmo nameNode do type recebido.
+	 * Retorna nulo se não for encontrado.
+	 * @param list
+	 * @param type
+	 * @return
+	 */
+	private TypeDeclaration findTypeDeclarationInList(List<TypeDeclaration> list, TypeDeclaration type){
+		for(int i=0; i< list.size(); i++){
+			TypeDeclaration typeDeclaration = list.get(i);
+			if(UtilTools.getNameNode(type).equals(UtilTools.getNameNode(typeDeclaration))){
+				return typeDeclaration;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Retorna a lista de todos os types de uma versão.
+	 * @param version
+	 * @return
+	 */
+	private List<TypeDeclaration> getAllTypes(APIVersion version){
+		List<TypeDeclaration> listTypesVersion = new ArrayList<TypeDeclaration>();
+		listTypesVersion.addAll(version.getApiNonAcessibleTypes());
+		listTypesVersion.addAll(version.getApiAcessibleTypes());
+		return listTypesVersion;
+	}
+	
+	/**
 	 * Busca classes que tiveram perda ou ganho de visibilidade.
 	 * Classes que perderam visibilidade são breaking changes [CATEGORY_LOST_VISIBILITY_TYPE].
 	 * Classes que perderam visibilidade mas estavam depreciadas na versão anterior são non-breaking changes [CATEGORY_LOST_DEPRECIATED_VISIBILITY_TYPE].
@@ -122,17 +153,41 @@ public class TypeDiff {
 	 * @param version2
 	 */
 	private void findChangedVisibilityTypes(APIVersion version1, APIVersion version2) {
-		for(TypeDeclaration acessibleTypeVersion1 : version1.getApiAcessibleTypes()){
-			if(version2.contaisNonAccessibleType(acessibleTypeVersion1)){
-				String category = this.isDeprecated(acessibleTypeVersion1)? this.CATEGORY_TYPE_LOST_VISIBILIT_DEPRECIATED: this.CATEGORY_TYPE_LOST_VISIBILITY;
-				Boolean isBreakingChange = this.isDeprecated(acessibleTypeVersion1)? false: true;
-				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(acessibleTypeVersion1), acessibleTypeVersion1.getName().toString(), category, isBreakingChange));
-			}
-		}
-
-		for(TypeDeclaration nonAcessibleTypeVersion1 : version1.getApiNonAcessibleTypes()){
-			if(version2.contaisAccessibleType(nonAcessibleTypeVersion1)){
-				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(nonAcessibleTypeVersion1), nonAcessibleTypeVersion1.getName().toString(), this.CATEGORY_TYPE_GAIN_VISIBILITY, false));
+		
+		List<TypeDeclaration> listTypesVersion1 = this.getAllTypes(version1);
+		List<TypeDeclaration> listTypesVersion2 = this.getAllTypes(version2);
+		
+		//Percorre types da versão anterior.
+		for(TypeDeclaration type1: listTypesVersion1){
+			TypeDeclaration type2 = this.findTypeDeclarationInList(listTypesVersion2, type1);
+			if(type2 != null){
+				
+				String visibilityType1 = UtilTools.getVisibility(type1);
+				String visibilityType2 = UtilTools.getVisibility(type2);
+				
+				if(!visibilityType1.equals(visibilityType2)){ //Se visibilidade mudou, verifica se houve perda ou ganho.
+					
+					String category = "";
+					Boolean isBreakingChange = false;
+					
+					//public --> qualquer modificador de acesso:  breaking change
+					//protected --> qualquer modificador de acesso, exceto public: breaking change
+					if(UtilTools.isVisibilityPublic(type1) || (UtilTools.isVisibilityProtected(type1) && !UtilTools.isVisibilityPublic(type2))){
+						category = this.isDeprecated(type1)? this.CATEGORY_TYPE_LOST_VISIBILIT_DEPRECIATED: this.CATEGORY_TYPE_LOST_VISIBILITY;
+						isBreakingChange = this.isDeprecated(type1)? false: true;
+					}
+					else{
+						//private ou default --> qualquer modificador de acesso: non-breaking change
+						//Demais casos: non-breaking change 
+						
+						//default --> private : CATEGORY_TYPE_LOST_VISIBILITY.
+						//Demais casos: CATEGORY_TYPE_GAIN_VISIBILITY
+						
+						category = UtilTools.isVisibilityDefault(type1) && UtilTools.isVisibilityPrivate(type2)? this.CATEGORY_TYPE_LOST_VISIBILITY: this.CATEGORY_TYPE_GAIN_VISIBILITY;
+						isBreakingChange = false;
+					}
+					this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(type2), type2.getName().toString(), category, isBreakingChange));
+				}
 			}
 		}
 	}

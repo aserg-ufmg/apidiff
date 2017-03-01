@@ -44,9 +44,9 @@ public class EnumConstantDiff {
 	private void findAddedConstant(APIVersion version1, APIVersion version2) {
 		
 		for(EnumDeclaration enumVersion2 : version2.getApiAccessibleEnums()){
-			if(!UtilTools.isPrivate(enumVersion2)){
+			if(!UtilTools.isVisibilityPrivate(enumVersion2)){
 				EnumDeclaration enumVersion1 = version1.getVersionAccessibleEnum(enumVersion2);
-				if(enumVersion1 != null && !UtilTools.isPrivate(enumVersion1)){
+				if(enumVersion1 != null && !UtilTools.isVisibilityPrivate(enumVersion1)){
 					for(Object constant : enumVersion2.enumConstants()){
 						if(version1.getEqualVersionConstant((EnumConstantDeclaration) constant, enumVersion2) == null){
 							this.nonBreakingChange++;
@@ -64,9 +64,9 @@ public class EnumConstantDiff {
 	private void findRemovedConstant(APIVersion version1, APIVersion version2) {
 		
 		for(EnumDeclaration enumVersion1 : version1.getApiAccessibleEnums()){
-			if(!UtilTools.isPrivate(enumVersion1)){
+			if(!UtilTools.isVisibilityPrivate(enumVersion1)){
 				EnumDeclaration enumVersion2 = version2.getVersionAccessibleEnum(enumVersion1);
-				if(enumVersion2 != null && !UtilTools.isPrivate(enumVersion2)){
+				if(enumVersion2 != null && !UtilTools.isVisibilityPrivate(enumVersion2)){
 					for(Object constantVersion1 : enumVersion1.enumConstants()){
 						if(version2.getEqualVersionConstant((EnumConstantDeclaration) constantVersion1, enumVersion1) == null){
 							if(((EnumConstantDeclaration)constantVersion1).resolveVariable() != null &&
@@ -100,9 +100,9 @@ public class EnumConstantDiff {
 	private void findAddedDeprecatedConstant(APIVersion version1, APIVersion version2) {
 		
 		for(EnumDeclaration enumVersion1 : version1.getApiAccessibleEnums()){
-			if(!UtilTools.isPrivate(enumVersion1)){
+			if(!UtilTools.isVisibilityPrivate(enumVersion1)){
 				EnumDeclaration enumVersion2 = version2.getVersionAccessibleEnum(enumVersion1);
-				if(enumVersion2 != null && !UtilTools.isPrivate(enumVersion2)){
+				if(enumVersion2 != null && !UtilTools.isVisibilityPrivate(enumVersion2)){
 					for(Object constantVersion2 : enumVersion2.enumConstants()){
 						if(((EnumConstantDeclaration) constantVersion2).resolveVariable() != null &&
 								((EnumConstantDeclaration) constantVersion2).resolveVariable().isDeprecated()){

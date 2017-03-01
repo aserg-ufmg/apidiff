@@ -55,14 +55,14 @@ public class FieldDiff {
 			if(version2.contaisAccessibleType(type)){
 
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
-					if(!UtilTools.isPrivate(fieldInVersion1)){
+					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
 						FieldDeclaration fieldInVersion2;
 						try {
 							fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
 						} catch (BindingException e) {
 							continue;
 						}
-						if(fieldInVersion2 != null && !UtilTools.isPrivate(fieldInVersion2)){
+						if(fieldInVersion2 != null && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
 							List<VariableDeclarationFragment> variable1Fragments = fieldInVersion1.fragments();
 							List<VariableDeclarationFragment> variable2Fragments = fieldInVersion2.fragments();
 							Expression valueVersion1 = null;
@@ -117,14 +117,14 @@ public class FieldDiff {
 			if(version2.contaisAccessibleType(type)){
 
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
-					if(!UtilTools.isPrivate(fieldInVersion1)){
+					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
 						FieldDeclaration fieldInVersion2;
 						try {
 							fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
 						} catch (BindingException e) {
 							continue;
 						}
-						if(fieldInVersion2 != null && !UtilTools.isPrivate(fieldInVersion2)){
+						if(fieldInVersion2 != null && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
 							if(!fieldInVersion1.getType().toString().equals(fieldInVersion2.getType().toString())){
 								this.fieldBreakingChange++;
 								this.fieldModif++;
@@ -154,9 +154,9 @@ public class FieldDiff {
 						continue;
 					}
 					if(fieldInVersion2 != null){
-						if(UtilTools.isPrivate(fieldInVersion1) && !UtilTools.isPrivate(fieldInVersion2)){
+						if(UtilTools.isVisibilityPrivate(fieldInVersion1) && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
 							this.fieldNonBreakingChange++;
-						} else if(!UtilTools.isPrivate(fieldInVersion1) && UtilTools.isPrivate(fieldInVersion2)){
+						} else if(!UtilTools.isVisibilityPrivate(fieldInVersion1) && UtilTools.isVisibilityPrivate(fieldInVersion2)){
 							if(UtilTools.isDeprecatedField(fieldInVersion1)){
 								this.fieldNonBreakingChange++;
 								this.fieldDeprecated++;
@@ -181,14 +181,14 @@ public class FieldDiff {
 			if(version2.contaisAccessibleType(type)){
 
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
-					if(!UtilTools.isPrivate(fieldInVersion1)){
+					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
 						FieldDeclaration fieldInVersion2;
 						try {
 							fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
 						} catch (BindingException e) {
 							continue;
 						}
-						if(fieldInVersion2 != null && !UtilTools.isPrivate(fieldInVersion2)){
+						if(fieldInVersion2 != null && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
 							//os dois tipos tem os mesmos fields
 
 							if((!UtilTools.isDeprecatedField(fieldInVersion1)) && (UtilTools.isDeprecatedField(fieldInVersion2))){
@@ -202,7 +202,7 @@ public class FieldDiff {
 
 		for (TypeDeclaration type : version2.getApiAcessibleTypes()) {
 			for (FieldDeclaration fieldInVersion2 : type.getFields()) {
-				if(!UtilTools.isPrivate(fieldInVersion2)){
+				if(!UtilTools.isVisibilityPrivate(fieldInVersion2)){
 					FieldDeclaration fieldInVersion1;
 					try {
 						fieldInVersion1 = version1.getVersionField(fieldInVersion2, type);
@@ -230,7 +230,7 @@ public class FieldDiff {
 			if(version1.contaisAccessibleType(type)){
 
 				for (FieldDeclaration fieldInVersion2 : type.getFields()) {
-					if(!UtilTools.isPrivate(fieldInVersion2)){
+					if(!UtilTools.isVisibilityPrivate(fieldInVersion2)){
 						FieldDeclaration fieldInVersion1;
 						try {
 							fieldInVersion1 = version1.getVersionField(fieldInVersion2, type);
@@ -246,7 +246,7 @@ public class FieldDiff {
 			} else{
 				//tipo foi adicionado na versao 2, todos os fields foram adicionados
 				for (FieldDeclaration field : type.getFields()) {
-					if(!UtilTools.isPrivate(field)){
+					if(!UtilTools.isVisibilityPrivate(field)){
 						this.fieldNonBreakingChange++; //addded field
 						this.fieldAdd++;
 					}
@@ -261,7 +261,7 @@ public class FieldDiff {
 			if(version2.contaisAccessibleType(type)){
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
 
-					if(!UtilTools.isPrivate(fieldInVersion1)){
+					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
 						FieldDeclaration fieldInVersion2;
 						try {
 							fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
@@ -288,7 +288,7 @@ public class FieldDiff {
 			} else{ 
 				//tipo foi removido na versao 2, todos os fields foram removidos
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
-					if(!UtilTools.isPrivate(fieldInVersion1)){
+					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
 						if(UtilTools.isDeprecatedField(fieldInVersion1)){
 							this.fieldNonBreakingChange++; //removed deprecated field
 							this.fieldDeprecated++;

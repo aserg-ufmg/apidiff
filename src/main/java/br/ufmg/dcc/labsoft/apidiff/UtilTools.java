@@ -64,9 +64,22 @@ public class UtilTools {
 		return false;
 	}
 	
-	public static boolean isPrivate(BodyDeclaration node){
+	public static boolean isVisibilityPrivate(BodyDeclaration node){
 		return getVisibility(node).equals("private");
 	}
+	
+	public static boolean isVisibilityPublic(BodyDeclaration node){
+		return getVisibility(node).equals("public");
+	}
+	
+	public static boolean isVisibilityDefault(BodyDeclaration node){
+		return getVisibility(node).equals("default");
+	}
+	
+	public static boolean isVisibilityProtected(BodyDeclaration node){
+		return getVisibility(node).equals("protected");
+	}
+	
 	
 	public static String getVisibility(BodyDeclaration node){
 		for (Object modifier : node.modifiers()) {
