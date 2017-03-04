@@ -31,6 +31,7 @@ public class Main {
 		} catch (IOException e) {
 			logger.error("Erro ao ler arquivo com a lista de projetos.", e);
 		}
+		logger.info("\n\nFinished process!");
 
 	}
 
