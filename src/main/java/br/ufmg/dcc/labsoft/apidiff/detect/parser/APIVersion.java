@@ -228,10 +228,10 @@ public class APIVersion {
 
 	public MethodDeclaration getEqualVersionMethod(MethodDeclaration method, TypeDeclaration type){
 		for(MethodDeclaration methodInThisVersion : this.getAllEqualMethodsByName(method, type)){
-			if(UtilTools.isEqualMethod(method, methodInThisVersion))
+			if(UtilTools.isEqualMethod(method, methodInThisVersion)){
 				return methodInThisVersion;
+			}
 		}
-
 		return null;
 	}
 
