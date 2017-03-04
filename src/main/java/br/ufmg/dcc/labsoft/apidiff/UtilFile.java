@@ -49,6 +49,9 @@ public class UtilFile {
 		    	if(data.length == 2){
 		    		result.put(data[0], data[1]);
 		    	}
+		    	else{
+		    		System.err.println("File format invalid! " + line);
+		    	}
 		    }
 		}
 		finally {
