@@ -6,12 +6,16 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 import br.ufmg.dcc.labsoft.apidiff.detect.exception.BindingException;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class FieldDiff {
+	
+	private Logger logger = LoggerFactory.getLogger(FieldDiff.class);
 	
 	private final String CATEGORY_FIELD_CHANGED_DEFAULT_VALUE = "FIELD CHANGED DEFAULT VALUE";
 	private final String CATEGORY_FIELD_CHANGED_DEFAULT_VALUE_DEPRECIATED = "FIELD CHANGED DEFAULT VALUE DEPRECIATED";
@@ -34,7 +38,7 @@ public class FieldDiff {
 	
 	public Result calculateDiff(final APIVersion version1, final APIVersion version2){
 		
-		//Lista breacking changes.
+		//Lista breaking changes.
 		this.findDefaultValueFields(version1, version2);
 		this.findChangedTypeFields(version1, version2);
 		this.findRemovedFields(version1, version2);
@@ -48,56 +52,54 @@ public class FieldDiff {
 		result.setListBreakingChange(this.listBreakingChange);
 		return result;
 	}
-
+	
+	
+	/**
+	 * Retorna verdadeiro se existe diferença entre os valores default de dois fields.
+	 * @param fieldInVersion1
+	 * @param fieldInVersion2
+	 * @return
+	 */
+	private Boolean diffValueDefaultField(FieldDeclaration fieldInVersion1, FieldDeclaration fieldInVersion2){
+		
+		List<VariableDeclarationFragment> variable1Fragments = fieldInVersion1.fragments();
+		List<VariableDeclarationFragment> variable2Fragments = fieldInVersion2.fragments();
+		
+		Expression valueVersion1 = variable1Fragments.get(0).getInitializer();
+		Expression valueVersion2 = variable2Fragments.get(0).getInitializer();
+		
+		//Se um valor default foi removido ou adicionado.
+		if((valueVersion1 == null && valueVersion2 != null) || (valueVersion1 != null && valueVersion2 == null)){
+			return true;
+		}
+		
+		//Se as duas versões possuem um valor default, verifica se são diferentes.
+		if((valueVersion1 != null && valueVersion2 != null) && (!valueVersion1.toString().equals(valueVersion2.toString()))){
+			return true;
+		}
+		
+		return false;
+	}
+	/**
+	 * Verifica se o valor default do field foi modificado.
+	 * @param version1
+	 * @param version2
+	 */
 	private void findDefaultValueFields(APIVersion version1, APIVersion version2){
 		
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
 			if(version2.containsAccessibleType(type)){
-
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
-					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
-						FieldDeclaration fieldInVersion2;
+					if(this.isFildAcessible(fieldInVersion1)){
 						try {
-							fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
+							FieldDeclaration fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
+							if(this.isFildAcessible(fieldInVersion2) && this.diffValueDefaultField(fieldInVersion1, fieldInVersion2)){
+								String category = this.isDeprecated(fieldInVersion1, type)? this.CATEGORY_FIELD_CHANGED_DEFAULT_VALUE_DEPRECIATED: this.CATEGORY_FIELD_CHANGED_DEFAULT_VALUE;
+								Boolean isBreakingChange = this.isDeprecated(fieldInVersion1, type)? false: true;
+								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), category, isBreakingChange));
+							}
 						} catch (BindingException e) {
 							continue;
-						}
-						if(fieldInVersion2 != null && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
-							List<VariableDeclarationFragment> variable1Fragments = fieldInVersion1.fragments();
-							List<VariableDeclarationFragment> variable2Fragments = fieldInVersion2.fragments();
-							Expression valueVersion1 = null;
-							Expression valueVersion2 = null;
-							
-							for (VariableDeclarationFragment variable1DeclarationFragment : variable1Fragments) {
-								valueVersion1 = variable1DeclarationFragment.getInitializer();
-							}
-							
-							for (VariableDeclarationFragment variable2DeclarationFragment : variable2Fragments) {
-								valueVersion2 = variable2DeclarationFragment.getInitializer();
-							}
-							
-							if(valueVersion1 == null && valueVersion2 != null){
-								try {
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_CHANGED_DEFAULT_VALUE));
-								} catch (BindingException e) {
-									continue;
-								}
-							}
-							else if(valueVersion1 != null && valueVersion2 == null){
-								try {
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_CHANGED_DEFAULT_VALUE));
-								} catch (BindingException e) {
-									continue;
-								}
-							}
-							else if(valueVersion1 != null && valueVersion2 != null)
-								if(!valueVersion1.toString().equals(valueVersion2.toString())) {
-									try {
-										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_CHANGED_DEFAULT_VALUE));
-									} catch (BindingException e) {
-										continue;
-								}
-							}
 						}
 					}
 				}
@@ -132,35 +134,61 @@ public class FieldDiff {
 			}
 		}
 	}
-
-	private void findChangedVisibilityFields(APIVersion version1, APIVersion version2) {
+	
+	/**
+	 * Compara duas versões de um field e verifica se houve perda ou ganho de visibilidade.
+	 * Resultados são registrados na saída.
+	 * @param typeVersion1
+	 * @param fieldVersion1
+	 * @param fieldVersion2
+	 */
+	private void checkGainOrLostVisibility(TypeDeclaration typeVersion1, FieldDeclaration fieldVersion1, FieldDeclaration fieldVersion2){
 		
-		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
-			if(version2.containsAccessibleType(type)){
+		if(fieldVersion2 != null && fieldVersion1!=null){//Se o método ainda existe na versão atual.
+			
+			String visibilityMethod1 = UtilTools.getVisibility(fieldVersion1);
+			String visibilityMethod2 = UtilTools.getVisibility(fieldVersion2);
+			
+			if(!visibilityMethod1.equals(visibilityMethod2)){ // Se o modificador de acesso foi alterado.
+				String category = "";
+				Boolean isBreakingChange = false;
+				
+				//Breaking change: public --> qualquer modificador de acesso, protected --> qualquer modificador de acesso, exceto public.
+				if(this.isFildAcessible(fieldVersion1) && !UtilTools.isVisibilityPublic(fieldVersion2)){
+					category = this.isDeprecated(fieldVersion1, typeVersion1)? this.CATEGORY_FIELD_LOST_VISIBILITY_DEPRECIATED: this.CATEGORY_FIELD_LOST_VISIBILITY;
+					isBreakingChange = this.isDeprecated(fieldVersion1, typeVersion1)? false: true;
+				}
+				else{
+					//non-breaking change: private ou default --> qualquer modificador de acesso, demais casos.
+					category = UtilTools.isVisibilityDefault(fieldVersion1) && UtilTools.isVisibilityPrivate(fieldVersion2)? this.CATEGORY_FIELD_LOST_VISIBILITY: this.CATEGORY_FIELD_GAIN_VISIBILITY;
+					isBreakingChange = false;
+				}
+				try {
+					this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(typeVersion1), UtilTools.getFieldName(fieldVersion2), category, isBreakingChange));
+				} catch (BindingException e) {
+					this.logger.error("Erro ao ler FildName [" + UtilTools.getNameNode(typeVersion1) +"," + fieldVersion2 + "]");
+					return;
+				}
+			}
+		}
+	}
 
-				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
-					FieldDeclaration fieldInVersion2;
+	/**
+	 * Busca fields que tiveram ganho ou perda de visibilidade.
+	 * @param version1
+	 * @param version2
+	 */
+	private void findChangedVisibilityFields(APIVersion version1, APIVersion version2) {
+		for(TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()){
+			if(version2.containsAccessibleType(typeVersion1)){
+				for (FieldDeclaration fieldVersion1 : typeVersion1.getFields()){
 					try {
-						fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
-						if(fieldInVersion2 != null){
-							if(UtilTools.isVisibilityPrivate(fieldInVersion1) && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
-								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_GAIN_VISIBILITY));
-							} else if(!UtilTools.isVisibilityPrivate(fieldInVersion1) && UtilTools.isVisibilityPrivate(fieldInVersion2)){
-								if(this.isDeprecated(fieldInVersion1, type)){
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_LOST_VISIBILITY_DEPRECIATED));
-								} else {
-									try {
-										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_LOST_VISIBILITY));
-									} catch (BindingException e) {
-										continue;
-									}
-								}
-							}
-						}
+						FieldDeclaration fieldVersion2 = version2.getVersionField(fieldVersion1, typeVersion1);
+						this.checkGainOrLostVisibility(typeVersion1, fieldVersion1, fieldVersion2);
 					} catch (BindingException e) {
+						this.logger.error("Erro ao ler FildName [" + UtilTools.getNameNode(typeVersion1) +"," + fieldVersion1 + "]");
 						continue;
 					}
-					
 				}
 			}
 		}
@@ -180,7 +208,7 @@ public class FieldDiff {
 				//Se o type foi criado depreciado, insere na saída.
 				if(this.isFildAcessible(fieldVersion2) && this.isDeprecated(fieldVersion2, typeVersion2)){
 					try {
-						FieldDeclaration fieldInVersion1 = version2.getVersionField(fieldVersion2, typeVersion2);
+						FieldDeclaration fieldInVersion1 = version1.getVersionField(fieldVersion2, typeVersion2);
 						//Se o field não estava depreciado na versão anterior ou não existia e foi criado depreciado.
 						if(fieldInVersion1 == null || !this.isDeprecated(fieldInVersion1, version1.getVersionAccessibleType(typeVersion2))){
 							this.listBreakingChange.add(new BreakingChange(typeVersion2.resolveBinding().getQualifiedName(),  UtilTools.getFieldName(fieldVersion2), this.CATEGORY_FIELD_DEPRECIATED, false));
