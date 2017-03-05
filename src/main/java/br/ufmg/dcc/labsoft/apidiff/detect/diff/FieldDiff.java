@@ -13,18 +13,24 @@ import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class FieldDiff {
 	
-	private final String CATEGORY_CHANGED_DEFAULT_VALUE = "CHANGED DEFAULT VALUE";
-	private final String CATEGORY_CHANGED_TYPE_FIELD = "CHANGED TYPE FIELD";
-	private final String CATEGORY_LOST_VISIBILITY = "LOST VISIBILITY";
-	private final String CATEGORY_REMOVED_FIELD = "REMOVED FIELD";
+	private final String CATEGORY_FILD_CHANGED_DEFAULT_VALUE = "CHANGED DEFAULT VALUE";
+	private final String CATEGORY_FILD_CHANGED_DEFAULT_VALUE_DEPRECIATED = "CHANGED DEFAULT VALUE DEPRECIATED";
+	
+	private final String CATEGORY_FILD_CHANGED_TYPE_FIELD = "CHANGED TYPE FIELD";
+	private final String CATEGORY_FILD_CHANGED_TYPE_FIELD_DEPRECIATED = "CHANGED TYPE FIELD DEPRECIATED";
+	
+	private final String CATEGORY_FILD_LOST_VISIBILITY = "LOST VISIBILITY";
+	private final String CATEGORY_FILD_LOST_VISIBILITY_DEPRECIATED = "LOST VISIBILITY DEPRECIATED";
+	private final String CATEGORY_FILD_GAIN_VISIBILITY = "LOST VISIBILITY";
+	
+	private final String CATEGORY_FILD_REMOVED_FIELD = "REMOVED FIELD";
+	private final String CATEGORY_FILD_REMOVED_FIELD_DEPRECIATED = "REMOVED FIELD DEPRECIATED";
+	
+	private final String CATEGORY_FILD_ADD = "FILD ADDED"; //non-breaking change
+	
+	private final String CATEGORY_FILD_DEPRECIATED = "FILD DEPRECIATED";
 	
 	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
-	private int fieldBreakingChange;
-	private int fieldNonBreakingChange;
-	private int fieldAdd;
-	private int fieldRemoval;
-	private int fieldModif;
-	private int fieldDeprecated;
 	
 	public Result calculateDiff(final APIVersion version1, final APIVersion version2){
 		
@@ -39,12 +45,6 @@ public class FieldDiff {
 		this.findAddedDeprecatedFields(version1, version2);
 		
 		Result result = new Result();
-		result.setBreakingChange(fieldBreakingChange);
-		result.setNonBreakingChange(fieldNonBreakingChange);
-		result.setElementDeprecated(this.fieldDeprecated);
-		result.setElementModified(this.fieldModif);
-		result.setElementRemoved(this.fieldRemoval);
-		result.setElementAdd(this.fieldAdd);
 		result.setListBreakingChange(this.listBreakingChange);
 		return result;
 	}
@@ -77,29 +77,23 @@ public class FieldDiff {
 							}
 							
 							if(valueVersion1 == null && valueVersion2 != null){
-								this.fieldBreakingChange++;
-								this.fieldModif++;
 								try {
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_CHANGED_DEFAULT_VALUE));
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_CHANGED_DEFAULT_VALUE));
 								} catch (BindingException e) {
 									continue;
 								}
 							}
 							else if(valueVersion1 != null && valueVersion2 == null){
-								this.fieldModif++;
-								this.fieldBreakingChange++;
 								try {
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_CHANGED_DEFAULT_VALUE));
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_CHANGED_DEFAULT_VALUE));
 								} catch (BindingException e) {
 									continue;
 								}
 							}
 							else if(valueVersion1 != null && valueVersion2 != null)
 								if(!valueVersion1.toString().equals(valueVersion2.toString())) {
-									this.fieldModif++;
-									this.fieldBreakingChange++;
 									try {
-										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_CHANGED_DEFAULT_VALUE));
+										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_CHANGED_DEFAULT_VALUE));
 									} catch (BindingException e) {
 										continue;
 								}
@@ -126,10 +120,8 @@ public class FieldDiff {
 						}
 						if(fieldInVersion2 != null && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
 							if(!fieldInVersion1.getType().toString().equals(fieldInVersion2.getType().toString())){
-								this.fieldBreakingChange++;
-								this.fieldModif++;
 								try {
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_CHANGED_TYPE_FIELD));
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_CHANGED_TYPE_FIELD));
 								} catch (BindingException e) {
 									continue;
 								}
@@ -150,27 +142,25 @@ public class FieldDiff {
 					FieldDeclaration fieldInVersion2;
 					try {
 						fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
-					} catch (BindingException e) {
-						continue;
-					}
-					if(fieldInVersion2 != null){
-						if(UtilTools.isVisibilityPrivate(fieldInVersion1) && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
-							this.fieldNonBreakingChange++;
-						} else if(!UtilTools.isVisibilityPrivate(fieldInVersion1) && UtilTools.isVisibilityPrivate(fieldInVersion2)){
-							if(UtilTools.isDeprecatedField(fieldInVersion1)){
-								this.fieldNonBreakingChange++;
-								this.fieldDeprecated++;
-							} else {
-								this.fieldBreakingChange++;
-								this.fieldModif++;
-								try {
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_LOST_VISIBILITY));
-								} catch (BindingException e) {
-									continue;
+						if(fieldInVersion2 != null){
+							if(UtilTools.isVisibilityPrivate(fieldInVersion1) && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
+								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_GAIN_VISIBILITY));
+							} else if(!UtilTools.isVisibilityPrivate(fieldInVersion1) && UtilTools.isVisibilityPrivate(fieldInVersion2)){
+								if(UtilTools.isDeprecatedField(fieldInVersion1)){
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_LOST_VISIBILITY_DEPRECIATED));
+								} else {
+									try {
+										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_LOST_VISIBILITY));
+									} catch (BindingException e) {
+										continue;
+									}
 								}
 							}
 						}
+					} catch (BindingException e) {
+						continue;
 					}
+					
 				}
 			}
 		}
@@ -185,15 +175,15 @@ public class FieldDiff {
 						FieldDeclaration fieldInVersion2;
 						try {
 							fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
+							if(fieldInVersion2 != null && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
+								//os dois tipos tem os mesmos fields
+
+								if((!UtilTools.isDeprecatedField(fieldInVersion1)) && (UtilTools.isDeprecatedField(fieldInVersion2))){
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_DEPRECIATED, false));
+								}
+							}
 						} catch (BindingException e) {
 							continue;
-						}
-						if(fieldInVersion2 != null && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
-							//os dois tipos tem os mesmos fields
-
-							if((!UtilTools.isDeprecatedField(fieldInVersion1)) && (UtilTools.isDeprecatedField(fieldInVersion2))){
-								this.fieldNonBreakingChange++;
-							}
 						}
 					}
 				}
@@ -206,23 +196,15 @@ public class FieldDiff {
 					FieldDeclaration fieldInVersion1;
 					try {
 						fieldInVersion1 = version1.getVersionField(fieldInVersion2, type);
+						if((fieldInVersion1 == null) && (UtilTools.isDeprecatedField(fieldInVersion2))){
+							this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_DEPRECIATED, false));
+						}
 					} catch (BindingException e) {
 						continue;
-					}
-					if((fieldInVersion1 == null) && (UtilTools.isDeprecatedField(fieldInVersion2))){
-						this.fieldNonBreakingChange++;
 					}
 				}
 			}
 		}
-	}
-
-	public int getFieldBreakingChange() {
-		return fieldBreakingChange;
-	}
-
-	public int getFieldNonBreakingChange() {
-		return fieldNonBreakingChange;
 	}
 
 	private void findAddedFields(APIVersion version1, APIVersion version2) {
@@ -234,12 +216,11 @@ public class FieldDiff {
 						FieldDeclaration fieldInVersion1;
 						try {
 							fieldInVersion1 = version1.getVersionField(fieldInVersion2, type);
+							if(fieldInVersion1 == null){
+								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_ADD, false));
+							}
 						} catch (BindingException e) {
 							continue;
-						}
-						if(fieldInVersion1 == null){
-							this.fieldNonBreakingChange++; //added field
-							this.fieldAdd++;
 						}
 					}
 				}
@@ -247,8 +228,11 @@ public class FieldDiff {
 				//tipo foi adicionado na versao 2, todos os fields foram adicionados
 				for (FieldDeclaration field : type.getFields()) {
 					if(!UtilTools.isVisibilityPrivate(field)){
-						this.fieldNonBreakingChange++; //addded field
-						this.fieldAdd++;
+						try {
+							this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(field), this.CATEGORY_FILD_ADD, false));
+						} catch (BindingException e) {
+							continue;
+						}
 					}
 				}
 			}
@@ -265,22 +249,19 @@ public class FieldDiff {
 						FieldDeclaration fieldInVersion2;
 						try {
 							fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
-						} catch (BindingException e) {
-							continue;
-						}
-						if(fieldInVersion2 == null){
-							if(UtilTools.isDeprecatedField(fieldInVersion1)){
-								this.fieldNonBreakingChange++; //removed deprecated field
-								this.fieldDeprecated++;
-							} else{
-								this.fieldBreakingChange++; //removed field
-								this.fieldRemoval++;
-								try {
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_REMOVED_FIELD));
-								} catch (BindingException e) {
-									continue;
+							if(fieldInVersion2 == null){
+								if(UtilTools.isDeprecatedField(fieldInVersion1)){
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_FILD_REMOVED_FIELD_DEPRECIATED, false));
+								} else{
+									try {
+										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_FILD_REMOVED_FIELD, true));
+									} catch (BindingException e) {
+										continue;
+									}
 								}
 							}
+						} catch (BindingException e) {
+							continue;
 						}
 					}
 
@@ -289,19 +270,18 @@ public class FieldDiff {
 				//tipo foi removido na versao 2, todos os fields foram removidos
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
 					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
-						if(UtilTools.isDeprecatedField(fieldInVersion1)){
-							this.fieldNonBreakingChange++; //removed deprecated field
-							this.fieldDeprecated++;
-						} else{
-							this.fieldBreakingChange++; //removed field
-							this.fieldRemoval++;
-							try {
-								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_REMOVED_FIELD));
-							} catch (BindingException e) {
+						try {
+							if(UtilTools.isDeprecatedField(fieldInVersion1)){
+								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_FILD_REMOVED_FIELD_DEPRECIATED, false));
+							} 
+							else{
+								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_FILD_REMOVED_FIELD, true));
+							} 
+						}catch (BindingException e) {
 								continue;
-							}
 						}
 					}
+				
 				}
 			}
 		}
