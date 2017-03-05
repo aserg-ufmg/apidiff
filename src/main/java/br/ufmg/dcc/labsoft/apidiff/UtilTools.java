@@ -218,17 +218,4 @@ public class UtilTools {
 		}
 		return list;
 	}
-
-	
-	/**
-	 * Retorna a lista de todos os types de uma versão.
-	 * @param version
-	 * @return
-	 */
-	public static List<TypeDeclaration> getAllTypes(APIVersion version){
-		List<TypeDeclaration> listTypesVersion = new ArrayList<TypeDeclaration>();
-		listTypesVersion.addAll(version.getApiNonAcessibleTypes());
-		listTypesVersion.addAll(version.getApiAcessibleTypes());
-		return listTypesVersion;
-	}
 }

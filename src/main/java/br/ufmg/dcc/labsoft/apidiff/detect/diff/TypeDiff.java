@@ -142,8 +142,8 @@ public class TypeDiff {
 	 */
 	private void findChangedVisibilityTypes(APIVersion version1, APIVersion version2) {
 		
-		List<TypeDeclaration> listTypesVersion1 = UtilTools.getAllTypes(version1);
-		List<TypeDeclaration> listTypesVersion2 = UtilTools.getAllTypes(version2);
+		List<TypeDeclaration> listTypesVersion1 = version1.getAllTypes();
+		List<TypeDeclaration> listTypesVersion2 = version2.getAllTypes();
 		
 		//Percorre types da versão anterior.
 		for(TypeDeclaration type1: listTypesVersion1){

@@ -272,5 +272,29 @@ public class APIVersion {
 
 		return null;
 	}
+	
+	/**
+	 * Retorna a lista de todos os types de uma versão.
+	 * @param version
+	 * @return
+	 */
+	public List<TypeDeclaration> getAllTypes(){
+		List<TypeDeclaration> listTypesVersion = new ArrayList<TypeDeclaration>();
+		listTypesVersion.addAll(this.getApiNonAcessibleTypes());
+		listTypesVersion.addAll(this.getApiAcessibleTypes());
+		return listTypesVersion;
+	}
+	
+	/**
+	 * Retorna a lista de todos os enums de uma versão.
+	 * @param version
+	 * @return
+	 */
+	public List<EnumDeclaration> getAllEnums(){
+		List<EnumDeclaration> listTypesVersion = new ArrayList<EnumDeclaration>();
+		listTypesVersion.addAll(this.getApiAccessibleEnums());
+		listTypesVersion.addAll(this.getApiNonAccessibleEnums());
+		return listTypesVersion;
+	}
 
 }
