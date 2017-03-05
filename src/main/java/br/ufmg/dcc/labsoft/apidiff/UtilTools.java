@@ -53,18 +53,6 @@ public class UtilTools {
 		return name;
 	}
 	
-	public static boolean isDeprecatedField(FieldDeclaration field){
-		List<VariableDeclarationFragment> variableFragments = field.fragments();
-		for (VariableDeclarationFragment variableDeclarationFragment : variableFragments) {
-			if(variableDeclarationFragment.resolveBinding() != null &&
-					variableDeclarationFragment.resolveBinding().isDeprecated()){
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
 	public static boolean isVisibilityPrivate(BodyDeclaration node){
 		return getVisibility(node).equals("private");
 	}
