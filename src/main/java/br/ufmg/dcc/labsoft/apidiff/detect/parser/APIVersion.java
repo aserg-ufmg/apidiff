@@ -97,10 +97,27 @@ public class APIVersion {
 		EnumDeclarationVisitor visitorEnum = new EnumDeclarationVisitor();
 		compilationUnit.accept(visitorType);
 		compilationUnit.accept(visitorEnum);
-		this.apiAccessibleTypes.addAll(visitorType.getAcessibleTypes());
-		this.apiNonAccessibleTypes.addAll(visitorType.getNonAcessibleTypes());
+		this.configureAcessiblesAndNonAccessibleTypes(visitorType);
 		this.apiAccessibleEnums.addAll(visitorEnum.getAcessibleEnums());
 		this.apiNonAccessibleEnums.addAll(visitorEnum.getNonAcessibleEnums());
+	}
+	
+	/**
+	 *  Salva os types acessíveis para o cliente externo são (public ou protected) e não acessíveis (default e private).
+	 * @param visitorType
+	 */
+	private void configureAcessiblesAndNonAccessibleTypes(TypeDeclarationVisitor visitorType){
+		
+		this.apiNonAccessibleTypes.addAll(visitorType.getNonAcessibleTypes()); // adiciona os types private.
+		
+		for(TypeDeclaration type: visitorType.getAcessibleTypes()){
+			if(UtilTools.isVisibilityProtected(type) || UtilTools.isVisibilityPublic(type)){
+				this.apiAccessibleTypes.add(type);
+			}
+			else{
+				this.apiNonAccessibleTypes.add(type);
+			}
+		}
 	}
 	
 	/**
@@ -180,20 +197,24 @@ public class APIVersion {
 
 		return null;
 	}
-
-	public boolean contaisAccessibleType(TypeDeclaration type){
+	
+	public boolean containsType(TypeDeclaration type){
+		return this.containsAccessibleType(type) || this.containsNonAccessibleType(type);
+	}
+	
+	public boolean containsAccessibleType(TypeDeclaration type){
 		return this.getVersionAccessibleType(type) != null;
 	}
 
-	public boolean contaisNonAccessibleType(TypeDeclaration type){
+	public boolean containsNonAccessibleType(TypeDeclaration type){
 		return this.getVersionNonAccessibleType(type) != null;
 	}
 
-	public boolean contaisAccessibleEnum(EnumDeclaration type){
+	public boolean containsAccessibleEnum(EnumDeclaration type){
 		return this.getVersionAccessibleEnum(type) != null;
 	}
 
-	public boolean contaisNonAccessibleEnum(EnumDeclaration type){
+	public boolean containsNonAccessibleEnum(EnumDeclaration type){
 		return this.getVersionNonAccessibleEnum(type) != null;
 	}
 
@@ -226,6 +247,13 @@ public class APIVersion {
 		return result;
 	}
 
+	/**
+	 * Retorna o método na versão corrente que possuem o mesmo nome do método recebido como parâmetro.
+	 * Retorna nulo se o método não for encontrado.
+	 * @param method
+	 * @param type
+	 * @return
+	 */
 	public MethodDeclaration getEqualVersionMethod(MethodDeclaration method, TypeDeclaration type){
 		for(MethodDeclaration methodInThisVersion : this.getAllEqualMethodsByName(method, type)){
 			if(UtilTools.isEqualMethod(method, methodInThisVersion)){

@@ -52,7 +52,7 @@ public class FieldDiff {
 	private void findDefaultValueFields(APIVersion version1, APIVersion version2){
 		
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
-			if(version2.contaisAccessibleType(type)){
+			if(version2.containsAccessibleType(type)){
 
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
 					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
@@ -114,7 +114,7 @@ public class FieldDiff {
 	private void findChangedTypeFields(APIVersion version1, APIVersion version2) {
 		
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
-			if(version2.contaisAccessibleType(type)){
+			if(version2.containsAccessibleType(type)){
 
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
 					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
@@ -144,7 +144,7 @@ public class FieldDiff {
 	private void findChangedVisibilityFields(APIVersion version1, APIVersion version2) {
 		
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
-			if(version2.contaisAccessibleType(type)){
+			if(version2.containsAccessibleType(type)){
 
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
 					FieldDeclaration fieldInVersion2;
@@ -178,7 +178,7 @@ public class FieldDiff {
 
 	private void findAddedDeprecatedFields(APIVersion version1, APIVersion version2) {
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
-			if(version2.contaisAccessibleType(type)){
+			if(version2.containsAccessibleType(type)){
 
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
 					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
@@ -227,7 +227,7 @@ public class FieldDiff {
 
 	private void findAddedFields(APIVersion version1, APIVersion version2) {
 		for (TypeDeclaration type : version2.getApiAcessibleTypes()) {
-			if(version1.contaisAccessibleType(type)){
+			if(version1.containsAccessibleType(type)){
 
 				for (FieldDeclaration fieldInVersion2 : type.getFields()) {
 					if(!UtilTools.isVisibilityPrivate(fieldInVersion2)){
@@ -258,7 +258,7 @@ public class FieldDiff {
 	private void findRemovedFields(APIVersion version1, APIVersion version2) {
 		
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
-			if(version2.contaisAccessibleType(type)){
+			if(version2.containsAccessibleType(type)){
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
 
 					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){

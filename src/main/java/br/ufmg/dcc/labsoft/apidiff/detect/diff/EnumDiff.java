@@ -60,7 +60,7 @@ public class EnumDiff {
 	private void findChangedVisibilityEnums(APIVersion version1, APIVersion version2) {
 		
 		for(EnumDeclaration acessibleEnumVersion1 : version1.getApiAccessibleEnums()){
-			if(version2.contaisNonAccessibleEnum(acessibleEnumVersion1)){
+			if(version2.containsNonAccessibleEnum(acessibleEnumVersion1)){
 				if(acessibleEnumVersion1.resolveBinding() != null &&
 						acessibleEnumVersion1.resolveBinding().isDeprecated()){
 					this.enumNonBreakingChange++;
@@ -74,7 +74,7 @@ public class EnumDiff {
 		}
 
 		for(EnumDeclaration nonAcessibleEnumVersion1 : version1.getApiNonAccessibleEnums()){
-			if(version2.contaisAccessibleEnum(nonAcessibleEnumVersion1)){
+			if(version2.containsAccessibleEnum(nonAcessibleEnumVersion1)){
 				this.enumNonBreakingChange++;
 			}
 		}

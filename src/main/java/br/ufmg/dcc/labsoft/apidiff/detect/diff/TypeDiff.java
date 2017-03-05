@@ -109,7 +109,7 @@ public class TypeDiff {
 
 		//Se type não existia na versão 1, e foi adicionado na versão 2 já depreciado.
 		for(TypeDeclaration accessibleTypeVersion2 : version2.getApiAcessibleTypes()){
-			if(!version1.contaisAccessibleType(accessibleTypeVersion2) && this.isDeprecated(accessibleTypeVersion2)){
+			if(!version1.containsAccessibleType(accessibleTypeVersion2) && this.isDeprecated(accessibleTypeVersion2)){
 				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(accessibleTypeVersion2), accessibleTypeVersion2.getName().toString(), this.CATEGORY_TYPE_DEPRECIATED, false));
 			}
 		}
@@ -132,17 +132,7 @@ public class TypeDiff {
 		return null;
 	}
 	
-	/**
-	 * Retorna a lista de todos os types de uma versão.
-	 * @param version
-	 * @return
-	 */
-	private List<TypeDeclaration> getAllTypes(APIVersion version){
-		List<TypeDeclaration> listTypesVersion = new ArrayList<TypeDeclaration>();
-		listTypesVersion.addAll(version.getApiNonAcessibleTypes());
-		listTypesVersion.addAll(version.getApiAcessibleTypes());
-		return listTypesVersion;
-	}
+
 	
 	/**
 	 * Busca classes que tiveram perda ou ganho de visibilidade.
@@ -154,8 +144,8 @@ public class TypeDiff {
 	 */
 	private void findChangedVisibilityTypes(APIVersion version1, APIVersion version2) {
 		
-		List<TypeDeclaration> listTypesVersion1 = this.getAllTypes(version1);
-		List<TypeDeclaration> listTypesVersion2 = this.getAllTypes(version2);
+		List<TypeDeclaration> listTypesVersion1 = UtilTools.getAllTypes(version1);
+		List<TypeDeclaration> listTypesVersion2 = UtilTools.getAllTypes(version2);
 		
 		//Percorre types da versão anterior.
 		for(TypeDeclaration type1: listTypesVersion1){
@@ -170,19 +160,13 @@ public class TypeDiff {
 					String category = "";
 					Boolean isBreakingChange = false;
 					
-					//public --> qualquer modificador de acesso:  breaking change
-					//protected --> qualquer modificador de acesso, exceto public: breaking change
+					//Breaking change: public --> qualquer modificador de acesso, protected --> qualquer modificador de acesso, exceto public.
 					if(UtilTools.isVisibilityPublic(type1) || (UtilTools.isVisibilityProtected(type1) && !UtilTools.isVisibilityPublic(type2))){
 						category = this.isDeprecated(type1)? this.CATEGORY_TYPE_LOST_VISIBILIT_DEPRECIATED: this.CATEGORY_TYPE_LOST_VISIBILITY;
 						isBreakingChange = this.isDeprecated(type1)? false: true;
 					}
 					else{
-						//private ou default --> qualquer modificador de acesso: non-breaking change
-						//Demais casos: non-breaking change 
-						
-						//default --> private : CATEGORY_TYPE_LOST_VISIBILITY.
-						//Demais casos: CATEGORY_TYPE_GAIN_VISIBILITY
-						
+						//non-breaking change: private ou default --> qualquer modificador de acesso, demais casos.
 						category = UtilTools.isVisibilityDefault(type1) && UtilTools.isVisibilityPrivate(type2)? this.CATEGORY_TYPE_LOST_VISIBILITY: this.CATEGORY_TYPE_GAIN_VISIBILITY;
 						isBreakingChange = false;
 					}
@@ -198,9 +182,12 @@ public class TypeDiff {
 	 * @param version2
 	 */
 	private void findAddedTypes(APIVersion version1, APIVersion version2) {
-		for (TypeDeclaration type : version2.getApiAcessibleTypes()) {
-			if(!version1.contaisAccessibleType(type) && !version1.contaisNonAccessibleType(type)){
-				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(type), type.getName().toString(), this.CATEGORY_TYPE_ADD, false));
+		//Busca types na segunda versão que não estão na primeira.
+		List<TypeDeclaration> listTypesVersion2 = UtilTools.getAcessibleTypes(version2);
+		for (TypeDeclaration typeVersion2 : listTypesVersion2) {
+			//Busca entre os types acessíveis e não acessíveis porque pode ser um type que já existia e ganhou visibilidade.
+			if(!version1.containsAccessibleType(typeVersion2) && !version1.containsNonAccessibleType(typeVersion2)){
+				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(typeVersion2), typeVersion2.getName().toString(), this.CATEGORY_TYPE_ADD, false));
 			}
 		}
 	}
@@ -214,7 +201,7 @@ public class TypeDiff {
 	 */
 	private void findRemovedTypes(APIVersion version1, APIVersion version2) {
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
-			if(!version2.contaisAccessibleType(type) && !version2.contaisNonAccessibleType(type)){
+			if(!version2.containsAccessibleType(type) && !version2.containsNonAccessibleType(type)){
 				String category = this.isDeprecated(type)? this.CATEGORY_TYPE_REMOVED_DEPRECIATED: this.CATEGORY_TYPE_REMOVED;
 				Boolean isBreakingChange = this.isDeprecated(type)? false: true;
 				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(type), type.getName().toString(), category, isBreakingChange));

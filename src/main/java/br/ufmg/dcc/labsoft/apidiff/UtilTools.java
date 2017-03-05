@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.detect.exception.BindingException;
+import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class UtilTools {
 	
@@ -196,5 +197,50 @@ public class UtilTools {
 		Properties properties = UtilTools.getProperties();
 		return properties.getProperty("PATH_PROJECT");
 	}
+	
+	/**
+	 * Retorna a lista dos types acessíveis de uma versão. No contexto de clientes externos,
+	 * apenas os métodos public e protected são acessíveis. Métodos default não são considerados.
+	 * @param version
+	 * @return
+	 */
+	public static  List<TypeDeclaration> getAcessibleTypes(APIVersion version){
+		List<TypeDeclaration> list = new ArrayList<TypeDeclaration>();
+		for(TypeDeclaration type: version.getApiAcessibleTypes()){
+			if(UtilTools.isVisibilityPublic(type) || UtilTools.isVisibilityProtected(type)){
+				list.add(type);
+			}
+		}
+		return list;
+	}
+	
+	/**
+	 * Retorna a lista de types que estão nas duas versões, ou seja, a interseção das duas listas.
+	 * Os types retornados são aqueles contidos na última versão (listVersion2).
+	 * @param listVersion1
+	 * @param listVersion2
+	 * @return
+	 */
+	public static  List<TypeDeclaration> getIntersectionListTypes(List<TypeDeclaration> listVersion1, List<TypeDeclaration> listVersion2){
+		List<TypeDeclaration> list = new ArrayList<TypeDeclaration>();
+		for(TypeDeclaration type: listVersion2){
+			if(listVersion1.contains(type)){
+				list.add(type);
+			}
+		}
+		return list;
+	}
 
+	
+	/**
+	 * Retorna a lista de todos os types de uma versão.
+	 * @param version
+	 * @return
+	 */
+	public static List<TypeDeclaration> getAllTypes(APIVersion version){
+		List<TypeDeclaration> listTypesVersion = new ArrayList<TypeDeclaration>();
+		listTypesVersion.addAll(version.getApiNonAcessibleTypes());
+		listTypesVersion.addAll(version.getApiAcessibleTypes());
+		return listTypesVersion;
+	}
 }
