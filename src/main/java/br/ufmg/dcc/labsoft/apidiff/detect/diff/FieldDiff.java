@@ -146,7 +146,7 @@ public class FieldDiff {
 							if(UtilTools.isVisibilityPrivate(fieldInVersion1) && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
 								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_GAIN_VISIBILITY));
 							} else if(!UtilTools.isVisibilityPrivate(fieldInVersion1) && UtilTools.isVisibilityPrivate(fieldInVersion2)){
-								if(this.isDeprecatedField(fieldInVersion1)){
+								if(this.isDeprecated(fieldInVersion1, type)){
 									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_LOST_VISIBILITY_DEPRECIATED));
 								} else {
 									try {
@@ -242,7 +242,7 @@ public class FieldDiff {
 						try {
 							fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
 							if(fieldInVersion2 == null){
-								if(this.isDeprecatedField(fieldInVersion1)){
+								if(this.isDeprecated(fieldInVersion1, type)){
 									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_FIELD_REMOVED_FIELD_DEPRECIATED, false));
 								} else{
 									try {
