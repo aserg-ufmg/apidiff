@@ -13,34 +13,34 @@ import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class FieldDiff {
 	
-	private final String CATEGORY_FILD_CHANGED_DEFAULT_VALUE = "FILD CHANGED DEFAULT VALUE";
-	private final String CATEGORY_FILD_CHANGED_DEFAULT_VALUE_DEPRECIATED = "FILD CHANGED DEFAULT VALUE DEPRECIATED";
+	private final String CATEGORY_FIELD_CHANGED_DEFAULT_VALUE = "FIELD CHANGED DEFAULT VALUE";
+	private final String CATEGORY_FIELD_CHANGED_DEFAULT_VALUE_DEPRECIATED = "FIELD CHANGED DEFAULT VALUE DEPRECIATED";
 	
-	private final String CATEGORY_FILD_CHANGED_TYPE_FIELD = "FILD CHANGED TYPE FIELD";
-	private final String CATEGORY_FILD_CHANGED_TYPE_FIELD_DEPRECIATED = "FILD CHANGED TYPE FIELD DEPRECIATED";
+	private final String CATEGORY_FIELD_CHANGED_TYPE_FIELD = "FIELD CHANGED TYPE FIELD";
+	private final String CATEGORY_FIELD_CHANGED_TYPE_FIELD_DEPRECIATED = "FIELD CHANGED TYPE FIELD DEPRECIATED";
 	
-	private final String CATEGORY_FILD_LOST_VISIBILITY = "FILD LOST VISIBILITY";
-	private final String CATEGORY_FILD_LOST_VISIBILITY_DEPRECIATED = "FILD LOST VISIBILITY DEPRECIATED";
-	private final String CATEGORY_FILD_GAIN_VISIBILITY = "FILD GAIN VISIBILITY";
+	private final String CATEGORY_FIELD_LOST_VISIBILITY = "FIELD LOST VISIBILITY";
+	private final String CATEGORY_FIELD_LOST_VISIBILITY_DEPRECIATED = "FIELD LOST VISIBILITY DEPRECIATED";
+	private final String CATEGORY_FIELD_GAIN_VISIBILITY = "FIELD GAIN VISIBILITY";
 	
-	private final String CATEGORY_FILD_REMOVED_FIELD = "FILD REMOVED";
-	private final String CATEGORY_FILD_REMOVED_FIELD_DEPRECIATED = "FILD REMOVED DEPRECIATED";
+	private final String CATEGORY_FIELD_REMOVED_FIELD = "FIELD REMOVED";
+	private final String CATEGORY_FIELD_REMOVED_FIELD_DEPRECIATED = "FIELD REMOVED DEPRECIATED";
 	
-	private final String CATEGORY_FILD_ADD = "FILD ADDED"; //non-breaking change
+	private final String CATEGORY_FIELD_ADD = "FIELD ADDED"; //non-breaking change
 	
-	private final String CATEGORY_FILD_DEPRECIATED = "FILD DEPRECIATED";
+	private final String CATEGORY_FIELD_DEPRECIATED = "FIELD DEPRECIATED";
 	
 	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
 	
 	public Result calculateDiff(final APIVersion version1, final APIVersion version2){
 		
-		//Lista breacking Change.
+		//Lista breacking changes.
 		this.findDefaultValueFields(version1, version2);
 		this.findChangedTypeFields(version1, version2);
 		this.findRemovedFields(version1, version2);
 		this.findChangedVisibilityFields(version1, version2);
 		
-		//Conta non-Breaking Change.
+		//Conta non-breaking changes.
 		this.findAddedFields(version1, version2);
 		this.findAddedDeprecatedFields(version1, version2);
 		
@@ -78,14 +78,14 @@ public class FieldDiff {
 							
 							if(valueVersion1 == null && valueVersion2 != null){
 								try {
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_CHANGED_DEFAULT_VALUE));
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_CHANGED_DEFAULT_VALUE));
 								} catch (BindingException e) {
 									continue;
 								}
 							}
 							else if(valueVersion1 != null && valueVersion2 == null){
 								try {
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_CHANGED_DEFAULT_VALUE));
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_CHANGED_DEFAULT_VALUE));
 								} catch (BindingException e) {
 									continue;
 								}
@@ -93,7 +93,7 @@ public class FieldDiff {
 							else if(valueVersion1 != null && valueVersion2 != null)
 								if(!valueVersion1.toString().equals(valueVersion2.toString())) {
 									try {
-										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_CHANGED_DEFAULT_VALUE));
+										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_CHANGED_DEFAULT_VALUE));
 									} catch (BindingException e) {
 										continue;
 								}
@@ -121,7 +121,7 @@ public class FieldDiff {
 						if(fieldInVersion2 != null && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
 							if(!fieldInVersion1.getType().toString().equals(fieldInVersion2.getType().toString())){
 								try {
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_CHANGED_TYPE_FIELD));
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_CHANGED_TYPE_FIELD));
 								} catch (BindingException e) {
 									continue;
 								}
@@ -144,13 +144,13 @@ public class FieldDiff {
 						fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
 						if(fieldInVersion2 != null){
 							if(UtilTools.isVisibilityPrivate(fieldInVersion1) && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
-								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_GAIN_VISIBILITY));
+								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_GAIN_VISIBILITY));
 							} else if(!UtilTools.isVisibilityPrivate(fieldInVersion1) && UtilTools.isVisibilityPrivate(fieldInVersion2)){
-								if(UtilTools.isDeprecatedField(fieldInVersion1)){
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_LOST_VISIBILITY_DEPRECIATED));
+								if(this.isDeprecatedField(fieldInVersion1)){
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_LOST_VISIBILITY_DEPRECIATED));
 								} else {
 									try {
-										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_LOST_VISIBILITY));
+										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_LOST_VISIBILITY));
 									} catch (BindingException e) {
 										continue;
 									}
@@ -166,38 +166,24 @@ public class FieldDiff {
 		}
 	}
 
+	/**
+	 * Busca fields que foram depreciados.
+	 * @param version1
+	 * @param version2
+	 */
 	private void findAddedDeprecatedFields(APIVersion version1, APIVersion version2) {
-		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
-			if(version2.containsAccessibleType(type)){
-
-				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
-					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
-						FieldDeclaration fieldInVersion2;
-						try {
-							fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
-							if(fieldInVersion2 != null && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
-								//os dois tipos tem os mesmos fields
-
-								if((!UtilTools.isDeprecatedField(fieldInVersion1)) && (UtilTools.isDeprecatedField(fieldInVersion2))){
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_DEPRECIATED, false));
-								}
-							}
-						} catch (BindingException e) {
-							continue;
-						}
-					}
-				}
-			}	
-		}
-
-		for (TypeDeclaration type : version2.getApiAcessibleTypes()) {
-			for (FieldDeclaration fieldInVersion2 : type.getFields()) {
-				if(!UtilTools.isVisibilityPrivate(fieldInVersion2)){
-					FieldDeclaration fieldInVersion1;
+		
+		//Percorre todos os types acessíveis da versão 2.
+		for(TypeDeclaration typeVersion2 : version2.getApiAcessibleTypes()){
+			for(FieldDeclaration fieldVersion2 : typeVersion2.getFields()){
+				//Se não estava depreciado na versão anterior, insere na saída.
+				//Se o type foi criado depreciado, insere na saída.
+				if(this.isFildAcessible(fieldVersion2) && this.isDeprecated(fieldVersion2, typeVersion2)){
 					try {
-						fieldInVersion1 = version1.getVersionField(fieldInVersion2, type);
-						if((fieldInVersion1 == null) && (UtilTools.isDeprecatedField(fieldInVersion2))){
-							this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_DEPRECIATED, false));
+						FieldDeclaration fieldInVersion1 = version2.getVersionField(fieldVersion2, typeVersion2);
+						//Se o field não estava depreciado na versão anterior ou não existia e foi criado depreciado.
+						if(fieldInVersion1 == null || !this.isDeprecated(fieldInVersion1, version1.getVersionAccessibleType(typeVersion2))){
+							this.listBreakingChange.add(new BreakingChange(typeVersion2.resolveBinding().getQualifiedName(),  UtilTools.getFieldName(fieldVersion2), this.CATEGORY_FIELD_DEPRECIATED, false));
 						}
 					} catch (BindingException e) {
 						continue;
@@ -217,7 +203,7 @@ public class FieldDiff {
 						try {
 							fieldInVersion1 = version1.getVersionField(fieldInVersion2, type);
 							if(fieldInVersion1 == null){
-								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FILD_ADD, false));
+								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_ADD, false));
 							}
 						} catch (BindingException e) {
 							continue;
@@ -229,7 +215,7 @@ public class FieldDiff {
 				for (FieldDeclaration field : type.getFields()) {
 					if(!UtilTools.isVisibilityPrivate(field)){
 						try {
-							this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(field), this.CATEGORY_FILD_ADD, false));
+							this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(field), this.CATEGORY_FIELD_ADD, false));
 						} catch (BindingException e) {
 							continue;
 						}
@@ -239,6 +225,12 @@ public class FieldDiff {
 		}
 	}
 
+	/**
+	 * Busca field que foram removidos.
+	 * Se a classe foi removida, os fields não são analisados. A remoção da classe é a breaking change.
+	 * @param version1
+	 * @param version2
+	 */
 	private void findRemovedFields(APIVersion version1, APIVersion version2) {
 		
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
@@ -250,11 +242,11 @@ public class FieldDiff {
 						try {
 							fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
 							if(fieldInVersion2 == null){
-								if(UtilTools.isDeprecatedField(fieldInVersion1)){
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_FILD_REMOVED_FIELD_DEPRECIATED, false));
+								if(this.isDeprecatedField(fieldInVersion1)){
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_FIELD_REMOVED_FIELD_DEPRECIATED, false));
 								} else{
 									try {
-										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_FILD_REMOVED_FIELD, true));
+										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_FIELD_REMOVED_FIELD, true));
 									} catch (BindingException e) {
 										continue;
 									}
@@ -271,11 +263,11 @@ public class FieldDiff {
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
 					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
 						try {
-							if(UtilTools.isDeprecatedField(fieldInVersion1)){
-								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_FILD_REMOVED_FIELD_DEPRECIATED, false));
+							if(this.isDeprecatedField(fieldInVersion1)){
+								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_FIELD_REMOVED_FIELD_DEPRECIATED, false));
 							} 
 							else{
-								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_FILD_REMOVED_FIELD, true));
+								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), this.CATEGORY_FIELD_REMOVED_FIELD, true));
 							} 
 						}catch (BindingException e) {
 								continue;
@@ -285,6 +277,45 @@ public class FieldDiff {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Retorna verdadeiro se o field está depreciado ou a classe do field está depreciada.
+	 * @param field
+	 * @param type
+	 * @return
+	 */
+	private Boolean isDeprecated(FieldDeclaration field, TypeDeclaration type){
+		Boolean isFildDeprecated = this.isDeprecatedField(field);
+		Boolean isTypeDeprecated = (type != null && type.resolveBinding() != null && type.resolveBinding().isDeprecated()) ? true: false;
+		
+		return isFildDeprecated || isTypeDeprecated;
+	}
+	
+	/**
+	 * Verifica se um field está depreciado.
+	 * @param field
+	 * @return
+	 */
+	private Boolean isDeprecatedField(FieldDeclaration field){
+		if(field != null){
+			List<VariableDeclarationFragment> variableFragments = field.fragments();
+			for (VariableDeclarationFragment variableDeclarationFragment : variableFragments) {
+				if(variableDeclarationFragment.resolveBinding() != null &&	variableDeclarationFragment.resolveBinding().isDeprecated()){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Retorna verdadeiro se é um método acessível pelo cliente externo ao projeto.
+	 * @param methodDeclaration
+	 * @return
+	 */
+	private boolean isFildAcessible(FieldDeclaration field){
+		return field != null && (UtilTools.isVisibilityProtected(field) || UtilTools.isVisibilityPublic(field))?true:false;
 	}
 	
 }
