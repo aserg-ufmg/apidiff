@@ -21,6 +21,10 @@ public class TypeDiff {
 	private final String CATEGORY_TYPE_GAIN_MODIFIER_FINAL = "TYPE GAIN MODIFIER FINAL"; //breaking change
 	private final String CATEGORY_TYPE_GAIN_MODIFIER_FINAL_DEPRECIATED = "TYPE GAIN MODIFIER FINAL DEPRECIATED"; //non-breaking change
 	
+	private final String CATEGORY_TYPE_LOST_MODIFIER_STATIC = "TYPE LOST MODIFIER STATIC"; //breaking change
+	private final String CATEGORY_TYPE_LOST_MODIFIER_STATIC_DEPRECIATED = "TYPE LOST MODIFIER STATIC DEPRECIATED"; //non-breaking change
+	private final String CATEGORY_TYPE_GAIN_MODIFIER_STATIC = "TYPE GAIN MODIFIER STATIC"; //non-breaking change
+	
 	private final String CATEGORY_TYPE_ADD = "TYPE ADDED"; //non-breaking change
 	
 	private final String CATEGORY_TYPE_DEPRECIATED = "TYPE DEPRECIATED"; //non-breaking change
@@ -45,7 +49,7 @@ public class TypeDiff {
 		this.findChangedVisibilityTypes(version1, version2);
 		this.findAddedDeprecated(version1, version2);
 		this.changedSuperTypes(version1, version2);
-		this.findChangedFinal(version1, version2);
+		this.findChangedFinalAndStatic(version1, version2);
 		
 		Result result = new Result();
 		result.setListBreakingChange(this.listBreakingChange);
@@ -247,6 +251,10 @@ public class TypeDiff {
 	/**
 	 * Compara se dois métodos tem ou não o modificador "final".
 	 * Registra na saída, se houver diferença.
+	 * 
+	 * Adicionar final é breaking change.
+	 * Remover final não é breaking change.
+	 * 
 	 * @param methodInVersion1
 	 * @param methodInVersion2
 	 */
@@ -271,17 +279,48 @@ public class TypeDiff {
 	}
 	
 	/**
-	 * Busca modificador "final" removido ou adicionado.
+	 * Verifica se duas versões de um type tiveram mudanças no modificador "static"
+	 * Registra na saída, se houver diferença.
+	 * 
+	 * Adicionar final não é breaking change.
+	 * Remover "Static" é breaking change.
+	 * 
+	 * @param methodInVersion1
+	 * @param methodInVersion2
+	 */
+	private void diffModifierStatic(TypeDeclaration typeVersion1, TypeDeclaration typeVersion2){
+		//Se não houve mudança no identificador static.
+		if((UtilTools.isStatic(typeVersion1) && UtilTools.isStatic(typeVersion2)) || ((!UtilTools.isStatic(typeVersion1) && !UtilTools.isStatic(typeVersion2)))){
+			return;
+		}
+		String category = "";
+		Boolean isBreakingChange = false;
+		//Se ganhou o modificador "static"
+		if((!UtilTools.isStatic(typeVersion1) && UtilTools.isStatic(typeVersion2))){
+			category =  this.CATEGORY_TYPE_GAIN_MODIFIER_STATIC;
+			isBreakingChange = false;
+		}
+		else{
+			//Se perdeu o modificador "static"
+			category = this.isDeprecated(typeVersion1)?this.CATEGORY_TYPE_LOST_MODIFIER_STATIC_DEPRECIATED:CATEGORY_TYPE_LOST_MODIFIER_STATIC;
+			isBreakingChange = this.isDeprecated(typeVersion1)?false:true;
+		}
+		this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(typeVersion2), typeVersion2.getName().toString(), category, isBreakingChange));
+	}
+	
+	/**
+	 * Busca modificadores final/static que foram removidos ou adicionados.
 	 * 
 	 * @param version1
 	 * @param version2
 	 */
-	private void findChangedFinal(APIVersion version1, APIVersion version2) {
+	private void findChangedFinalAndStatic(APIVersion version1, APIVersion version2) {
 		//Percorre todos os types da versão corrente.
 		for (TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()) {
 			TypeDeclaration typeVersion2 = version2.getVersionAccessibleType(typeVersion1);
 			if(typeVersion2 != null){
 				this.diffModifierFinal(typeVersion1, typeVersion2);
+				this.diffModifierStatic(typeVersion1, typeVersion2);
 			}
 		}
 	}

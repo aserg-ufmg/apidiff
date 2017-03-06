@@ -19,6 +19,10 @@ public class MethodDiff {
 	private final String CATEGORY_METHOD_GAIN_MODIFIER_FINAL = "METHOD GAIN MODIFIER FINAL"; //breaking change
 	private final String CATEGORY_METHOD_GAIN_MODIFIER_FINAL_DEPRECIATED = "METHOD GAIN MODIFIER FINAL DEPRECIATED"; //non-breaking change
 	
+	private final String CATEGORY_METHOD_LOST_MODIFIER_STATIC = "METHOD LOST MODIFIER STATIC"; //breaking change
+	private final String CATEGORY_METHOD_LOST_MODIFIER_STATIC_DEPRECIATED = "METHOD LOST MODIFIER STATIC DEPRECIATED"; //non-breaking change
+	private final String CATEGORY_METHOD_GAIN_MODIFIER_STATIC = "METHOD GAIN MODIFIER STATIC"; //non-breaking change
+	
 	private final String CATEGORY_METHOD_CHANGED_PARAMETERS = "METHOD CHANGED PARAMETERS"; //breaking change
 	private final String CATEGORY_METHOD_CHANGED_PARAMETERS_DEPRECIATED = "METHOD CHANGED PARAMETERS DEPRECIATED"; //non-breaking change
 	
@@ -46,7 +50,7 @@ public class MethodDiff {
 		this.findChangedReturnTypeMethods(version1, version2);
 		this.findChangedParametersMethods(version1, version2);
 		this.findChangedExceptionTypeMethods(version1, version2);
-		this.findChangedFinal(version1, version2);
+		this.findChangedFinalAndStatic(version1, version2);
 		
 		//Lista non-breaking changes.
 		this.findAddedMethods(version1, version2);
@@ -364,43 +368,70 @@ public class MethodDiff {
 	/**
 	 * Compara se dois métodos tem ou não o modificador "final".
 	 * Registra na saída, se houver diferença.
-	 * @param methodInVersion1
-	 * @param methodInVersion2
+	 * @param methodVersion1
+	 * @param methodVersion2
 	 */
-	private void diffModifierFinal(TypeDeclaration typeVersion1, MethodDeclaration methodInVersion1, MethodDeclaration methodInVersion2){
+	private void diffModifierFinal(TypeDeclaration typeVersion1, MethodDeclaration methodVersion1, MethodDeclaration methodVersion2){
 		//Se não houve mudança no identificador final.
-		if((UtilTools.isFinal(methodInVersion1) && UtilTools.isFinal(methodInVersion2)) || ((!UtilTools.isFinal(methodInVersion1) && !UtilTools.isFinal(methodInVersion2)))){
+		if((UtilTools.isFinal(methodVersion1) && UtilTools.isFinal(methodVersion2)) || ((!UtilTools.isFinal(methodVersion1) && !UtilTools.isFinal(methodVersion2)))){
 			return;
 		}
 		String category = "";
 		Boolean isBreakingChange = false;
 		//Se ganhou o modificador "final"
-		if((!UtilTools.isFinal(methodInVersion1) && UtilTools.isFinal(methodInVersion2))){
-			category = this.isDeprecated(methodInVersion1, typeVersion1)?this.CATEGORY_METHOD_GAIN_MODIFIER_FINAL_DEPRECIATED:CATEGORY_METHOD_GAIN_MODIFIER_FINAL;
-			isBreakingChange = this.isDeprecated(methodInVersion1, typeVersion1)?false:true;
+		if((!UtilTools.isFinal(methodVersion1) && UtilTools.isFinal(methodVersion2))){
+			category = this.isDeprecated(methodVersion1, typeVersion1)?this.CATEGORY_METHOD_GAIN_MODIFIER_FINAL_DEPRECIATED:CATEGORY_METHOD_GAIN_MODIFIER_FINAL;
+			isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)?false:true;
 		}
 		else{
 			//Se perdeu o modificador "final"
 			category = this.CATEGORY_METHOD_LOST_MODIFIER_FINAL;
 			isBreakingChange = false;
 		}
-		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodInVersion2.getName().toString(), category, isBreakingChange));
+		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion2.getName().toString(), category, isBreakingChange));
 	}
 	
 	/**
-	 * Busca modificador "final" removido ou adicionado.
+	 * Verifica se duas versões de um método tiveram mudanças no modificador "static"
+	 * Registra na saída, se houver diferença.
+	 * @param methodVersion1
+	 * @param methodVersion2
+	 */
+	private void diffModifierStatic(TypeDeclaration typeVersion1, MethodDeclaration methodVersion1, MethodDeclaration methodVersion2){
+		//Se não houve mudança no identificador final.
+		if((UtilTools.isStatic(methodVersion1) && UtilTools.isStatic(methodVersion2)) || ((!UtilTools.isStatic(methodVersion1) && !UtilTools.isStatic(methodVersion2)))){
+			return;
+		}
+		String category = "";
+		Boolean isBreakingChange = false;
+		//Se ganhou o modificador "static"
+		if((!UtilTools.isStatic(methodVersion1) && UtilTools.isStatic(methodVersion2))){
+			category = CATEGORY_METHOD_GAIN_MODIFIER_STATIC;
+			isBreakingChange = false;
+		}
+		else{
+			//Se perdeu o modificador "static"
+			category = this.isDeprecated(methodVersion1, typeVersion1)?this.CATEGORY_METHOD_LOST_MODIFIER_STATIC_DEPRECIATED:CATEGORY_METHOD_LOST_MODIFIER_STATIC;
+			isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)?false:true;
+		}
+		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion2.getName().toString(), category, isBreakingChange));
+	}
+	
+	/**
+	 * Busca modificadores final/static que foram removidos ou adicionados.
 	 * 
 	 * @param version1
 	 * @param version2
 	 */
-	private void findChangedFinal(APIVersion version1, APIVersion version2) {
+	private void findChangedFinalAndStatic(APIVersion version1, APIVersion version2) {
 		//Percorre todos os types da versão corrente.
-		for (TypeDeclaration typeInVersion1 : version1.getApiAcessibleTypes()) {
-			if(version2.containsType(typeInVersion1)){//Se type ainda existe.
-				for(MethodDeclaration methodInVersion1: typeInVersion1.getMethods()){
-					MethodDeclaration methodInVersion2 = version2.getEqualVersionMethod(methodInVersion1, typeInVersion1);
-					if(this.isMethodAcessible(methodInVersion1) && (methodInVersion2 != null)){
-						this.diffModifierFinal(typeInVersion1, methodInVersion1, methodInVersion2);
+		for (TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()) {
+			if(version2.containsType(typeVersion1)){//Se type ainda existe.
+				for(MethodDeclaration methodVersion1: typeVersion1.getMethods()){
+					MethodDeclaration methodVersion2 = version2.getEqualVersionMethod(methodVersion1, typeVersion1);
+					if(this.isMethodAcessible(methodVersion1) && (methodVersion2 != null)){
+						this.diffModifierFinal(typeVersion1, methodVersion1, methodVersion2);
+						this.diffModifierStatic(typeVersion1, methodVersion1, methodVersion2);
 					}
 				}
 			}

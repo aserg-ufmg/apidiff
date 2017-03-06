@@ -74,6 +74,10 @@ public class UtilTools {
 		return containsModifier(node, "final");
 	}
 	
+	public static Boolean isStatic(BodyDeclaration node){
+		return containsModifier(node, "static");
+	}
+	
 	/**
 	 * Busca modificador na lista de modificadores do nó.
 	 * @param node
