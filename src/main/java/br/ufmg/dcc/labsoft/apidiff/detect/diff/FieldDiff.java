@@ -23,6 +23,10 @@ public class FieldDiff {
 	private final String CATEGORY_FIELD_CHANGED_TYPE_FIELD = "FIELD CHANGED TYPE FIELD";
 	private final String CATEGORY_FIELD_CHANGED_TYPE_FIELD_DEPRECIATED = "FIELD CHANGED TYPE FIELD DEPRECIATED";
 	
+	private final String CATEGORY_FIELD_LOST_MODIFIER_FINAL = "FIELD LOST MODIFIER FINAL"; //non-breaking change
+	private final String CATEGORY_FIELD_GAIN_MODIFIER_FINAL = "FIELD GAIN MODIFIER FINAL"; //breaking change
+	private final String CATEGORY_FIELD_GAIN_MODIFIER_FINAL_DEPRECIATED = "FIELD GAIN MODIFIER FINAL DEPRECIATED"; //non-breaking change
+	
 	private final String CATEGORY_FIELD_LOST_VISIBILITY = "FIELD LOST VISIBILITY";
 	private final String CATEGORY_FIELD_LOST_VISIBILITY_DEPRECIATED = "FIELD LOST VISIBILITY DEPRECIATED";
 	private final String CATEGORY_FIELD_GAIN_VISIBILITY = "FIELD GAIN VISIBILITY";
@@ -43,8 +47,7 @@ public class FieldDiff {
 		this.findChangedTypeFields(version1, version2);
 		this.findRemovedFields(version1, version2);
 		this.findChangedVisibilityFields(version1, version2);
-		
-		//Conta non-breaking changes.
+		this.findChangedFinal(version1, version2);
 		this.findAddedFields(version1, version2);
 		this.findAddedDeprecatedFields(version1, version2);
 		
@@ -344,6 +347,60 @@ public class FieldDiff {
 	 */
 	private boolean isFildAcessible(FieldDeclaration field){
 		return field != null && (UtilTools.isVisibilityProtected(field) || UtilTools.isVisibilityPublic(field))?true:false;
+	}
+	
+	/**
+	 * Compara se dois campos tem ou não o modificador "final".
+	 * Registra na saída, se houver diferença.
+	 * @param fieldVersion1
+	 * @param fieldVersion2
+	 * @throws BindingException 
+	 */
+	private void diffModifierFinal(TypeDeclaration typeVersion1, FieldDeclaration fieldVersion1, FieldDeclaration fieldVersion2) throws BindingException{
+		
+		//Se não houve mudança no identificador final.
+		if((UtilTools.isFinal(fieldVersion1) && UtilTools.isFinal(fieldVersion2)) || ((!UtilTools.isFinal(fieldVersion1) && !UtilTools.isFinal(fieldVersion2)))){
+			return;
+		}
+		
+		String category = "";
+		Boolean isBreakingChange = false;
+		//Se ganhou o modificador "final"
+		if((!UtilTools.isFinal(fieldVersion1) && UtilTools.isFinal(fieldVersion2))){
+			category = this.isDeprecated(fieldVersion1, typeVersion1)?this.CATEGORY_FIELD_GAIN_MODIFIER_FINAL_DEPRECIATED:CATEGORY_FIELD_GAIN_MODIFIER_FINAL;
+			isBreakingChange = this.isDeprecated(fieldVersion1, typeVersion1)?false:true;
+		}
+		else{
+			//Se perdeu o modificador "final"
+			category = this.CATEGORY_FIELD_LOST_MODIFIER_FINAL;
+			isBreakingChange = false;
+		}
+		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldVersion2), category, isBreakingChange));
+	}
+	
+	/**
+	 * Busca modificador "final" removido ou adicionado.
+	 * 
+	 * @param version1
+	 * @param version2
+	 */
+	private void findChangedFinal(APIVersion version1, APIVersion version2) {
+		//Percorre todos os types da versão corrente.
+		for (TypeDeclaration typeInVersion1 : version1.getApiAcessibleTypes()) {
+			if(version2.containsType(typeInVersion1)){//Se type ainda existe.
+				for(FieldDeclaration fieldVersion1: typeInVersion1.getFields()){
+					try {
+						FieldDeclaration fieldVersion2 = version2.getVersionField(fieldVersion1, typeInVersion1);
+						if(this.isFildAcessible(fieldVersion1) && (fieldVersion2 != null)){
+							this.diffModifierFinal(typeInVersion1, fieldVersion1, fieldVersion2);
+						}
+					} catch (BindingException e) {
+						this.logger.error("Erro reading field path [" + typeInVersion1 + "," + fieldVersion1 + "]");
+						continue;
+					}
+				}
+			}
+		}
 	}
 	
 }

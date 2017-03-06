@@ -17,6 +17,10 @@ public class TypeDiff {
 	private final String CATEGORY_TYPE_LOST_VISIBILITY = "TYPE LOST VISIBILIT"; //breaking change
 	private final String CATEGORY_TYPE_GAIN_VISIBILITY = "TYPE GAIN VISIBILITY"; //non-breaking change
 	
+	private final String CATEGORY_TYPE_LOST_MODIFIER_FINAL = "TYPE LOST MODIFIER FINAL"; //non-breaking change
+	private final String CATEGORY_TYPE_GAIN_MODIFIER_FINAL = "TYPE GAIN MODIFIER FINAL"; //breaking change
+	private final String CATEGORY_TYPE_GAIN_MODIFIER_FINAL_DEPRECIATED = "TYPE GAIN MODIFIER FINAL DEPRECIATED"; //non-breaking change
+	
 	private final String CATEGORY_TYPE_ADD = "TYPE ADDED"; //non-breaking change
 	
 	private final String CATEGORY_TYPE_DEPRECIATED = "TYPE DEPRECIATED"; //non-breaking change
@@ -41,6 +45,7 @@ public class TypeDiff {
 		this.findChangedVisibilityTypes(version1, version2);
 		this.findAddedDeprecated(version1, version2);
 		this.changedSuperTypes(version1, version2);
+		this.findChangedFinal(version1, version2);
 		
 		Result result = new Result();
 		result.setListBreakingChange(this.listBreakingChange);
@@ -238,4 +243,46 @@ public class TypeDiff {
 		return (nameSuperClass != null && !"java.lang.Object".equals(nameSuperClass))?true:false;
 	}
 	
+	
+	/**
+	 * Compara se dois métodos tem ou não o modificador "final".
+	 * Registra na saída, se houver diferença.
+	 * @param methodInVersion1
+	 * @param methodInVersion2
+	 */
+	private void diffModifierFinal(TypeDeclaration typeVersion1, TypeDeclaration typeVersion2){
+		//Se não houve mudança no identificador final.
+		if((UtilTools.isFinal(typeVersion1) && UtilTools.isFinal(typeVersion2)) || ((!UtilTools.isFinal(typeVersion1) && !UtilTools.isFinal(typeVersion2)))){
+			return;
+		}
+		String category = "";
+		Boolean isBreakingChange = false;
+		//Se ganhou o modificador "final"
+		if((!UtilTools.isFinal(typeVersion1) && UtilTools.isFinal(typeVersion2))){
+			category = this.isDeprecated(typeVersion1)?this.CATEGORY_TYPE_GAIN_MODIFIER_FINAL_DEPRECIATED:CATEGORY_TYPE_GAIN_MODIFIER_FINAL;
+			isBreakingChange = this.isDeprecated(typeVersion1)?false:true;
+		}
+		else{
+			//Se perdeu o modificador "final"
+			category = this.CATEGORY_TYPE_LOST_MODIFIER_FINAL;
+			isBreakingChange = false;
+		}
+		this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(typeVersion2), typeVersion2.getName().toString(), category, isBreakingChange));
+	}
+	
+	/**
+	 * Busca modificador "final" removido ou adicionado.
+	 * 
+	 * @param version1
+	 * @param version2
+	 */
+	private void findChangedFinal(APIVersion version1, APIVersion version2) {
+		//Percorre todos os types da versão corrente.
+		for (TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()) {
+			TypeDeclaration typeVersion2 = version2.getVersionAccessibleType(typeVersion1);
+			if(typeVersion2 != null){
+				this.diffModifierFinal(typeVersion1, typeVersion2);
+			}
+		}
+	}
 }

@@ -15,6 +15,10 @@ public class MethodDiff {
 	private final String CATEGORY_METHOD_CHANGED_EXCEPTION = "METHOD CHANGED EXCEPTION"; //breaking change
 	private final String CATEGORY_METHOD_CHANGED_EXCEPTION_DEPRECIATED = "METHOD CHANGED EXCEPTION DEPRECIATED"; //non-breaking change
 	
+	private final String CATEGORY_METHOD_LOST_MODIFIER_FINAL = "METHOD LOST MODIFIER FINAL"; //non-breaking change
+	private final String CATEGORY_METHOD_GAIN_MODIFIER_FINAL = "METHOD GAIN MODIFIER FINAL"; //breaking change
+	private final String CATEGORY_METHOD_GAIN_MODIFIER_FINAL_DEPRECIATED = "METHOD GAIN MODIFIER FINAL DEPRECIATED"; //non-breaking change
+	
 	private final String CATEGORY_METHOD_CHANGED_PARAMETERS = "METHOD CHANGED PARAMETERS"; //breaking change
 	private final String CATEGORY_METHOD_CHANGED_PARAMETERS_DEPRECIATED = "METHOD CHANGED PARAMETERS DEPRECIATED"; //non-breaking change
 	
@@ -42,6 +46,7 @@ public class MethodDiff {
 		this.findChangedReturnTypeMethods(version1, version2);
 		this.findChangedParametersMethods(version1, version2);
 		this.findChangedExceptionTypeMethods(version1, version2);
+		this.findChangedFinal(version1, version2);
 		
 		//Lista non-breaking changes.
 		this.findAddedMethods(version1, version2);
@@ -336,7 +341,7 @@ public class MethodDiff {
 	 */
 	private void findAddedMethods(APIVersion version1, APIVersion version2) {
 		for (TypeDeclaration typeInVersion2 : version2.getApiAcessibleTypes()) {
-			if(version1.containsType(typeInVersion2)){//Se type já existia, verica quais são os novos métodos.
+			if(version1.containsType(typeInVersion2)){//Se type já existia, verifica quais são os novos métodos.
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){
 					if(this.isMethodAcessible(methodInVersion2)){
 						MethodDeclaration methodInVersion1 = version1.getEqualVersionMethod(methodInVersion2, typeInVersion2);
@@ -349,6 +354,53 @@ public class MethodDiff {
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){//Se type foi adicionado.
 					if(this.isMethodAcessible(methodInVersion2)){
 						this.listBreakingChange.add(new BreakingChange(typeInVersion2.resolveBinding().getQualifiedName(), methodInVersion2.getName().toString(), this.CATEGORY_METHOD_ADDED, false));
+					}
+				}
+			}
+		}
+	}
+	
+	
+	/**
+	 * Compara se dois métodos tem ou não o modificador "final".
+	 * Registra na saída, se houver diferença.
+	 * @param methodInVersion1
+	 * @param methodInVersion2
+	 */
+	private void diffModifierFinal(TypeDeclaration typeVersion1, MethodDeclaration methodInVersion1, MethodDeclaration methodInVersion2){
+		//Se não houve mudança no identificador final.
+		if((UtilTools.isFinal(methodInVersion1) && UtilTools.isFinal(methodInVersion2)) || ((!UtilTools.isFinal(methodInVersion1) && !UtilTools.isFinal(methodInVersion2)))){
+			return;
+		}
+		String category = "";
+		Boolean isBreakingChange = false;
+		//Se ganhou o modificador "final"
+		if((!UtilTools.isFinal(methodInVersion1) && UtilTools.isFinal(methodInVersion2))){
+			category = this.isDeprecated(methodInVersion1, typeVersion1)?this.CATEGORY_METHOD_GAIN_MODIFIER_FINAL_DEPRECIATED:CATEGORY_METHOD_GAIN_MODIFIER_FINAL;
+			isBreakingChange = this.isDeprecated(methodInVersion1, typeVersion1)?false:true;
+		}
+		else{
+			//Se perdeu o modificador "final"
+			category = this.CATEGORY_METHOD_LOST_MODIFIER_FINAL;
+			isBreakingChange = false;
+		}
+		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodInVersion2.getName().toString(), category, isBreakingChange));
+	}
+	
+	/**
+	 * Busca modificador "final" removido ou adicionado.
+	 * 
+	 * @param version1
+	 * @param version2
+	 */
+	private void findChangedFinal(APIVersion version1, APIVersion version2) {
+		//Percorre todos os types da versão corrente.
+		for (TypeDeclaration typeInVersion1 : version1.getApiAcessibleTypes()) {
+			if(version2.containsType(typeInVersion1)){//Se type ainda existe.
+				for(MethodDeclaration methodInVersion1: typeInVersion1.getMethods()){
+					MethodDeclaration methodInVersion2 = version2.getEqualVersionMethod(methodInVersion1, typeInVersion1);
+					if(this.isMethodAcessible(methodInVersion1) && (methodInVersion2 != null)){
+						this.diffModifierFinal(typeInVersion1, methodInVersion1, methodInVersion2);
 					}
 				}
 			}

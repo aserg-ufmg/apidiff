@@ -70,6 +70,25 @@ public class UtilTools {
 	}
 	
 	
+	public static Boolean isFinal(BodyDeclaration node){
+		return containsModifier(node, "final");
+	}
+	
+	/**
+	 * Busca modificador na lista de modificadores do nó.
+	 * @param node
+	 * @param modifier
+	 * @return
+	 */
+	public static Boolean containsModifier(BodyDeclaration node, String modifier){
+		for (Object m : node.modifiers()) {
+			if(m.toString().equals(modifier)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public static String getVisibility(BodyDeclaration node){
 		for (Object modifier : node.modifiers()) {
 			if(modifier.toString().equals("public") || modifier.toString().equals("private")
