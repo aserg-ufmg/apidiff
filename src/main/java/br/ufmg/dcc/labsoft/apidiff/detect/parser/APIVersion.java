@@ -98,8 +98,7 @@ public class APIVersion {
 		compilationUnit.accept(visitorType);
 		compilationUnit.accept(visitorEnum);
 		this.configureAcessiblesAndNonAccessibleTypes(visitorType);
-		this.apiAccessibleEnums.addAll(visitorEnum.getAcessibleEnums());
-		this.apiNonAccessibleEnums.addAll(visitorEnum.getNonAcessibleEnums());
+		this.configureAcessiblesAndNonAccessibleEnums(visitorEnum);
 	}
 	
 	/**
@@ -116,6 +115,22 @@ public class APIVersion {
 			}
 			else{
 				this.apiNonAccessibleTypes.add(type);
+			}
+		}
+	}
+	
+	/**
+	 *  Salva os enums acessíveis para o cliente externo são (public ou protected) e não acessíveis (default e private).
+	 * @param visitorType
+	 */
+	private void configureAcessiblesAndNonAccessibleEnums(EnumDeclarationVisitor visitorType){
+		this.apiNonAccessibleEnums.addAll(visitorType.getNonAcessibleEnums()); // adiciona os types private.
+		for(EnumDeclaration type: visitorType.getAcessibleEnums()){
+			if(UtilTools.isVisibilityProtected(type) || UtilTools.isVisibilityPublic(type)){
+				this.apiAccessibleEnums.add(type);
+			}
+			else{
+				this.apiNonAccessibleEnums.add(type);
 			}
 		}
 	}
