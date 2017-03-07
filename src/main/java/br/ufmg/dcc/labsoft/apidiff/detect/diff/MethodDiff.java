@@ -6,6 +6,8 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
@@ -41,8 +43,12 @@ public class MethodDiff {
 	private final String CATEGORY_METHOD_GAIN_VISIBILITY = "METHOD GAIN VISIBILITY"; //non-breaking change
 	
 	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
+	
+	private Logger logger = LoggerFactory.getLogger(MethodDiff.class);
 
 	public Result calculateDiff(final APIVersion version1, final APIVersion version2) {
+		
+		this.logger.info("Processing Methods...");
 		
 		//Lista breaking changes.
 		this.findRemovedMethods(version1, version2);

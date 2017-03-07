@@ -25,13 +25,10 @@ import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class APIDiff {
 	
-
 	private final String nameFile = "output.csv";
 	
 	private String nameProject;
 	private String url;
-	private APIVersion versionOld;
-	private APIVersion versionNew;
 	
 	private Result resultType; 
 	private Result resultFild;
@@ -46,60 +43,72 @@ public class APIDiff {
 		this.nameProject = nameProject;
 	}
 	
-
 	public void calculateDiff() {
-
 		try {
 			GitService service = new GitServiceImpl();
-			File projectFolder = new File(UtilTools.getPathProjects() + "/" + this.nameProject);
 			Repository repository = service.openRepositoryAndCloneIfNotExists(this.nameProject, this.url);
 			RevWalk revWalk = service.fetchAndCreateNewRevsWalk(repository, null);
 			
 			//Itera sobre os commits.
 			Iterator<RevCommit> i = revWalk.iterator();
 			while(i.hasNext()){
-				
 				RevCommit currentCommit = i.next();
-				
-				//Busca a lista de arquivos modificados entre o commit atual e o commit pai.
-				Map<ChangeType, List<GitFile>> mapModifications = service.fileTreeDiff(repository, currentCommit);
-				
-				//Informações do autor.
-				PersonIdent personIdent = currentCommit.getAuthorIdent();
-				
-				//versao atual
-				String commitId = currentCommit.getId().getName();
-				service.checkout(repository, commitId);
-				this.versionNew = new APIVersion(projectFolder, mapModifications);
-				
-				//versao antiga
-				String parentCommit = currentCommit.getParent(0).getName();
-				service.checkout(repository, parentCommit);
-				this.versionOld = new APIVersion(projectFolder, mapModifications);
-				
-				this.logger.info("Processing Types ...");
-				this.resultType = new TypeDiff().calculateDiff(this.versionOld, this.versionNew);
-				
-				this.logger.info("Processing Filds...");
-				this.resultFild = new FieldDiff().calculateDiff(this.versionOld, this.versionNew);
-				
-				this.logger.info("Processing Methods...");
-				this.resultMethod = new MethodDiff().calculateDiff(this.versionOld, this.versionNew);
-				
-				this.logger.info("Processing Method Enums...");
-				this.resultEnum = new EnumDiff().calculateDiff(this.versionOld, this.versionNew);
-				
-				this.logger.info("Processing Method Enuns Constant...");
-				this.resultEnumConstant = new EnumConstantDiff().calculateDiff(this.versionOld, this.versionNew);
-				
-				this.print(currentCommit);//Escreve saída em arquivo.
+				this.diffCommit(currentCommit, repository, this.nameProject);
 			}
 		
 		} catch (Exception e) {
 			this.logger.error("Error in calculating commitn diff ", e);
 		}
-		
 		this.logger.info("Finished processing. Check the output file <" + this.nameFile + ">");
+	}
+	
+	/**
+	 * Calcula um diff entre um commit e a versão anterior dos seus arquivos.
+	 * @param currentCommit
+	 * @param repository
+	 * @param nameProject
+	 * @throws Exception
+	 */
+	private void diffCommit(final RevCommit currentCommit, final Repository repository, String nameProject) throws Exception{
+		
+		File projectFolder = new File(UtilTools.getPathProjects() + "/" + nameProject);
+		APIVersion versionNew = this.getAPIVersionByCommit(currentCommit.getId().getName(), projectFolder, repository, currentCommit); //versao atual
+		APIVersion versionOld = this.getAPIVersionByCommit(currentCommit.getParent(0).getName(), projectFolder, repository, currentCommit);////versao antiga
+		this.diff(versionOld, versionNew);
+		this.print(currentCommit);//Escreve saída em arquivo.
+	}
+	
+	/**
+	 * Retorna uma APIVersion conforme o commit corrente.
+	 * @param commit - is do commit de referencia
+	 * @param projectFolder - File do projeto analisado
+	 * @param repository
+	 * @param currentCommit -- commit de referencia no grafo.
+	 * @return
+	 * @throws Exception
+	 */
+	private APIVersion getAPIVersionByCommit(String commit, File projectFolder, Repository repository, RevCommit currentCommit) throws Exception{
+		
+		GitService service = new GitServiceImpl();
+		
+		//Busca a lista de arquivos modificados entre o commit atual e o commit pai.
+		Map<ChangeType, List<GitFile>> mapModifications = service.fileTreeDiff(repository, currentCommit);
+		
+		service.checkout(repository, commit);
+		return new APIVersion(projectFolder, mapModifications);
+	}
+	
+	/**
+	 * Procura breaking changes e non-breaking changes entre duas versões do código-fonte.
+	 * @param version1
+	 * @param version2
+	 */
+	private void diff(APIVersion version1, APIVersion version2){
+		this.resultType = new TypeDiff().calculateDiff(version1, version2);
+		this.resultFild = new FieldDiff().calculateDiff(version1, version2);
+		this.resultMethod = new MethodDiff().calculateDiff(version1, version2);
+		this.resultEnum = new EnumDiff().calculateDiff(version1, version2);
+		this.resultEnumConstant = new EnumConstantDiff().calculateDiff(version1, version2);
 	}
 	
 	/**
@@ -135,14 +144,6 @@ public class APIDiff {
 			}
 		}
 		return list;
-	}
-	
-	private String printCount(final Result result, final String struture){
-		if(result!=null){
-			return struture + ";" + result.getElementAdd() + ";" + result.getElementRemoved() + ";" +result.getElementModified() + ";" +  result.getElementDeprecated();	
-		}
-		return "";
-		
 	}
 	
 	private String formatMessage(String message){

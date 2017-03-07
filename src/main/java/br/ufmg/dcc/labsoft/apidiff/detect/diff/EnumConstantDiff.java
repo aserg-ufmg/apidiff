@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
@@ -20,7 +22,11 @@ public class EnumConstantDiff {
 	
 	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
 	
+	private Logger logger = LoggerFactory.getLogger(EnumConstantDiff.class);
+	
 	public Result calculateDiff(final APIVersion version1, final APIVersion version2) {
+		
+		this.logger.info("Processing Method Enuns Constant...");
 		
 		//Lista breaking Change.
 		this.findRemovedConstant(version1, version2);

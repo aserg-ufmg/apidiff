@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
@@ -22,8 +24,12 @@ public class EnumDiff {
 	private final String CATEGORY_ENUM_DEPRECIATED = "ENUM DEPRECIATED";
 	
 	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
+	
+	private Logger logger = LoggerFactory.getLogger(EnumDiff.class);
 
 	public Result calculateDiff(final APIVersion version1, final APIVersion version2) {
+		
+		this.logger.info("Processing Method Enums...");
 		
 		//Adiciona lista de Breaking Changes.
 		this.findRemovedEnums(version1, version2);

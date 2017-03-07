@@ -42,6 +42,8 @@ public class FieldDiff {
 	
 	public Result calculateDiff(final APIVersion version1, final APIVersion version2){
 		
+		this.logger.info("Processing Filds...");
+		
 		//Lista breaking changes.
 		this.findDefaultValueFields(version1, version2);
 		this.findChangedTypeFields(version1, version2);

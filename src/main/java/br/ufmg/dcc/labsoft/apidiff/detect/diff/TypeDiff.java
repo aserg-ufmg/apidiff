@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
@@ -37,6 +39,8 @@ public class TypeDiff {
 	private final String CATEGORY_SUPER_TYPE_ADD_DEPRECIATED = "SUPER TYPE ADDED DEPRECIATED"; //non-breaking change
 	
 	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
+	
+	private Logger logger = LoggerFactory.getLogger(TypeDiff.class);
 
 	/**
 	 * Calculates the diff for classes
@@ -44,6 +48,9 @@ public class TypeDiff {
 	 * @param version2 newer version of an API
 	 */
 	public Result calculateDiff(final APIVersion version1, final APIVersion version2) {
+		
+		this.logger.info("Processing Types ...");
+		
 		this.findRemovedTypes(version1, version2);
 		this.findAddedTypes(version1, version2);
 		this.findChangedVisibilityTypes(version1, version2);
