@@ -22,6 +22,7 @@ import br.ufmg.dcc.labsoft.apidiff.detect.diff.service.git.GitFile;
 import br.ufmg.dcc.labsoft.apidiff.detect.diff.service.git.GitService;
 import br.ufmg.dcc.labsoft.apidiff.detect.diff.service.git.GitServiceImpl;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
+import br.ufmg.dcc.labsoft.apidiff.enums.ClassifierAPI;
 
 public class APIDiff {
 	
@@ -53,7 +54,11 @@ public class APIDiff {
 			Iterator<RevCommit> i = revWalk.iterator();
 			while(i.hasNext()){
 				RevCommit currentCommit = i.next();
-				this.diffCommit(currentCommit, repository, this.nameProject);
+				this.diffCommit(currentCommit, repository, this.nameProject, ClassifierAPI.API);
+				this.diffCommit(currentCommit, repository, this.nameProject, ClassifierAPI.NON_API_EXAMPLE);
+				this.diffCommit(currentCommit, repository, this.nameProject, ClassifierAPI.NON_API_EXPERIMENTAL);
+				this.diffCommit(currentCommit, repository, this.nameProject, ClassifierAPI.NON_API_INTERNAL);
+				this.diffCommit(currentCommit, repository, this.nameProject, ClassifierAPI.NON_API_TEST);
 			}
 		
 		} catch (Exception e) {
@@ -69,13 +74,13 @@ public class APIDiff {
 	 * @param nameProject
 	 * @throws Exception
 	 */
-	private void diffCommit(final RevCommit currentCommit, final Repository repository, String nameProject) throws Exception{
+	private void diffCommit(final RevCommit currentCommit, final Repository repository, String nameProject, ClassifierAPI classifierAPI) throws Exception{
 		
 		File projectFolder = new File(UtilTools.getPathProjects() + "/" + nameProject);
-		APIVersion versionNew = this.getAPIVersionByCommit(currentCommit.getId().getName(), projectFolder, repository, currentCommit); //versao atual
-		APIVersion versionOld = this.getAPIVersionByCommit(currentCommit.getParent(0).getName(), projectFolder, repository, currentCommit);////versao antiga
+		APIVersion versionNew = this.getAPIVersionByCommit(currentCommit.getId().getName(), projectFolder, repository, currentCommit, classifierAPI); //versao atual
+		APIVersion versionOld = this.getAPIVersionByCommit(currentCommit.getParent(0).getName(), projectFolder, repository, currentCommit,classifierAPI);////versao antiga
 		this.diff(versionOld, versionNew);
-		this.print(currentCommit);//Escreve saída em arquivo.
+		this.print(currentCommit, classifierAPI);//Escreve saída em arquivo.
 	}
 	
 	/**
@@ -87,7 +92,7 @@ public class APIDiff {
 	 * @return
 	 * @throws Exception
 	 */
-	private APIVersion getAPIVersionByCommit(String commit, File projectFolder, Repository repository, RevCommit currentCommit) throws Exception{
+	private APIVersion getAPIVersionByCommit(String commit, File projectFolder, Repository repository, RevCommit currentCommit, ClassifierAPI classifierAPI) throws Exception{
 		
 		GitService service = new GitServiceImpl();
 		
@@ -95,7 +100,7 @@ public class APIDiff {
 		Map<ChangeType, List<GitFile>> mapModifications = service.fileTreeDiff(repository, currentCommit);
 		
 		service.checkout(repository, commit);
-		return new APIVersion(projectFolder, mapModifications);
+		return new APIVersion(projectFolder, mapModifications, classifierAPI);
 	}
 	
 	/**
@@ -114,15 +119,15 @@ public class APIDiff {
 	/**
 	 * Imprime resultado em um arquivo CSV.
 	 */
-	private void print(final RevCommit currentCommit){
+	private void print(final RevCommit currentCommit, ClassifierAPI classifierAPI){
 		List<String> result =  new ArrayList<String>();
 		//Lista de Breaking Changes.
 		Date date = new Date();
-		result.addAll(this.printListBreakingChange(this.resultType, currentCommit, date));
-		result.addAll(this.printListBreakingChange(this.resultFild, currentCommit, date));
-		result.addAll(this.printListBreakingChange(this.resultMethod,currentCommit, date));
-		result.addAll(this.printListBreakingChange(this.resultEnum,currentCommit, date));
-		result.addAll(this.printListBreakingChange(this.resultEnumConstant, currentCommit, date));
+		result.addAll(this.printListBreakingChange(this.resultType, currentCommit, date, classifierAPI));
+		result.addAll(this.printListBreakingChange(this.resultFild, currentCommit, date, classifierAPI));
+		result.addAll(this.printListBreakingChange(this.resultMethod,currentCommit, date, classifierAPI));
+		result.addAll(this.printListBreakingChange(this.resultEnum,currentCommit, date, classifierAPI));
+		result.addAll(this.printListBreakingChange(this.resultEnumConstant, currentCommit, date, classifierAPI));
 		
 		UtilFile.writeFile(this.nameFile, result);
 	}
@@ -131,7 +136,7 @@ public class APIDiff {
 	 * Imprime lista de breaking change detectadas.
 	 * @param r
 	 */
-	private List<String> printListBreakingChange(final Result r, final RevCommit currentCommit, Date date){
+	private List<String> printListBreakingChange(final Result r, final RevCommit currentCommit, Date date, ClassifierAPI classifierAPI){
 		
 		//name developer; e-mail; project; path; struture; category; id commit; message commit; timestamp commit (milliseconds); timestamp process (milliseconds); formatted date process; is breaking change (boolean)
 		PersonIdent personIdent = currentCommit.getAuthorIdent();
@@ -140,7 +145,8 @@ public class APIDiff {
 		if(r != null){
 			for(BreakingChange bc: r.getListBreakingChange()){
 				list.add(personIdent.getName() + ";" + personIdent.getEmailAddress() + ";" + this.nameProject  + ";" + bc.getPath() + ";" + bc.getStruture() + ";" + bc.getCategory()
-				+ ";" + currentCommit.getId().getName() + ";" + this.formatMessage(currentCommit.getFullMessage()) + ";" + currentCommit.getCommitTime() + "000" + ";" + date.getTime() + ";" + sdf.format(date) +  ";" + bc.isBreakingChange());
+				+ ";" + currentCommit.getId().getName() + ";" + this.formatMessage(currentCommit.getFullMessage()) + ";" + currentCommit.getCommitTime() + "000" + ";" + date.getTime() + ";" + sdf.format(date) +  ";" + bc.isBreakingChange()
+				+ ";" + classifierAPI);
 			}
 		}
 		return list;

@@ -18,11 +18,10 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.detect.exception.BindingException;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
+import br.ufmg.dcc.labsoft.apidiff.enums.ClassifierAPI;
 
 public class UtilTools {
 	
@@ -152,6 +151,50 @@ public class UtilTools {
 		return ((node == null) || (node.resolveBinding().getQualifiedName() == null))?"":node.resolveBinding().getQualifiedName();
 	}
 	
+	
+	public static Boolean isAPIByClassifier(String pathCompleteFile, ClassifierAPI classifierAPI) throws IOException{
+		Boolean isAPI = false;
+		String pathLibrary = getPathProjectByPathComplete(pathCompleteFile);
+		switch (classifierAPI){
+			case NON_API_EXAMPLE:
+				isAPI = isNonAPIExample(pathLibrary)?true:false;
+				break;
+			case NON_API_INTERNAL:
+				isAPI = isNonAPIInternal(pathLibrary)?true:false;
+				break;
+			case NON_API_TEST:
+				isAPI = isNonAPITest(pathLibrary)?true:false;
+				break;
+			case NON_API_EXPERIMENTAL:
+				isAPI = isNonAPIExperimental(pathLibrary)?true:false;
+				break;
+			case API:
+				isAPI = isInterfaceStable(pathLibrary)?true:false;
+				break;
+			default:
+				break;
+	      }
+		return isAPI;
+	}
+	
+	public static Boolean isNonAPITest(String pathLibrary){
+		return (pathLibrary !=null  && !"".equals(pathLibrary) && (pathLibrary.toLowerCase().contains("test")))?true:false;
+	}
+	
+	public static Boolean isNonAPIInternal(String pathLibrary){
+		return (pathLibrary !=null  && !"".equals(pathLibrary)  && pathLibrary.toLowerCase().contains("/internal/"))?true:false;
+	}
+	
+	public static Boolean isNonAPIExample(String pathLibrary){
+		return (pathLibrary !=null  && !"".equals(pathLibrary) && (pathLibrary.toLowerCase().contains("/example/") ||  
+				pathLibrary.toLowerCase().contains("/examples/")))?true:false;
+	}
+	
+	public static Boolean isNonAPIExperimental(String pathLibrary){
+		return (pathLibrary !=null  && !"".equals(pathLibrary)  && pathLibrary.toLowerCase().contains("/experimental/"))?true:false;
+	}
+	
+	
 	/**
 	 * Verifica pelo caminho completo do arquivo, se ele está dentro de pacotes que indicam interfaces instáveis.
 	 * Exemplo: /project/tests/Util.java ou /project/internal/Util.java
@@ -159,9 +202,18 @@ public class UtilTools {
 	 * @return
 	 * @throws IOException
 	 */
-	public static Boolean isInterfaceStable(String pathCompleteFile) throws IOException{
+	public static Boolean isInterfaceStable(String pathLibrary) throws IOException{
+	  if((!"".equals(pathLibrary) && !isNonAPIExample(pathLibrary) && !isNonAPIExperimental(pathLibrary) && !isNonAPIInternal(pathLibrary) && !isNonAPITest(pathLibrary))){
+		return true;
+	  }
+	  return false;
+	}
+	
+	public static String getPathProjectByPathComplete(String pathCompleteFile) throws IOException{
 		
-	      String pathProjects = UtilTools.getPathProjects();
+		String pathLibrary = "";
+		
+	     String pathProjects = UtilTools.getPathProjects();
 	      String pattern = "^"+pathProjects+"(.*.)$";
 
 	      //Remove início do path, ou seja, o caminho até o path do projeto.
@@ -169,19 +221,9 @@ public class UtilTools {
 	      Matcher m = r.matcher(pathCompleteFile);
 	      
 	      if (m.find( )) {
-	    	  String pathLibrary = m.group(1);
-	    	  if(("".equals(pathLibrary) ||
-    			  pathLibrary.contains("/test/") ||
-    			  pathLibrary.contains("/tests/") ||
-    			  pathLibrary.contains("/example/") ||
-    			  pathLibrary.contains("/examples/") ||
-    			  pathLibrary.contains("/internal/") ||
-    			  pathLibrary.contains("/experimental/"))){
-	  			return false;
-	    	  }
+	    	  pathLibrary = m.group(1);
 	      }
-	      
-		return true;
+	      return pathLibrary;
 	}
 	
 	/**

@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 import br.ufmg.dcc.labsoft.apidiff.detect.diff.service.git.GitFile;
 import br.ufmg.dcc.labsoft.apidiff.detect.exception.BindingException;
+import br.ufmg.dcc.labsoft.apidiff.enums.ClassifierAPI;
 
 public class APIVersion {
 
@@ -32,12 +33,14 @@ public class APIVersion {
 	private ArrayList<EnumDeclaration> apiNonAccessibleEnums = new ArrayList<EnumDeclaration>();
 	private Map<ChangeType, List<GitFile>> mapModifications = new HashMap<ChangeType, List<GitFile>>();
 	private List<String> listFilesMofify = new ArrayList<String>();
+	private ClassifierAPI classifierAPI;
 	
 	private Logger logger = LoggerFactory.getLogger(APIVersion.class);
 
-	public APIVersion(final File path, final Map<ChangeType, List<GitFile>> mapModifications) {
+	public APIVersion(final File path, final Map<ChangeType, List<GitFile>> mapModifications, ClassifierAPI classifierAPI) {
 		
 		try {
+			this.classifierAPI = classifierAPI;
 			this.mapModifications = mapModifications;
 			
 	    	String prefix = path.getAbsolutePath() + "/";
@@ -59,7 +62,7 @@ public class APIVersion {
 
 	public void parseFilesInDir(File file) throws IOException {
 		if (file.isFile()) {
-			if (UtilTools.isJavaFile(file.getName()) && this.isFileModification(file)) {
+			if (UtilTools.isJavaFile(file.getName()) && this.isFileModification(file) && UtilTools.isAPIByClassifier(file.getAbsolutePath(), this.classifierAPI)) {
 				this.parse(UtilTools.readFileToString(file.getAbsolutePath()), file);		
 			}
 		} else {
