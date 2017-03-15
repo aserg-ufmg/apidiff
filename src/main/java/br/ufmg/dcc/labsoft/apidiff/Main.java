@@ -23,16 +23,17 @@ public class Main {
 //		String nameFile = "/home/aline/utilitarios/workspaces/wsc_apiBreakingChange/APIDiff/src/main/resources/files/projects-tests.csv";
 		try {
 			Map<String, String> projects = UtilFile.readCSV(nameFile);
+			int index = 1;
 			for(String nameLibray: projects.keySet()){
 				String url = projects.get(nameLibray);
 				APIDiff diff = new APIDiff(nameLibray, url);
+				logger.info("\n\n["+nameLibray+"][" + index + "/" + projects.size()+ "]");
+				index++;
 				diff.calculateDiff();
 			}
 		} catch (IOException e) {
 			logger.error("Erro ao ler arquivo com a lista de projetos.", e);
 		}
-		logger.info("\n\nFinished process!");
-
 	}
 
 }
