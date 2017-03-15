@@ -1,8 +1,11 @@
 package br.ufmg.dcc.labsoft.apidiff.detect.diff.service.git;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,14 +39,38 @@ public class GitServiceImpl implements GitService {
 	
 	private Logger logger = LoggerFactory.getLogger(GitServiceImpl.class);
 	
+	private static final Long MINUTE = 60000L; //60.000 miliseconds
+	private static final Long HOUR = MINUTE * 60;
+	private static final Long DAY = HOUR * 24;
+	private static final Long SEVEN_DAYS = DAY * 7; //7 dias em milissegundos.
+	
 	private class DefaultCommitsFilter extends RevFilter {
 		@Override
 		public final boolean include(final RevWalk walker, final RevCommit c) {
-			//Se c.getParentCount() > 1, temos um merge de branches. TODO: confirmar com testes.
+			//Se c.getParentCount() > 1, temos um merge de branches. 
+			Long diffTimestamp = 0L;
 			if(c.getParentCount() > 1){
 				logger.info("Merge branches deleted. [commitId="+c.getId().getName()+"]");
 			}
-			return c.getParentCount() == 1 && !isCommitAnalyzed(c.getName());
+			else{//Se é um commit muito velho (mais de 7 dias)
+				Calendar timeNow = Calendar.getInstance();
+				Long timestampNow = timeNow.getTimeInMillis();
+				
+				Long timestampCommit = (long)c.getCommitTime() * 1000;
+				Calendar calendarCommit = Calendar.getInstance();
+				calendarCommit.setTime(new Date(timestampCommit));
+				
+				diffTimestamp = Math.abs(timestampCommit - timestampNow);
+						
+				//Apenas commits realizados a no máximo 1 semana.
+				if(diffTimestamp > SEVEN_DAYS){
+					SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+					String formattedDateCommit = format.format(calendarCommit.getTime());
+					logger.info("Commit old deleted. [commitId="+c.getId().getName()+"][date="+formattedDateCommit+"]");
+				}
+			}
+			
+			return ((c.getParentCount() == 1 && !isCommitAnalyzed(c.getName())) || (diffTimestamp > SEVEN_DAYS));
 		}
 
 		@Override
@@ -157,8 +184,19 @@ public class GitServiceImpl implements GitService {
 	@Override
 	public Map<ChangeType, List<GitFile>> fileTreeDiff(Repository repository, RevCommit commitNew) throws Exception {
 	       
-		ObjectId headOld = commitNew.getParent(0).getTree(); //Commit pai no grafo.
+		Map<ChangeType, List<GitFile>> mapDiff = new HashMap<ChangeType, List<GitFile>>();
+		mapDiff.put(ChangeType.ADD, new ArrayList<>());
+		mapDiff.put(ChangeType.COPY, new ArrayList<>());
+		mapDiff.put(ChangeType.DELETE, new ArrayList<>());
+		mapDiff.put(ChangeType.MODIFY, new ArrayList<>());
+		mapDiff.put(ChangeType.RENAME, new ArrayList<>());
+		
+		if(commitNew.getParentCount() == 0){
+			this.logger.warn("Commit don't have parent [commitId="+commitNew.getId().getName()+"]");
+			return mapDiff;
+		}
        
+		ObjectId headOld = commitNew.getParent(0).getTree(); //Commit pai no grafo.
 		ObjectId headNew = commitNew.getTree(); //Commit corrente.
 
         // prepare the two iterators to compute the diff between
@@ -176,13 +214,6 @@ public class GitServiceImpl implements GitService {
 		                    .setOldTree(treeRepositoryOld)
 		                    .setShowNameAndStatusOnly(true)
 		                    .call();
-		
-		Map<ChangeType, List<GitFile>> mapDiff = new HashMap<ChangeType, List<GitFile>>();
-		mapDiff.put(ChangeType.ADD, new ArrayList<>());
-		mapDiff.put(ChangeType.COPY, new ArrayList<>());
-		mapDiff.put(ChangeType.DELETE, new ArrayList<>());
-		mapDiff.put(ChangeType.MODIFY, new ArrayList<>());
-		mapDiff.put(ChangeType.RENAME, new ArrayList<>());
 		
         for (DiffEntry entry : diffs) {
         	if(UtilTools.isJavaFile(entry.getOldPath()) || UtilTools.isJavaFile(entry.getNewPath())) {
