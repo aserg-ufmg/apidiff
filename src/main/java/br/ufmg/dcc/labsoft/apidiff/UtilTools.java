@@ -177,23 +177,41 @@ public class UtilTools {
 		return isAPI;
 	}
 	
-	public static Boolean isNonAPITest(String pathLibrary){
-		return (pathLibrary !=null  && !"".equals(pathLibrary) && (pathLibrary.toLowerCase().contains("test")))?true:false;
+	public static Boolean isNonAPITest(String pathAPI){
+		String regexTest =  "(?i)(\\/test)|(test\\/)|(tests\\/)|(test\\.java$)|(tests\\.java$)";
+		return (pathAPI !=null  && !"".equals(pathAPI) && checkCountainsByRegex(regexTest, pathAPI))?true:false;
 	}
 	
-	public static Boolean isNonAPIInternal(String pathLibrary){
-		return (pathLibrary !=null  && !"".equals(pathLibrary)  && pathLibrary.toLowerCase().contains("/internal/"))?true:false;
+	public static Boolean isNonAPIInternal(String pathAPI){
+		return (pathAPI !=null  && !"".equals(pathAPI)  && pathAPI.toLowerCase().contains("/internal/"))?true:false;
 	}
 	
-	public static Boolean isNonAPIExample(String pathLibrary){
-		return (pathLibrary !=null  && !"".equals(pathLibrary) && (pathLibrary.toLowerCase().contains("/example/") ||  
-				pathLibrary.toLowerCase().contains("/examples/")))?true:false;
+	public static Boolean isNonAPIExperimental(String pathAPI){
+		return (pathAPI !=null  && !"".equals(pathAPI)  && pathAPI.toLowerCase().contains("/experimental/"))?true:false;
 	}
 	
-	public static Boolean isNonAPIExperimental(String pathLibrary){
-		return (pathLibrary !=null  && !"".equals(pathLibrary)  && pathLibrary.toLowerCase().contains("/experimental/"))?true:false;
+	public static Boolean isNonAPIDemo(String pathAPI){
+		String regexDemo = "(?i)(\\/demo)|(demo\\/)";
+		return (pathAPI !=null  && !"".equals(pathAPI)  &&  checkCountainsByRegex(regexDemo, pathAPI))?true:false;
 	}
 	
+	public static Boolean isNonAPISample(String pathAPI){
+		String regexSample = "(?i)(\\/sample)|(sample\\/)|(samples\\/)";
+		return (pathAPI !=null  && !"".equals(pathAPI)  && checkCountainsByRegex(regexSample, pathAPI))?true:false;
+	}
+	
+	public static Boolean isNonAPIExample(String pathAPI){
+		String regexExample = "(?i)(\\/example)|(example\\/)|(examples\\/)";
+		Boolean isNonAPIExample = checkCountainsByRegex(regexExample, pathAPI) || isNonAPIDemo(pathAPI) || isNonAPISample(pathAPI);
+		return (pathAPI !=null  && !"".equals(pathAPI) && isNonAPIExample)?true:false;
+	}
+	
+	public static Boolean checkCountainsByRegex(String regex, String pathAPI){
+		String path = pathAPI.toLowerCase();
+		Pattern r = Pattern.compile(regex);
+		Matcher m = r.matcher(path);
+		return m.find();
+	}
 	
 	/**
 	 * Verifica pelo caminho completo do arquivo, se ele está dentro de pacotes que indicam interfaces instáveis.
