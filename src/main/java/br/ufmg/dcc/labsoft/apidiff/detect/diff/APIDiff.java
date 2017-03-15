@@ -153,7 +153,9 @@ public class APIDiff {
 	}
 	
 	private String formatMessage(String message){
-		return message.replace("\n", " ").replace(";", ",");
+		String messageFormat = message.replaceAll("\\r?\\n", "--NEW_LINE_APIDIFF_PARSER--");
+		messageFormat = messageFormat.replace(";", "--SEMICOLON_APIDIFF_PARSER--");
+		return messageFormat;
 	}
 
 }

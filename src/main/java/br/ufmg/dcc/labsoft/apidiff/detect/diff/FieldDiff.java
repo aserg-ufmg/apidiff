@@ -171,7 +171,7 @@ public class FieldDiff {
 				try {
 					this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(typeVersion1), UtilTools.getFieldName(fieldVersion2), category, isBreakingChange));
 				} catch (BindingException e) {
-					this.logger.error("Erro ao ler FildName [" + UtilTools.getNameNode(typeVersion1) +"," + fieldVersion2 + "]");
+					this.logger.error("Erro ao ler FildName.", e);
 					return;
 				}
 			}
@@ -191,7 +191,7 @@ public class FieldDiff {
 						FieldDeclaration fieldVersion2 = version2.getVersionField(fieldVersion1, typeVersion1);
 						this.checkGainOrLostVisibility(typeVersion1, fieldVersion1, fieldVersion2);
 					} catch (BindingException e) {
-						this.logger.error("Erro ao ler FildName [" + UtilTools.getNameNode(typeVersion1) +"," + fieldVersion1 + "]");
+						this.logger.error("Erro ao ler FildName.", e);
 						continue;
 					}
 				}
@@ -397,7 +397,7 @@ public class FieldDiff {
 							this.diffModifierFinal(typeInVersion1, fieldVersion1, fieldVersion2);
 						}
 					} catch (BindingException e) {
-						this.logger.error("Erro reading field path [" + typeInVersion1 + "," + fieldVersion1 + "]");
+						this.logger.error("Erro reading field path", e);
 						continue;
 					}
 				}
