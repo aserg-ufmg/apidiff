@@ -52,25 +52,25 @@ public class GitServiceImpl implements GitService {
 			if(c.getParentCount() > 1){
 				logger.info("Merge branches deleted. [commitId="+c.getId().getName()+"]");
 			}
-			else{//Se é um commit muito velho (mais de 7 dias)
-				Calendar timeNow = Calendar.getInstance();
-				Long timestampNow = timeNow.getTimeInMillis();
-				
-				Long timestampCommit = (long)c.getCommitTime() * 1000;
-				Calendar calendarCommit = Calendar.getInstance();
-				calendarCommit.setTime(new Date(timestampCommit));
-				
-				diffTimestamp = Math.abs(timestampCommit - timestampNow);
-						
-				//Apenas commits realizados a no máximo 1 semana.
-				if(diffTimestamp > SEVEN_DAYS){
-					SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
-					String formattedDateCommit = format.format(calendarCommit.getTime());
-					logger.info("Commit old deleted. [commitId="+c.getId().getName()+"][date="+formattedDateCommit+"]");
-				}
+			//Se é um commit muito velho (mais de 7 dias)
+			Calendar timeNow = Calendar.getInstance();
+			Long timestampNow = timeNow.getTimeInMillis();
+			
+			Long timestampCommit = (long)c.getCommitTime() * 1000;
+			Calendar calendarCommit = Calendar.getInstance();
+			calendarCommit.setTime(new Date(timestampCommit));
+			
+			diffTimestamp = Math.abs(timestampCommit - timestampNow);
+					
+			//Apenas commits realizados a no máximo 1 semana.
+			if(diffTimestamp > SEVEN_DAYS){
+				SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+				String formattedDateCommit = format.format(calendarCommit.getTime());
+				logger.info("Commit old deleted. [commitId="+c.getId().getName()+"][date="+formattedDateCommit+"]");
 			}
 			
-			return ((c.getParentCount() == 1 && !isCommitAnalyzed(c.getName())) || (diffTimestamp > SEVEN_DAYS));
+			
+			return ((c.getParentCount() == 1) && (!isCommitAnalyzed(c.getName())) && (diffTimestamp <= SEVEN_DAYS));
 		}
 
 		@Override
