@@ -11,7 +11,7 @@ var dbUrl = 'mongodb://127.0.0.1:27017/APIDiff';
 var db = null;
 
 //Dados da coleção onde os dados serão inseridos.
-var nameCollection = "breakingChanges";
+var nameCollection = "piloto_day1_14032017";
 var collection = null;
 
 //Bibliotecas para acessar banco de dados e ler o arquivo de entrada.
@@ -54,6 +54,12 @@ var parserFile = function(){
 			registry.idCommit = data[6];
 			registry.messageCommit = data[7];
 			registry.timeCommit = data[8];
+			registry.timeProcess = data[9];
+			registry.timeProcessFormat = data[10];
+			registry.isBreakingChange = data[11];
+			registry.classifierAPI = data[12];
+
+			console.log(registry.nameLibrary)
 			insertRegistry(registry,last);
 		}
 		else{
