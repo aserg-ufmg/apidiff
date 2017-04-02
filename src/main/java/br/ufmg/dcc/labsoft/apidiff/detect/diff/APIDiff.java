@@ -32,6 +32,7 @@ public class APIDiff {
 	private String url;
 	
 	private Result resultType; 
+	private Result resultAnnotationType; 
 	private Result resultFild;
 	private Result resultMethod;
 	private Result resultEnum;
@@ -55,10 +56,8 @@ public class APIDiff {
 			while(i.hasNext()){
 				RevCommit currentCommit = i.next();
 				this.diffCommit(currentCommit, repository, this.nameProject, ClassifierAPI.API);
-				this.diffCommit(currentCommit, repository, this.nameProject, ClassifierAPI.NON_API_EXAMPLE);
 				this.diffCommit(currentCommit, repository, this.nameProject, ClassifierAPI.NON_API_EXPERIMENTAL);
 				this.diffCommit(currentCommit, repository, this.nameProject, ClassifierAPI.NON_API_INTERNAL);
-				this.diffCommit(currentCommit, repository, this.nameProject, ClassifierAPI.NON_API_TEST);
 			}
 		
 		} catch (Exception e) {
@@ -114,6 +113,7 @@ public class APIDiff {
 		this.resultMethod = new MethodDiff().calculateDiff(version1, version2);
 		this.resultEnum = new EnumDiff().calculateDiff(version1, version2);
 		this.resultEnumConstant = new EnumConstantDiff().calculateDiff(version1, version2);
+		this.resultAnnotationType = new AnnotationTypeDiff().calculateDiff(version1, version2);
 	}
 	
 	/**
@@ -128,6 +128,7 @@ public class APIDiff {
 		result.addAll(this.printListBreakingChange(this.resultMethod,currentCommit, date, classifierAPI));
 		result.addAll(this.printListBreakingChange(this.resultEnum,currentCommit, date, classifierAPI));
 		result.addAll(this.printListBreakingChange(this.resultEnumConstant, currentCommit, date, classifierAPI));
+		result.addAll(this.printListBreakingChange(this.resultAnnotationType, currentCommit, date, classifierAPI));
 		
 		UtilFile.writeFile(this.nameFile, result);
 	}

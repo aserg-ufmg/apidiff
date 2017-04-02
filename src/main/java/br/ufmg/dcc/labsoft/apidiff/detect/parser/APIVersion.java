@@ -10,6 +10,7 @@ import java.util.Map;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
@@ -31,6 +32,8 @@ public class APIVersion {
 	private ArrayList<TypeDeclaration> apiNonAccessibleTypes = new ArrayList<TypeDeclaration>();;
 	private ArrayList<EnumDeclaration> apiAccessibleEnums = new ArrayList<EnumDeclaration>();
 	private ArrayList<EnumDeclaration> apiNonAccessibleEnums = new ArrayList<EnumDeclaration>();
+	private ArrayList<AnnotationTypeDeclaration> apiAccessibleAnnotation = new ArrayList<AnnotationTypeDeclaration>();
+	private ArrayList<AnnotationTypeDeclaration> apiNonAccessibleAnnotation = new ArrayList<AnnotationTypeDeclaration>();
 	private Map<ChangeType, List<GitFile>> mapModifications = new HashMap<ChangeType, List<GitFile>>();
 	private List<String> listFilesMofify = new ArrayList<String>();
 	private ClassifierAPI classifierAPI;
@@ -98,10 +101,15 @@ public class APIVersion {
 
 		TypeDeclarationVisitor visitorType = new TypeDeclarationVisitor();
 		EnumDeclarationVisitor visitorEnum = new EnumDeclarationVisitor();
+		AnnotationTypeDeclarationVisitor visitorAnnotation = new AnnotationTypeDeclarationVisitor();
+		
 		compilationUnit.accept(visitorType);
 		compilationUnit.accept(visitorEnum);
+		compilationUnit.accept(visitorAnnotation);
+		
 		this.configureAcessiblesAndNonAccessibleTypes(visitorType);
 		this.configureAcessiblesAndNonAccessibleEnums(visitorEnum);
+		this.configureAcessiblesAndNonAccessibleAnnotations(visitorAnnotation);
 	}
 	
 	/**
@@ -109,17 +117,8 @@ public class APIVersion {
 	 * @param visitorType
 	 */
 	private void configureAcessiblesAndNonAccessibleTypes(TypeDeclarationVisitor visitorType){
-		
-		this.apiNonAccessibleTypes.addAll(visitorType.getNonAcessibleTypes()); // adiciona os types private.
-		
-		for(TypeDeclaration type: visitorType.getAcessibleTypes()){
-			if(UtilTools.isVisibilityProtected(type) || UtilTools.isVisibilityPublic(type)){
-				this.apiAccessibleTypes.add(type);
-			}
-			else{
-				this.apiNonAccessibleTypes.add(type);
-			}
-		}
+		this.apiNonAccessibleTypes.addAll(visitorType.getNonAcessibleTypes());
+		this.apiAccessibleTypes.addAll(visitorType.getAcessibleTypes());
 	}
 	
 	/**
@@ -127,15 +126,17 @@ public class APIVersion {
 	 * @param visitorType
 	 */
 	private void configureAcessiblesAndNonAccessibleEnums(EnumDeclarationVisitor visitorType){
-		this.apiNonAccessibleEnums.addAll(visitorType.getNonAcessibleEnums()); // adiciona os types private.
-		for(EnumDeclaration type: visitorType.getAcessibleEnums()){
-			if(UtilTools.isVisibilityProtected(type) || UtilTools.isVisibilityPublic(type)){
-				this.apiAccessibleEnums.add(type);
-			}
-			else{
-				this.apiNonAccessibleEnums.add(type);
-			}
-		}
+		this.apiNonAccessibleEnums.addAll(visitorType.getNonAcessibleEnums());
+		this.apiAccessibleEnums.addAll(visitorType.getAcessibleEnums());
+	}
+	
+	/**
+	 *  Salva as anotações (@interface) acessíveis para o cliente externo são (public ou protected) e não acessíveis (default e private).
+	 * @param visitorType
+	 */
+	private void configureAcessiblesAndNonAccessibleAnnotations(AnnotationTypeDeclarationVisitor visitorAnnotation){
+		this.apiNonAccessibleAnnotation.addAll(visitorAnnotation.getNonAcessibleAnnotation());
+		this.apiAccessibleAnnotation.addAll(visitorAnnotation.getAcessibleAnnotation());
 	}
 	
 	/**
@@ -163,6 +164,28 @@ public class APIVersion {
 	public ArrayList<TypeDeclaration> getApiAcessibleTypes(){
 		return this.apiAccessibleTypes;
 	}
+	
+	
+	/**
+	 * Retorna a lista de types de foram removidos.
+	 * @return
+	 * TODO: Pendente
+	 */
+	public List<TypeDeclaration> getApiRemovedTypes(){
+		List<TypeDeclaration> list = new ArrayList<>();
+		return list;
+	}
+	
+	/**
+	 * Retorna a lista de types que foram renomeados.
+	 * @return
+	 * TODO: Pendente
+	 */
+	public List<TypeDeclaration> getApiRenamedTypes(){
+		List<TypeDeclaration> list = new ArrayList<>();
+		return list;
+	}
+	
 
 	public ArrayList<TypeDeclaration> getApiNonAcessibleTypes(){
 		return this.apiNonAccessibleTypes;
@@ -203,6 +226,18 @@ public class APIVersion {
 
 		return null;
 	}
+	
+	public AnnotationTypeDeclaration getVersionNonAccessibleAnnotationType(AnnotationTypeDeclaration annotationVersionReference){
+		for (AnnotationTypeDeclaration annotationDeclarion : this.apiNonAccessibleAnnotation) {
+			if(annotationDeclarion.resolveBinding() != null && annotationVersionReference.resolveBinding() != null){
+				if(annotationDeclarion.resolveBinding().getQualifiedName().equals(annotationVersionReference.resolveBinding().getQualifiedName())){
+					return annotationDeclarion;
+				}
+			}
+		}
+
+		return null;
+	}
 
 	public TypeDeclaration getVersionAccessibleType(TypeDeclaration typeVersrionReference){
 		for (TypeDeclaration typeDeclarion : this.apiAccessibleTypes) {
@@ -212,7 +247,17 @@ public class APIVersion {
 				}
 			}
 		}
-
+		return null;
+	}
+	
+	public AnnotationTypeDeclaration getVersionAccessibleAnnotationType(AnnotationTypeDeclaration typeVersionReference){
+		for (AnnotationTypeDeclaration annotationTypeDeclaration : this.apiAccessibleAnnotation) {
+			if(annotationTypeDeclaration.resolveBinding() != null && typeVersionReference.resolveBinding() != null){
+				if(annotationTypeDeclaration.resolveBinding().getQualifiedName().equals(typeVersionReference.resolveBinding().getQualifiedName())){
+					return annotationTypeDeclaration;
+				}
+			}
+		}
 		return null;
 	}
 	
@@ -223,9 +268,17 @@ public class APIVersion {
 	public boolean containsAccessibleType(TypeDeclaration type){
 		return this.getVersionAccessibleType(type) != null;
 	}
+	
+	public boolean containsAccessibleAnnotationType(AnnotationTypeDeclaration annotationTypeDeclaration){
+		return this.getVersionAccessibleAnnotationType(annotationTypeDeclaration) != null;
+	}
 
 	public boolean containsNonAccessibleType(TypeDeclaration type){
 		return this.getVersionNonAccessibleType(type) != null;
+	}
+	
+	public boolean containsNonAccessibleAnnotationType(AnnotationTypeDeclaration annotation){
+		return this.getVersionNonAccessibleAnnotationType(annotation) != null;
 	}
 
 	public boolean containsAccessibleEnum(EnumDeclaration type){
@@ -304,6 +357,18 @@ public class APIVersion {
 	}
 	
 	/**
+	 * Retorna a lista de todos as anotações de uma versão.
+	 * @param version
+	 * @return
+	 */
+	public List<AnnotationTypeDeclaration> getAllAnnotationTypes(){
+		List<AnnotationTypeDeclaration> listAnnotationTypesVersion = new ArrayList<AnnotationTypeDeclaration>();
+		listAnnotationTypesVersion.addAll(this.getApiNonAccessibleAnnotation());
+		listAnnotationTypesVersion.addAll(this.getApiAccessibleAnnotation());
+		return listAnnotationTypesVersion;
+	}
+	
+	/**
 	 * Retorna a lista de todos os enums de uma versão.
 	 * @param version
 	 * @return
@@ -315,4 +380,21 @@ public class APIVersion {
 		return listTypesVersion;
 	}
 
+	public ArrayList<AnnotationTypeDeclaration> getApiAccessibleAnnotation() {
+		return apiAccessibleAnnotation;
+	}
+
+	public void setApiAccessibleAnnotation(ArrayList<AnnotationTypeDeclaration> apiAccessibleAnnotation) {
+		this.apiAccessibleAnnotation = apiAccessibleAnnotation;
+	}
+
+	public ArrayList<AnnotationTypeDeclaration> getApiNonAccessibleAnnotation() {
+		return apiNonAccessibleAnnotation;
+	}
+
+	public void setApiNonAccessibleAnnotation(ArrayList<AnnotationTypeDeclaration> apiNonAccessibleAnnotation) {
+		this.apiNonAccessibleAnnotation = apiNonAccessibleAnnotation;
+	}
+
+	
 }
