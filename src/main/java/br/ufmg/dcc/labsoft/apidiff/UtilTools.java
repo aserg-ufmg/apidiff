@@ -11,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -24,6 +25,13 @@ import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 import br.ufmg.dcc.labsoft.apidiff.enums.ClassifierAPI;
 
 public class UtilTools {
+	
+	public static boolean isEqualAnnotationMember(AnnotationTypeMemberDeclaration member1, AnnotationTypeMemberDeclaration member2){
+		if(!member1.getName().toString().equals(member2.getName().toString())){
+			return false;
+		}
+		return true;
+	}
 	
 	public static boolean isEqualMethod(MethodDeclaration method1, MethodDeclaration method2){
 		if(!method1.getName().toString().equals(method2.getName().toString()))

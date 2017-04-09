@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +71,7 @@ public class AnnotationTypeDiff {
 	}
 
 	/**
-	 * Retorna a anotação na lista com o mesmo nameNode da anotação recebida.
+	 * Retorna a anotação na lista com o mesmo nome da anotação recebida.
 	 * Retorna nulo se não for encontrado.
 	 * @param list
 	 * @param type

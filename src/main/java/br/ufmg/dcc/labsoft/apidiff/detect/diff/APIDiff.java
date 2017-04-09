@@ -33,6 +33,7 @@ public class APIDiff {
 	
 	private Result resultType; 
 	private Result resultAnnotationType; 
+	private Result resultAnnotationTypeMember; 
 	private Result resultFild;
 	private Result resultMethod;
 	private Result resultEnum;
@@ -114,6 +115,7 @@ public class APIDiff {
 		this.resultEnum = new EnumDiff().calculateDiff(version1, version2);
 		this.resultEnumConstant = new EnumConstantDiff().calculateDiff(version1, version2);
 		this.resultAnnotationType = new AnnotationTypeDiff().calculateDiff(version1, version2);
+		this.resultAnnotationTypeMember = new AnnotationTypeMemberDiff().calculateDiff(version1, version2);
 	}
 	
 	/**
@@ -129,6 +131,7 @@ public class APIDiff {
 		result.addAll(this.printListBreakingChange(this.resultEnum,currentCommit, date, classifierAPI));
 		result.addAll(this.printListBreakingChange(this.resultEnumConstant, currentCommit, date, classifierAPI));
 		result.addAll(this.printListBreakingChange(this.resultAnnotationType, currentCommit, date, classifierAPI));
+		result.addAll(this.printListBreakingChange(this.resultAnnotationTypeMember, currentCommit, date, classifierAPI));
 		
 		UtilFile.writeFile(this.nameFile, result);
 	}

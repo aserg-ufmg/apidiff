@@ -11,6 +11,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
+import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
@@ -261,6 +262,10 @@ public class APIVersion {
 		return null;
 	}
 	
+	public boolean containsAnnotationType(AnnotationTypeDeclaration annotationTypeDeclaration){
+		return this.containsAccessibleAnnotationType(annotationTypeDeclaration) || this.containsNonAccessibleAnnotationType(annotationTypeDeclaration);
+	}
+	
 	public boolean containsType(TypeDeclaration type){
 		return this.containsAccessibleType(type) || this.containsNonAccessibleType(type);
 	}
@@ -314,7 +319,6 @@ public class APIVersion {
 				}
 			}
 		}
-
 		return result;
 	}
 
@@ -329,6 +333,37 @@ public class APIVersion {
 		for(MethodDeclaration methodInThisVersion : this.getAllEqualMethodsByName(method, type)){
 			if(UtilTools.isEqualMethod(method, methodInThisVersion)){
 				return methodInThisVersion;
+			}
+		}
+		return null;
+	}
+	
+	public ArrayList<AnnotationTypeMemberDeclaration> getAllEqualAnnotationMemberByName(AnnotationTypeMemberDeclaration member, AnnotationTypeDeclaration annotation) {
+		ArrayList<AnnotationTypeMemberDeclaration> result = new ArrayList<AnnotationTypeMemberDeclaration>();
+		for (AnnotationTypeDeclaration annotationType : this.apiAccessibleAnnotation) {
+			if(annotationType.getName().toString().equals(annotation.getName().toString())){
+				List<AnnotationTypeMemberDeclaration> members =  annotationType.bodyDeclarations();
+				for(int i=0; i< members.size(); i++){
+					AnnotationTypeMemberDeclaration memberComparation = members.get(i);
+					if(memberComparation.getName().toString().equals(member.getName().toString()))
+						result.add(memberComparation);
+				}
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Retorna o membro de uma anotação na versão corrente que possuem o mesmo nome do membro recebido como parâmetro.
+	 * Retorna nulo se o membro não for encontrado.
+	 * @param method
+	 * @param type
+	 * @return
+	 */
+	public AnnotationTypeMemberDeclaration getEqualVersionAnnotationTypeMember(AnnotationTypeMemberDeclaration annotationMember, AnnotationTypeDeclaration annotationType){
+		for(AnnotationTypeMemberDeclaration annotationTypeMemberDeclaration : this.getAllEqualAnnotationMemberByName(annotationMember, annotationType)){
+			if(UtilTools.isEqualAnnotationMember(annotationMember, annotationTypeMemberDeclaration)){
+				return annotationTypeMemberDeclaration;
 			}
 		}
 		return null;
