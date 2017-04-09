@@ -2,6 +2,7 @@
 build.local.sh
 output.csv
 scripts/node/node_modules
+*.csv
 
 #Projects Files
 *.class
