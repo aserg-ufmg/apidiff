@@ -80,8 +80,9 @@ public class AnnotationTypeMemberDiff {
 	private void findAddedDeprecatedAnnotationTypeMember(APIVersion version1, AnnotationTypeDeclaration annotationTypeDeclaration2, List<AnnotationTypeMemberDeclaration> membersVersion2){
 		for(int i=0; i< membersVersion2.size(); i++){
 			 AnnotationTypeMemberDeclaration memberVersion2 = membersVersion2.get(i);
-			 AnnotationTypeMemberDeclaration methodInVersion1 = version1.getEqualVersionAnnotationTypeMember(memberVersion2, annotationTypeDeclaration2);
-			if(methodInVersion1 == null || !this.isDeprecated(methodInVersion1, version1.getVersionAccessibleAnnotationType(annotationTypeDeclaration2))){
+			 AnnotationTypeMemberDeclaration memberVersion1 = version1.getEqualVersionAnnotationTypeMember(memberVersion2, annotationTypeDeclaration2);
+			if((memberVersion1 == null || !this.isDeprecated(memberVersion1, version1.getVersionAccessibleAnnotationType(annotationTypeDeclaration2)))
+					&& (this.isDeprecated(memberVersion2, annotationTypeDeclaration2))){
 				this.listBreakingChange.add(new BreakingChange(annotationTypeDeclaration2.resolveBinding().getQualifiedName(), memberVersion2.getName().toString(), this.CATEGORY_ANNOTATION_TYPE_MEMBER_DEPRECIATED,false));
 			}
 		}	 
@@ -122,7 +123,7 @@ public class AnnotationTypeMemberDiff {
 	}
 	
 	private String getDefaultValue(AnnotationTypeMemberDeclaration member){
-		return member.getDefault() == null? "":member.getDefault().toString();
+		return (member == null || member.getDefault() == null) ? "":member.getDefault().toString();
 	}
 	
 	private void diffDefaultValue(AnnotationTypeDeclaration typeAnnotation1, AnnotationTypeMemberDeclaration member1, AnnotationTypeMemberDeclaration member2){
@@ -182,11 +183,13 @@ public class AnnotationTypeMemberDiff {
 	}
 	
 	private Boolean diffReturnType(AnnotationTypeMemberDeclaration methodVersion1, AnnotationTypeMemberDeclaration methodVersion2){
-		Type returnType1 = methodVersion1.getType();
-		Type returnType2 = methodVersion2.getType();
-		
-		if(returnType1 != null && returnType2 != null &&  !returnType1.toString().equals(returnType2.toString())){
-			return true;
+		if(methodVersion1!= null && methodVersion2!=null){
+			Type returnType1 = methodVersion1.getType();
+			Type returnType2 = methodVersion2.getType();
+			
+			if(returnType1 != null && returnType2 != null &&  !returnType1.toString().equals(returnType2.toString())){
+				return true;
+			}
 		}
 		return false;
 	}
