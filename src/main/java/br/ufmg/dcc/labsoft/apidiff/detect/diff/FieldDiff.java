@@ -128,7 +128,9 @@ public class FieldDiff {
 						if(fieldInVersion2 != null && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
 							if(!fieldInVersion1.getType().toString().equals(fieldInVersion2.getType().toString())){
 								try {
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), this.CATEGORY_FIELD_CHANGED_TYPE_FIELD));
+									String category = this.isDeprecated(fieldInVersion1, type)? this.CATEGORY_FIELD_CHANGED_TYPE_FIELD_DEPRECIATED: this.CATEGORY_FIELD_CHANGED_TYPE_FIELD;
+									Boolean isBreakingChange = this.isDeprecated(fieldInVersion1, type)? false: true;
+									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), category, isBreakingChange));
 								} catch (BindingException e) {
 									continue;
 								}
