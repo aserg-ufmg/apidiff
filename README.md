@@ -2,11 +2,11 @@
 Tool to identify breaking changes and non-breaking changes between  versions of a Java library.
 
 ### Contributors
-The code has been developed by [Laerte Xavier](https://github.com/xavierlaerte) and [Aline Brito](https://github.com/alinebrito), inspired by the APIChangeTypeFinderSanner project developed by  [Laerte Xavier](https://github.com/xavierlaerte).
+The code has been developed by [Laerte Xavier](https://github.com/xavierlaerte) and [Aline Brito](https://github.com/alinebrito).
 
 ### Requirements
 
-* [Java 1.7+](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+* [Java 1.8+](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 * [Maven 3.1+](https://maven.apache.org/download.cgi)
 
 ### Build aplication.
@@ -28,7 +28,7 @@ The file APIDiff.jar is built  in target. Copy APIDiff.jar for a path with permi
 Run APIDiff using the following syntax:
 
 ```
-java -jar APIDiff.jar <path version library old> <path version library new>
+java -jar APIDiff.jar <path library>
 ```
 
 The output is a CSV file (output.csv).
