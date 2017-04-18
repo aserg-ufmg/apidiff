@@ -8,6 +8,7 @@ import org.eclipse.jdt.core.dom.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class AnnotationTypeMemberDiff {
@@ -64,6 +65,7 @@ public class AnnotationTypeMemberDiff {
 				 if(memberVersion1 == null){
 					 String category = "".equals(this.getDefaultValue(memberVersion2))?this.CATEGORY_ANNOTATION_TYPE_MEMBER_ADDED_WITHOUT_DEFAULT:this.CATEGORY_ANNOTATION_TYPE_MEMBER_ADDED_WITH_DEFAULT;
 					 Boolean isBreakingChange = "".equals(this.getDefaultValue(memberVersion2))?true:false;
+					 category += UtilTools.getSufixJavadoc(memberVersion2);
 					 this.listBreakingChange.add(new BreakingChange(annotationTypeDeclaration2.resolveBinding().getQualifiedName(), memberVersion2.getName().toString(), category, isBreakingChange));
 				 }
 			 }
@@ -78,12 +80,16 @@ public class AnnotationTypeMemberDiff {
 	 * @param version2
 	 */
 	private void findAddedDeprecatedAnnotationTypeMember(APIVersion version1, AnnotationTypeDeclaration annotationTypeDeclaration2, List<AnnotationTypeMemberDeclaration> membersVersion2){
+		
+		String category = this.CATEGORY_ANNOTATION_TYPE_MEMBER_DEPRECIATED;
+		
 		for(int i=0; i< membersVersion2.size(); i++){
 			 AnnotationTypeMemberDeclaration memberVersion2 = membersVersion2.get(i);
 			 AnnotationTypeMemberDeclaration memberVersion1 = version1.getEqualVersionAnnotationTypeMember(memberVersion2, annotationTypeDeclaration2);
 			if((memberVersion1 == null || !this.isDeprecated(memberVersion1, version1.getVersionAccessibleAnnotationType(annotationTypeDeclaration2)))
 					&& (this.isDeprecated(memberVersion2, annotationTypeDeclaration2))){
-				this.listBreakingChange.add(new BreakingChange(annotationTypeDeclaration2.resolveBinding().getQualifiedName(), memberVersion2.getName().toString(), this.CATEGORY_ANNOTATION_TYPE_MEMBER_DEPRECIATED,false));
+				category += UtilTools.getSufixJavadoc(memberVersion2);
+				this.listBreakingChange.add(new BreakingChange(annotationTypeDeclaration2.resolveBinding().getQualifiedName(), memberVersion2.getName().toString(), category,false));
 			}
 		}	 
 	}
@@ -103,6 +109,7 @@ public class AnnotationTypeMemberDiff {
 				AnnotationTypeMemberDeclaration memberVersion2 = version2.getEqualVersionAnnotationTypeMember(memberVersion1, typeInVersion1);
 				if(memberVersion2 == null){ //Se método foi removido na última versão.
 					String category = this.isDeprecated(memberVersion1, typeInVersion1)? this.CATEGORY_ANNOTATION_TYPE_MEMBER_REMOVED_DEPRECIATED: this.CATEGORY_ANNOTATION_TYPE_MEMBER_REMOVED;
+					category += UtilTools.getSufixJavadoc(memberVersion1);
 					Boolean isBreakingChange = this.isDeprecated(memberVersion1, typeInVersion1)? false: true;
 					this.listBreakingChange.add(new BreakingChange(typeInVersion1.resolveBinding().getQualifiedName(), memberVersion1.getName().toString(), category, isBreakingChange));
 				}
@@ -146,6 +153,7 @@ public class AnnotationTypeMemberDiff {
 			category = this.isDeprecated(member1, typeAnnotation1)?this.CATEGORY_ANNOTATION_TYPE_MEMBER_CHANGE_DEFAULT_VALUE_DEPRECIATED:CATEGORY_ANNOTATION_TYPE_MEMBER_CHANGE_DEFAULT_VALUE;
 			isBreakingChange = this.isDeprecated(member1, typeAnnotation1)?false:true;
 		}
+		category += UtilTools.getSufixJavadoc(member1);
 		this.listBreakingChange.add(new BreakingChange(typeAnnotation1.resolveBinding().getQualifiedName(), member2.getName().toString(), category, isBreakingChange));
 	}
 
@@ -174,6 +182,7 @@ public class AnnotationTypeMemberDiff {
 					AnnotationTypeMemberDeclaration methodVersion2 = version2.getEqualVersionAnnotationTypeMember(methodVersion1, typeVersion1);
 						if(this.diffReturnType(methodVersion1, methodVersion2)){
 							String category = this.isDeprecated(methodVersion1, typeVersion1)? this.CATEGORY_ANNOTATION_TYPE_MEMBER_CHANGE_RETURN_DEPRECIATED: this.CATEGORY_ANNOTATION_TYPE_MEMBER_CHANGE_RETURN;
+							category += UtilTools.getSufixJavadoc(methodVersion1);
 							Boolean isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
 							this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), category, isBreakingChange));
 						}

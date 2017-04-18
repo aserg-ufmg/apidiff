@@ -11,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
@@ -319,5 +320,31 @@ public class UtilTools {
 		return ((node != null) && (node.getJavadoc() != null) && (!node.getJavadoc().equals("")))? "" : " WITHOUT JAVADOC";
 	}
 	
+	/**
+	 * Se o método não possui javadoc, retorna prefixo.
+	 * @param node
+	 * @return
+	 */
+	public static String getSufixJavadoc(final MethodDeclaration methodDeclaration){
+		return ((methodDeclaration != null) && (methodDeclaration.getJavadoc() != null) && (!methodDeclaration.getJavadoc().equals("")))? "" : " WITHOUT JAVADOC";
+	}
+	
+	/**
+	 * Se o membro da anotação não possui javadoc, retorna prefixo.
+	 * @param node
+	 * @return
+	 */
+	public static String getSufixJavadoc(final AnnotationTypeMemberDeclaration annotationMember){
+		return ((annotationMember != null) && (annotationMember.getJavadoc() != null) && (!annotationMember.getJavadoc().equals("")))? "" : " WITHOUT JAVADOC";
+	}
+
+	/**
+	 * Se o fild não possui javadoc, retorna prefixo.
+	 * @param node
+	 * @return
+	 */
+	public static String getSufixJavadoc(final FieldDeclaration fieldInVersion){
+		return ((fieldInVersion != null) && (fieldInVersion.getJavadoc() != null) && (!fieldInVersion.getJavadoc().equals("")))? "" : " WITHOUT JAVADOC";
+	}
 	
 }

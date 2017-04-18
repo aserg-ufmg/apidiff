@@ -135,6 +135,7 @@ public class MethodDiff {
 							List<SimpleType> exceptionsVersion2 = methodVersion2.thrownExceptionTypes();
 							
 							String category = this.isDeprecated(methodVersion1, typeVersion1)? this.CATEGORY_METHOD_CHANGED_EXCEPTION_DEPRECIATED: this.CATEGORY_METHOD_CHANGED_EXCEPTION;
+							category += UtilTools.getSufixJavadoc(methodVersion2);
 							Boolean isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
 							
 							if(exceptionsVersion1.size() != exceptionsVersion2.size() || (this.diffListExceptions(exceptionsVersion1, exceptionsVersion2))) {
@@ -194,6 +195,7 @@ public class MethodDiff {
 						for(MethodDeclaration methodVersion2: methodsVersion2){
 							if(this.isMethodAcessible(methodVersion2) && version1.getEqualVersionMethod(methodVersion2, typeVersion1) == null && this.diffListParameter(methodVersion1, methodVersion2)){
 								String category = this.isDeprecated(methodVersion1, typeVersion1)? this.CATEGORY_METHOD_CHANGED_PARAMETERS_DEPRECIATED: this.CATEGORY_METHOD_CHANGED_PARAMETERS;
+								category += UtilTools.getSufixJavadoc(methodVersion2);
 								Boolean isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
 								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), category, isBreakingChange));
 							}
@@ -236,6 +238,7 @@ public class MethodDiff {
 						if(this.isMethodAcessible((methodVersion2))){
 							if(this.diffReturnType(methodVersion1, methodVersion2)){
 								String category = this.isDeprecated(methodVersion1, typeVersion1)? this.CATEGORY_METHOD_CHANGED_RETURN_TYPE_DEPRECIATED: this.CATEGORY_METHOD_CHANGED_RETURN_TYPE;
+								category += UtilTools.getSufixJavadoc(methodVersion2);
 								Boolean isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
 								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), category, isBreakingChange));
 							}
@@ -274,6 +277,7 @@ public class MethodDiff {
 					category = UtilTools.isVisibilityDefault(methodVersion1) && UtilTools.isVisibilityPrivate(methodVersion2)? this.CATEGORY_METHOD_LOST_VISIBILITY: this.CATEGORY_METHOD_GAIN_VISIBILITY;
 					isBreakingChange = false;
 				}
+				category += UtilTools.getSufixJavadoc(methodVersion2);
 				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(typeVersion1), methodVersion2.getName().toString(), category, isBreakingChange));
 			}
 		}
@@ -311,7 +315,8 @@ public class MethodDiff {
 				if(this.isMethodAcessible(methodVersion2) && this.isDeprecated(methodVersion2, typeVersion2)){
 					MethodDeclaration methodInVersion1 = version1.getEqualVersionMethod(methodVersion2, typeVersion2);
 					if(methodInVersion1 == null || !this.isDeprecated(methodInVersion1, version1.getVersionAccessibleType(typeVersion2))){
-						this.listBreakingChange.add(new BreakingChange(typeVersion2.resolveBinding().getQualifiedName(), methodVersion2.getName().toString(), this.CATEGORY_METHOD_DEPRECIATED,false));
+						String category =  this.CATEGORY_METHOD_DEPRECIATED +  UtilTools.getSufixJavadoc(methodVersion2);
+						this.listBreakingChange.add(new BreakingChange(typeVersion2.resolveBinding().getQualifiedName(), methodVersion2.getName().toString(), category,false));
 					}
 				}
 			}
@@ -334,6 +339,7 @@ public class MethodDiff {
 						MethodDeclaration methodInVersion2 = version2.getEqualVersionMethod(methodInVersion1, typeInVersion1);
 						if(methodInVersion2 == null){ //Se método foi removido na última versão.
 							String category = this.isDeprecated(methodInVersion1, typeInVersion1)? this.CATEGORY_METHOD_REMOVED_DEPRECIATED: this.CATEGORY_METHOD_REMOVED;
+							category += UtilTools.getSufixJavadoc(methodInVersion1);
 							Boolean isBreakingChange = this.isDeprecated(methodInVersion1, typeInVersion1)? false: true;
 							this.listBreakingChange.add(new BreakingChange(typeInVersion1.resolveBinding().getQualifiedName(), methodInVersion1.getName().toString(), category, isBreakingChange));
 						}
@@ -350,20 +356,25 @@ public class MethodDiff {
 	 * @param version2
 	 */
 	private void findAddedMethods(APIVersion version1, APIVersion version2) {
+		
+		String category = this.CATEGORY_METHOD_ADDED;
+		
 		for (TypeDeclaration typeInVersion2 : version2.getApiAcessibleTypes()) {
 			if(version1.containsType(typeInVersion2)){//Se type já existia, verifica quais são os novos métodos.
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){
 					if(this.isMethodAcessible(methodInVersion2)){
 						MethodDeclaration methodInVersion1 = version1.getEqualVersionMethod(methodInVersion2, typeInVersion2);
 						if(methodInVersion1 == null){
-							this.listBreakingChange.add(new BreakingChange(typeInVersion2.resolveBinding().getQualifiedName(), methodInVersion2.getName().toString(), this.CATEGORY_METHOD_ADDED, false));
+							category += UtilTools.getSufixJavadoc(methodInVersion1);
+							this.listBreakingChange.add(new BreakingChange(typeInVersion2.resolveBinding().getQualifiedName(), methodInVersion2.getName().toString(), category, false));
 						}
 					}
 				}
 			} else {
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){//Se type foi adicionado.
 					if(this.isMethodAcessible(methodInVersion2)){
-						this.listBreakingChange.add(new BreakingChange(typeInVersion2.resolveBinding().getQualifiedName(), methodInVersion2.getName().toString(), this.CATEGORY_METHOD_ADDED, false));
+						category += UtilTools.getSufixJavadoc(methodInVersion2);
+						this.listBreakingChange.add(new BreakingChange(typeInVersion2.resolveBinding().getQualifiedName(), methodInVersion2.getName().toString(), category, false));
 					}
 				}
 			}
@@ -394,6 +405,7 @@ public class MethodDiff {
 			category = this.CATEGORY_METHOD_LOST_MODIFIER_FINAL;
 			isBreakingChange = false;
 		}
+		category += UtilTools.getSufixJavadoc(methodVersion2);
 		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion2.getName().toString(), category, isBreakingChange));
 	}
 	
@@ -420,6 +432,7 @@ public class MethodDiff {
 			category = this.isDeprecated(methodVersion1, typeVersion1)?this.CATEGORY_METHOD_LOST_MODIFIER_STATIC_DEPRECIATED:CATEGORY_METHOD_LOST_MODIFIER_STATIC;
 			isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)?false:true;
 		}
+		category += UtilTools.getSufixJavadoc(methodVersion2);
 		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion2.getName().toString(), category, isBreakingChange));
 	}
 	
