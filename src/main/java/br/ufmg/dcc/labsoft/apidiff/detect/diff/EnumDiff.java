@@ -48,11 +48,12 @@ public class EnumDiff {
 		for(EnumDeclaration acessibleEnumVersion2 : version2.getApiAccessibleEnums()){
 			if(this.isDeprecated(acessibleEnumVersion2)){
 				EnumDeclaration accessibleEnumVersion1 = version1.getVersionAccessibleEnum(acessibleEnumVersion2);
+				String category = this.CATEGORY_ENUM_DEPRECIATED + UtilTools.getSufixJavadoc(acessibleEnumVersion2);;
 				if(accessibleEnumVersion1 == null){
-					this.listBreakingChange.add(new BreakingChange(acessibleEnumVersion2.resolveBinding().getQualifiedName(), acessibleEnumVersion2.getName().toString(), this.CATEGORY_ENUM_DEPRECIATED, false));
+					this.listBreakingChange.add(new BreakingChange(acessibleEnumVersion2.resolveBinding().getQualifiedName(), acessibleEnumVersion2.getName().toString(), category, false));
 				} else {
 					if(accessibleEnumVersion1.resolveBinding() != null && !accessibleEnumVersion1.resolveBinding().isDeprecated()){
-						this.listBreakingChange.add(new BreakingChange(accessibleEnumVersion1.resolveBinding().getQualifiedName(), accessibleEnumVersion1.getName().toString(), this.CATEGORY_ENUM_DEPRECIATED, false));
+						this.listBreakingChange.add(new BreakingChange(accessibleEnumVersion1.resolveBinding().getQualifiedName(), accessibleEnumVersion1.getName().toString(), category, false));
 					}
 				}
 			}
@@ -115,6 +116,7 @@ public class EnumDiff {
 						category = UtilTools.isVisibilityDefault(enum1) && UtilTools.isVisibilityPrivate(enum2)? this.CATEGORY_ENUM_LOST_VISIBILITY: this.CATEGORY_ENUM_GAIN_VISIBILITY;
 						isBreakingChange = false;
 					}
+					category += UtilTools.getSufixJavadoc(enum2);
 					this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(enum2), enum2.getName().toString(), category, isBreakingChange));
 				}
 			}
@@ -125,7 +127,7 @@ public class EnumDiff {
 		for(EnumDeclaration enumVersion2 : version2.getApiAccessibleEnums()){
 			if(version1.getVersionAccessibleEnum(enumVersion2) == null && 
 					version1.getVersionNonAccessibleEnum(enumVersion2) == null){
-				this.listBreakingChange.add(new BreakingChange(enumVersion2.resolveBinding().getQualifiedName(), enumVersion2.getName().toString(), this.CATEGORY_ENUM_ADD, false));
+				this.listBreakingChange.add(new BreakingChange(enumVersion2.resolveBinding().getQualifiedName(), enumVersion2.getName().toString(), this.CATEGORY_ENUM_ADD + UtilTools.getSufixJavadoc(enumVersion2), false));
 			}
 		}
 	}
@@ -134,9 +136,9 @@ public class EnumDiff {
 		for(EnumDeclaration enumVersion1 : version1.getApiAccessibleEnums()){
 			if(version2.getVersionAccessibleEnum(enumVersion1) == null && version2.getVersionNonAccessibleEnum(enumVersion1) == null){
 				if(this.isDeprecated(enumVersion1)){
-					this.listBreakingChange.add(new BreakingChange(enumVersion1.resolveBinding().getQualifiedName(), enumVersion1.getName().toString(), this.CATEGORY_ENUM_REMOVED_DEPRECIATED, false));
+					this.listBreakingChange.add(new BreakingChange(enumVersion1.resolveBinding().getQualifiedName(), enumVersion1.getName().toString(), this.CATEGORY_ENUM_REMOVED_DEPRECIATED + UtilTools.getSufixJavadoc(enumVersion1), false));
 				} else{
-					this.listBreakingChange.add(new BreakingChange(enumVersion1.resolveBinding().getQualifiedName(), enumVersion1.getName().toString(), this.CATEGORY_ENUM_REMOVED, true));
+					this.listBreakingChange.add(new BreakingChange(enumVersion1.resolveBinding().getQualifiedName(), enumVersion1.getName().toString(), this.CATEGORY_ENUM_REMOVED + UtilTools.getSufixJavadoc(enumVersion1) , true));
 				}
 			}
 		}
