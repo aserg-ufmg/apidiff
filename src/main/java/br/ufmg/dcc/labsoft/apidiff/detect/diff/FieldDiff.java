@@ -211,8 +211,6 @@ public class FieldDiff {
 	 */
 	private void findAddedDeprecatedFields(APIVersion version1, APIVersion version2) {
 		
-		String category = this.CATEGORY_FIELD_DEPRECIATED;
-		
 		//Percorre todos os types acessíveis da versão 2.
 		for(TypeDeclaration typeVersion2 : version2.getApiAcessibleTypes()){
 			for(FieldDeclaration fieldVersion2 : typeVersion2.getFields()){
@@ -223,7 +221,7 @@ public class FieldDiff {
 						FieldDeclaration fieldInVersion1 = version1.getVersionField(fieldVersion2, typeVersion2);
 						//Se o field não estava depreciado na versão anterior ou não existia e foi criado depreciado.
 						if(fieldInVersion1 == null || !this.isDeprecated(fieldInVersion1, version1.getVersionAccessibleType(typeVersion2))){
-							category += UtilTools.getSufixJavadoc(fieldVersion2);
+							String category = this.CATEGORY_FIELD_DEPRECIATED + UtilTools.getSufixJavadoc(fieldVersion2);
 							this.listBreakingChange.add(new BreakingChange(typeVersion2.resolveBinding().getQualifiedName(),  UtilTools.getFieldName(fieldVersion2), category, false));
 						}
 					} catch (BindingException e) {
@@ -236,8 +234,6 @@ public class FieldDiff {
 
 	private void findAddedFields(APIVersion version1, APIVersion version2) {
 		
-		String category = this.CATEGORY_FIELD_ADD;
-		
 		for (TypeDeclaration type : version2.getApiAcessibleTypes()) {
 			if(version1.containsAccessibleType(type)){
 
@@ -247,7 +243,7 @@ public class FieldDiff {
 						try {
 							fieldInVersion1 = version1.getVersionField(fieldInVersion2, type);
 							if(fieldInVersion1 == null){
-								category += UtilTools.getSufixJavadoc(fieldInVersion2);
+								String category = this.CATEGORY_FIELD_ADD + UtilTools.getSufixJavadoc(fieldInVersion2);
 								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), category, false));
 							}
 						} catch (BindingException e) {
@@ -260,7 +256,7 @@ public class FieldDiff {
 				for (FieldDeclaration field : type.getFields()) {
 					if(!UtilTools.isVisibilityPrivate(field)){
 						try {
-							category += UtilTools.getSufixJavadoc(field);
+							String category = this.CATEGORY_FIELD_ADD + UtilTools.getSufixJavadoc(field);
 							this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(field), category, false));
 						} catch (BindingException e) {
 							continue;

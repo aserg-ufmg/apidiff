@@ -115,13 +115,11 @@ public class TypeDiff {
 	 */
 	private void findAddedDeprecated(APIVersion version1, APIVersion version2) {
 		
-		String category = this.CATEGORY_TYPE_DEPRECIATED;
-		//Se type não era depreciado na versão 1 e foi depreciado na versão 2.
 		for(TypeDeclaration accessibleTypeVersion1 : version1.getApiAcessibleTypes()){
 			TypeDeclaration accessibleTypeVersion2 = version2.getVersionAccessibleType(accessibleTypeVersion1);
 			if(accessibleTypeVersion2 != null){
 				if(!this.isDeprecated(accessibleTypeVersion1) && this.isDeprecated(accessibleTypeVersion2)){
-					category += UtilTools.getSufixJavadoc(accessibleTypeVersion2);
+					String category = this.CATEGORY_TYPE_DEPRECIATED +  UtilTools.getSufixJavadoc(accessibleTypeVersion2);
 					this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(accessibleTypeVersion1), accessibleTypeVersion1.getName().toString(), category, false));
 				}
 			}
@@ -130,7 +128,7 @@ public class TypeDiff {
 		//Se type não existia na versão 1, e foi adicionado na versão 2 já depreciado.
 		for(TypeDeclaration accessibleTypeVersion2 : version2.getApiAcessibleTypes()){
 			if(!version1.containsAccessibleType(accessibleTypeVersion2) && this.isDeprecated(accessibleTypeVersion2)){
-				category += UtilTools.getSufixJavadoc(accessibleTypeVersion2);
+				String category = this.CATEGORY_TYPE_DEPRECIATED + UtilTools.getSufixJavadoc(accessibleTypeVersion2);
 				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(accessibleTypeVersion2), accessibleTypeVersion2.getName().toString(), category, false));
 			}
 		}

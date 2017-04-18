@@ -81,14 +81,14 @@ public class AnnotationTypeMemberDiff {
 	 */
 	private void findAddedDeprecatedAnnotationTypeMember(APIVersion version1, AnnotationTypeDeclaration annotationTypeDeclaration2, List<AnnotationTypeMemberDeclaration> membersVersion2){
 		
-		String category = this.CATEGORY_ANNOTATION_TYPE_MEMBER_DEPRECIATED;
+		
 		
 		for(int i=0; i< membersVersion2.size(); i++){
 			 AnnotationTypeMemberDeclaration memberVersion2 = membersVersion2.get(i);
 			 AnnotationTypeMemberDeclaration memberVersion1 = version1.getEqualVersionAnnotationTypeMember(memberVersion2, annotationTypeDeclaration2);
 			if((memberVersion1 == null || !this.isDeprecated(memberVersion1, version1.getVersionAccessibleAnnotationType(annotationTypeDeclaration2)))
 					&& (this.isDeprecated(memberVersion2, annotationTypeDeclaration2))){
-				category += UtilTools.getSufixJavadoc(memberVersion2);
+				String category = this.CATEGORY_ANNOTATION_TYPE_MEMBER_DEPRECIATED + UtilTools.getSufixJavadoc(memberVersion2);
 				this.listBreakingChange.add(new BreakingChange(annotationTypeDeclaration2.resolveBinding().getQualifiedName(), memberVersion2.getName().toString(), category,false));
 			}
 		}	 

@@ -53,14 +53,12 @@ public class AnnotationTypeDiff {
 	 */
 	private void findAddedAnnotationDeprecated(APIVersion version1, APIVersion version2) {
 		
-		String category = this.CATEGORY_ANNOTATION_TYPE_DEPRECIATED;
-		
 		//Se anotação não era depreciada na versão 1 e foi depreciada na versão 2.
 		for(AnnotationTypeDeclaration accessibleAnnotationTypeVersion1 : version1.getApiAccessibleAnnotation()){
 			AnnotationTypeDeclaration accessibleAnnotationTypeVersion2 = version2.getVersionAccessibleAnnotationType(accessibleAnnotationTypeVersion1);
 			if(accessibleAnnotationTypeVersion2 != null){
 				if(!this.isDeprecated(accessibleAnnotationTypeVersion1) && this.isDeprecated(accessibleAnnotationTypeVersion2)){
-					category += UtilTools.getSufixJavadoc(accessibleAnnotationTypeVersion2);
+					String category = this.CATEGORY_ANNOTATION_TYPE_DEPRECIATED + UtilTools.getSufixJavadoc(accessibleAnnotationTypeVersion2);
 					this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(accessibleAnnotationTypeVersion1), accessibleAnnotationTypeVersion1.getName().toString(), category, false));
 				}
 			}
@@ -69,7 +67,7 @@ public class AnnotationTypeDiff {
 		//Se anotação não existia na versão 1, e foi adicionado na versão 2 já depreciada.
 		for(AnnotationTypeDeclaration accessibleTypeVersion2 : version2.getApiAccessibleAnnotation()){
 			if(!version1.containsAccessibleAnnotationType(accessibleTypeVersion2) && this.isDeprecated(accessibleTypeVersion2)){
-				category += UtilTools.getSufixJavadoc(accessibleTypeVersion2);
+				String category = this.CATEGORY_ANNOTATION_TYPE_DEPRECIATED + UtilTools.getSufixJavadoc(accessibleTypeVersion2);
 				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(accessibleTypeVersion2), accessibleTypeVersion2.getName().toString(), category, false));
 			}
 		}

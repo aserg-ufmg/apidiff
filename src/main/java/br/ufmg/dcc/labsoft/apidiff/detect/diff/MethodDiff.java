@@ -357,15 +357,13 @@ public class MethodDiff {
 	 */
 	private void findAddedMethods(APIVersion version1, APIVersion version2) {
 		
-		String category = this.CATEGORY_METHOD_ADDED;
-		
 		for (TypeDeclaration typeInVersion2 : version2.getApiAcessibleTypes()) {
 			if(version1.containsType(typeInVersion2)){//Se type já existia, verifica quais são os novos métodos.
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){
 					if(this.isMethodAcessible(methodInVersion2)){
 						MethodDeclaration methodInVersion1 = version1.getEqualVersionMethod(methodInVersion2, typeInVersion2);
 						if(methodInVersion1 == null){
-							category += UtilTools.getSufixJavadoc(methodInVersion1);
+							String category = this.CATEGORY_METHOD_ADDED + UtilTools.getSufixJavadoc(methodInVersion1);
 							this.listBreakingChange.add(new BreakingChange(typeInVersion2.resolveBinding().getQualifiedName(), methodInVersion2.getName().toString(), category, false));
 						}
 					}
@@ -373,7 +371,7 @@ public class MethodDiff {
 			} else {
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){//Se type foi adicionado.
 					if(this.isMethodAcessible(methodInVersion2)){
-						category += UtilTools.getSufixJavadoc(methodInVersion2);
+						String category = this.CATEGORY_METHOD_ADDED + UtilTools.getSufixJavadoc(methodInVersion2);
 						this.listBreakingChange.add(new BreakingChange(typeInVersion2.resolveBinding().getQualifiedName(), methodInVersion2.getName().toString(), category, false));
 					}
 				}
