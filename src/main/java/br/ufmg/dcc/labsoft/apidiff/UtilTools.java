@@ -309,4 +309,15 @@ public class UtilTools {
 		}
 		return list;
 	}
+	
+	/**
+	 * Se o nó não possui javadoc, retorna prefixo.
+	 * @param node
+	 * @return
+	 */
+	public static String getSufixJavadoc(final AbstractTypeDeclaration node){
+		return ((node != null) && (node.getJavadoc() != null) && (!node.getJavadoc().equals("")))? "" : " WITHOUT JAVADOC";
+	}
+	
+	
 }
