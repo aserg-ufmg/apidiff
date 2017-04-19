@@ -157,7 +157,7 @@ public class UtilTools {
 	 * 		   String vazia se não foi possível ler o binding.
 	 */
 	public static  String getNameNode(final AbstractTypeDeclaration node){
-		return ((node == null) || (node.resolveBinding().getQualifiedName() == null))?"":node.resolveBinding().getQualifiedName();
+		return ((node == null) || (node.resolveBinding() == null) || (node.resolveBinding().getQualifiedName() == null))? "" : node.resolveBinding().getQualifiedName();
 	}
 	
 	
