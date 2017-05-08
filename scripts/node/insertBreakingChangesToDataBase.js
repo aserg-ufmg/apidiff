@@ -4,14 +4,14 @@
 // -------
 
 // Path e nome do arquivo de entrada.
-var file = "./output1.csv";
+var file = "./input/survey/day_1_output.csv";
 
 // Dados para conexão com o MongoDB
-var dbUrl = 'mongodb://127.0.0.1:27017/APIDiff';
+var dbUrl = 'mongodb://127.0.0.1:27017/APIs-BreakingChange-survey';
 var db = null;
 
 //Dados da coleção onde os dados serão inseridos.
-var nameCollection = "piloto_day1_14032017";
+var nameCollection = "day_1";
 var collection = null;
 
 //Bibliotecas para acessar banco de dados e ler o arquivo de entrada.
@@ -36,14 +36,15 @@ var insertRegistry = function(registry, last){
 
 var parserFile = function(){
 
-	var i = 0;
+	var i = 1;
 	//last == true se fim do arquivo.
 	lineReader.eachLine(file, function(line, last) {
 	    
 		//Quebra a linha pelo separador (;)
 		var data = line.split(";");
-
-		if(data.length >= 9){
+		console.log(i);
+		i++;
+		if(data.length >= 12){
 			var registry = new Object();
 			registry.author	= data[0];
 			registry.email	= data[1];
@@ -53,11 +54,14 @@ var parserFile = function(){
 			registry.category = data[5];
 			registry.idCommit = data[6];
 			registry.messageCommit = data[7];
-			registry.timeCommit = data[8];
-			registry.timeProcess = data[9];
-			registry.timeProcessFormat = data[10];
+			registry.timestampCommit = data[8];
+			registry.timestampProcess = data[9];
+			registry.dateProcessFormat = data[10];
+			registry.dateProcess = new Date(new Number(registry.timestampProcess));
+			registry.dateCommit = new Date(new Number(registry.timestampCommit));
 			registry.isBreakingChange = data[11];
 			registry.classifierAPI = data[12];
+			registry.linkGitHubCommit = "https://github.com/"+registry.nameLibrary+ "/commit/" + registry.idCommit;
 
 			console.log(registry.nameLibrary)
 			insertRegistry(registry,last);
@@ -65,7 +69,7 @@ var parserFile = function(){
 		else{
 			console.log("ERROR: Data invalid! " + i + ": [" + line + "]");
 		}
-		i++;
+		
 	});
 }
 
