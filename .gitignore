@@ -1,8 +1,11 @@
 #Local Files
+*.*~
+*.log
 build.local.sh
 output.csv
 scripts/node/node_modules
-*.csv
+scripts/node/input
+*test.csv
 
 #Projects Files
 *.class
