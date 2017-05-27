@@ -38,6 +38,7 @@ public class APIVersion {
 	private Map<ChangeType, List<GitFile>> mapModifications = new HashMap<ChangeType, List<GitFile>>();
 	private List<String> listFilesMofify = new ArrayList<String>();
 	private ClassifierAPI classifierAPI;
+	private String nameProject;
 	
 	private Logger logger = LoggerFactory.getLogger(APIVersion.class);
 
@@ -58,27 +59,50 @@ public class APIVersion {
 					}
 				}
 			}
-			this.parseFilesInDir(path);
+			this.parseFilesInDir(path, false);
 		} catch (IOException e) {
-			e.printStackTrace();
+			this.logger.error("Erro ao criar APIVersion", e);
 		}
 	}
+	
+	/**
+	 * Retorna uma APIVersion com os arquivos do projeto.
+	 * @param path - path da biblioteca analisada.
+	 * @param classifierAPI - tipo da API analisada.
+	 */
+	public APIVersion(final String nameProject, ClassifierAPI classifierAPI) {
+		try {
+			this.nameProject = nameProject;
+			this.classifierAPI = classifierAPI;
+			File path = new File(UtilTools.getPathProjects() + "/" + this.nameProject);
+			this.parseFilesInDir(path, true);
+		} catch (IOException e) {
+			this.logger.error("Erro ao criar APIVersion", e);
+		}
+		
+	}
 
-	public void parseFilesInDir(File file) throws IOException {
+	/**
+	 * @param Path - path da biblioteca analisada.
+	 * @param ignoreTreeDiff - true para ignorar a árvore de modificações (comparação de projetos). False para considerar a árvore de modificações (análise em nível de commit).
+	 * @throws IOException
+	 */
+	public void parseFilesInDir(File file, final Boolean ignoreTreeDiff) throws IOException {
 		if (file.isFile()) {
-			if (UtilTools.isJavaFile(file.getName()) && this.isFileModification(file) && UtilTools.isAPIByClassifier(file.getAbsolutePath(), this.classifierAPI)) {
-				this.parse(UtilTools.readFileToString(file.getAbsolutePath()), file);		
+			String simpleNameFile = file.getAbsolutePath().replaceAll(UtilTools.getPathProjects() + "/" + this.nameProject, "");
+			if (UtilTools.isJavaFile(file.getName()) && this.isFileModification(file, ignoreTreeDiff) && UtilTools.isAPIByClassifier(simpleNameFile, this.classifierAPI)) {
+				this.parse(UtilTools.readFileToString(file.getAbsolutePath()), file, ignoreTreeDiff);		
 			}
 		} else {
 			for (File f : file.listFiles()) {
-				this.parseFilesInDir(f);
+				this.parseFilesInDir(f, ignoreTreeDiff);
 			}
 		}
 	}
 
-	public void parse(String str, File source) throws IOException {
+	public void parse(String str, File source, final Boolean ignoreTreeDiff) throws IOException {
 		
-		if(this.mapModifications.size() > 0 && !this.isFileModification(source)){
+		if(this.mapModifications.size() > 0 && !this.isFileModification(source,ignoreTreeDiff)){
 			return;
 		}
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
@@ -141,17 +165,14 @@ public class APIVersion {
 	}
 	
 	/**
-	 * Retorna verdadeiro se o arquivo está na lista de arquivos modificados na última versão.
-	 * Falso caso contrário.
-	 * @param source
-	 * @return
+	 *  Retorna verdadeiro se o arquivo está na lista de arquivos modificados na última versão, ou se a lista de midificações não for considerada na análise.
+	 *  Falso caso contrário.
+	 * @param source - Arquivo analisado.
+	 * @param ignoreTreeDiff - Se verdadeiro ignora a lista de modificações. Se falso, verifica se o arquivo pertence está contido na lista de arquivos modificados.
+	 * @return - Verdadeiro se é um arquivo que deve ser incluído no diff, falso caso contrário.
 	 */
-	private Boolean isFileModification(final File source){
-		String path = source.getAbsolutePath();
-		if(this.listFilesMofify.contains(path)){
-			return true;
-		}
-		return false;
+	private Boolean isFileModification(final File source, final Boolean ignoreTreeDiff){
+		return (ignoreTreeDiff || this.listFilesMofify.contains(source.getAbsolutePath()))? true: false;
 	}
 
 	public ArrayList<EnumDeclaration> getApiAccessibleEnums() {

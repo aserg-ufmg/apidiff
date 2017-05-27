@@ -46,7 +46,11 @@ public class APIDiff {
 		this.nameProject = nameProject;
 	}
 	
-	public void calculateDiff() {
+	public APIDiff(final String nameProject) {
+		this.nameProject = nameProject;
+	}
+
+	public void calculateDiffCommit() {
 		try {
 			GitService service = new GitServiceImpl();
 			Repository repository = service.openRepositoryAndCloneIfNotExists(this.nameProject, this.url);
@@ -67,6 +71,20 @@ public class APIDiff {
 		this.logger.info("Finished processing. Check the output file <" + this.nameFile + ">");
 	}
 	
+	
+	/**
+	 * Calcula a diferença entre dois projetos.
+	 * @param nameProjectVersion1
+	 * @param nameProjectVersion2
+	 */
+	public void calculateDiffProject(final String nameProjectVersion1, final String nameProjectVersion2, ClassifierAPI classifierAPI){
+		APIVersion version1 = new APIVersion(nameProjectVersion1, classifierAPI);
+		APIVersion version2 = new APIVersion(nameProjectVersion2, classifierAPI);
+		this.diff(version1, version2);
+		this.printAll(null, classifierAPI);//Escreve saída em arquivo.
+	}
+	
+	
 	/**
 	 * Calcula um diff entre um commit e a versão anterior dos seus arquivos.
 	 * @param currentCommit
@@ -80,9 +98,9 @@ public class APIDiff {
 		APIVersion versionNew = this.getAPIVersionByCommit(currentCommit.getId().getName(), projectFolder, repository, currentCommit, classifierAPI); //versao atual
 		APIVersion versionOld = this.getAPIVersionByCommit(currentCommit.getParent(0).getName(), projectFolder, repository, currentCommit,classifierAPI);////versao antiga
 		this.diff(versionOld, versionNew);
-		this.print(currentCommit, classifierAPI);//Escreve saída em arquivo.
+		this.printAll(currentCommit, classifierAPI);//Escreve saída em arquivo.
 	}
-	
+
 	/**
 	 * Retorna uma APIVersion conforme o commit corrente.
 	 * @param commit - is do commit de referencia
@@ -121,24 +139,37 @@ public class APIDiff {
 	/**
 	 * Imprime resultado em um arquivo CSV.
 	 */
-	private void print(final RevCommit currentCommit, ClassifierAPI classifierAPI){
+	private void printAll(final RevCommit currentCommit, ClassifierAPI classifierAPI){
 		List<String> result =  new ArrayList<String>();
 		//Lista de Breaking Changes.
 		Date date = new Date();
-		result.addAll(this.printListBreakingChange(this.resultType, currentCommit, date, classifierAPI));
-		result.addAll(this.printListBreakingChange(this.resultFild, currentCommit, date, classifierAPI));
-		result.addAll(this.printListBreakingChange(this.resultMethod,currentCommit, date, classifierAPI));
-		result.addAll(this.printListBreakingChange(this.resultEnum,currentCommit, date, classifierAPI));
-		result.addAll(this.printListBreakingChange(this.resultEnumConstant, currentCommit, date, classifierAPI));
-		result.addAll(this.printListBreakingChange(this.resultAnnotationType, currentCommit, date, classifierAPI));
-		result.addAll(this.printListBreakingChange(this.resultAnnotationTypeMember, currentCommit, date, classifierAPI));
+		result.addAll(this.print(this.resultType, currentCommit, date, classifierAPI));
+		result.addAll(this.print(this.resultFild, currentCommit, date, classifierAPI));
+		result.addAll(this.print(this.resultMethod,currentCommit, date, classifierAPI));
+		result.addAll(this.print(this.resultEnum,currentCommit, date, classifierAPI));
+		result.addAll(this.print(this.resultEnumConstant, currentCommit, date, classifierAPI));
+		result.addAll(this.print(this.resultAnnotationType, currentCommit, date, classifierAPI));
+		result.addAll(this.print(this.resultAnnotationTypeMember, currentCommit, date, classifierAPI));
 		
 		UtilFile.writeFile(this.nameFile, result);
 	}
 	
+	private List<String> print(final Result r, final RevCommit currentCommit, Date date, ClassifierAPI classifierAPI){
+		if(currentCommit != null){
+			return this.printListBreakingChange(r, currentCommit, date, classifierAPI);
+		}
+		else{
+			return this.printListBreakingChange(r, date, classifierAPI);
+		}
+	}
+	
 	/**
-	 * Imprime lista de breaking change detectadas.
-	 * @param r
+	 * Imprime lista de breaking change detectadas no commit.
+	 * @param r - Resultados do diff.
+	 * @param currentCommit - Commit corrente, o nulo se a análise não verifica a árvore de commits.
+	 * @param date - data do processamento.
+	 * @param classifierAPI - classificação das APIs analisadas.
+	 * @return
 	 */
 	private List<String> printListBreakingChange(final Result r, final RevCommit currentCommit, Date date, ClassifierAPI classifierAPI){
 		
@@ -156,6 +187,32 @@ public class APIDiff {
 		return list;
 	}
 	
+	/**
+	 * Imprime lista de breaking changes detectadas.
+	 * @param  r - Resultados do diff.
+	 * @param date - data do processamento.
+	 * @param classifierAPI
+	 * @return
+	 */
+	private List<String> printListBreakingChange(final Result r, Date date, ClassifierAPI classifierAPI){
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+		List<String> list =  new ArrayList<String>();
+		if(r != null){
+			for(BreakingChange bc: r.getListBreakingChange()){
+				list.add(this.nameProject  + ";" + bc.getPath() + ";" + bc.getStruture() + ";" + bc.getCategory()
+				+ ";" + date.getTime() + ";" + sdf.format(date) +  ";" + bc.isBreakingChange()
+				+ ";" + classifierAPI);
+			}
+		}
+		return list;
+	}
+	
+	/**
+	 * Substitui quebras de linha e ponto e vírgula das mensagens. Ajuste necessário para a saida CSV.
+	 * @param message
+	 * @return
+	 */
 	private String formatMessage(String message){
 		String messageFormat = message.replaceAll("\\r?\\n", "--NEW_LINE_APIDIFF_PARSER--");
 		messageFormat = messageFormat.replace(";", "--SEMICOLON_APIDIFF_PARSER--");

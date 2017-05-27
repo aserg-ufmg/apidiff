@@ -11,7 +11,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
-import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
@@ -161,9 +160,8 @@ public class UtilTools {
 	}
 	
 	
-	public static Boolean isAPIByClassifier(String pathCompleteFile, ClassifierAPI classifierAPI) throws IOException{
+	public static Boolean isAPIByClassifier(String pathLibrary, ClassifierAPI classifierAPI) throws IOException{
 		Boolean isAPI = false;
-		String pathLibrary = getPathProjectByPathComplete(pathCompleteFile);
 		switch (classifierAPI){
 			case NON_API_EXAMPLE:
 				isAPI = isNonAPIExample(pathLibrary)?true:false;
@@ -234,23 +232,6 @@ public class UtilTools {
 		return true;
 	  }
 	  return false;
-	}
-	
-	public static String getPathProjectByPathComplete(String pathCompleteFile) throws IOException{
-		
-		String pathLibrary = "";
-		
-	     String pathProjects = UtilTools.getPathProjects();
-	      String pattern = "^"+pathProjects+"(.*.)$";
-
-	      //Remove início do path, ou seja, o caminho até o path do projeto.
-	      Pattern r = Pattern.compile(pattern);
-	      Matcher m = r.matcher(pathCompleteFile);
-	      
-	      if (m.find( )) {
-	    	  pathLibrary = m.group(1);
-	      }
-	      return pathLibrary;
 	}
 	
 	/**
