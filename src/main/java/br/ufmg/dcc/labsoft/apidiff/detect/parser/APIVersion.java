@@ -405,17 +405,13 @@ public class APIVersion {
 	}
 
 	/**
-	 * Retorna o método na versão corrente que possuem o mesmo nome, assinatura, e retorno, se comparado ao método recebido.
-	 * Se não encontrar, busca um método com mesmo nome e retorno.
-	 * Se não encontrar, busca método com mesmo nome e assinatura.
-	 * Se não encontrar, busca um método com o mesmo nome.
+	 * Retorna o método na versão corrente que possuem o mesmo nome do método recebido como parâmetro.
 	 * Retorna nulo se o método não for encontrado.
 	 * @param method
 	 * @param type
 	 * @return
 	 */
 	public MethodDeclaration getEqualVersionMethod(MethodDeclaration method, TypeDeclaration type){
-		//Procura 
 		for(MethodDeclaration methodInThisVersion : this.getAllEqualMethodsByName(method, type)){
 			if(UtilTools.isEqualMethod(method, methodInThisVersion)){
 				return methodInThisVersion;
