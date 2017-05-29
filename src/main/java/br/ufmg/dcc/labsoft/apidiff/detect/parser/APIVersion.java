@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.UtilTools;
+import br.ufmg.dcc.labsoft.apidiff.detect.diff.comparator.ComparatorMethod;
 import br.ufmg.dcc.labsoft.apidiff.detect.diff.service.git.GitFile;
 import br.ufmg.dcc.labsoft.apidiff.detect.exception.BindingException;
 import br.ufmg.dcc.labsoft.apidiff.enums.ClassifierAPI;
@@ -342,15 +343,79 @@ public class APIVersion {
 		}
 		return result;
 	}
+	
+	/**
+	 * Retorna o método da classe que possui o mesmo nome, retorno e assinatura. Retorna nulo se o método não for encontrado.
+	 * @param method
+	 * @param type
+	 * @return
+	 */
+	public MethodDeclaration findMethodByNameAndParametersAndReturn(MethodDeclaration method, TypeDeclaration type){
+		MethodDeclaration methodVersionOld = null;
+		for (TypeDeclaration versionType : this.apiAccessibleTypes) {
+			if(versionType.getName().toString().equals(type.getName().toString())){
+				for(MethodDeclaration versionMethod : versionType.getMethods()){
+					if(!ComparatorMethod.isDiffMethodByNameAndParametersAndReturn(versionMethod, method)){
+						methodVersionOld =  versionMethod;
+					}
+				}
+			}
+		}
+		return methodVersionOld;
+	}
+	
+	/**
+	 * Retorna o método da classe que possui o mesmo nome e tipo de  retorno. Retorna nulo se o método não for encontrado.
+	 * @param method
+	 * @param type
+	 * @return
+	 */
+	private MethodDeclaration findMethodByNameAndReturn(MethodDeclaration method, TypeDeclaration type){
+		MethodDeclaration methodVersionOld = null;
+		for (TypeDeclaration versionType : this.apiAccessibleTypes) {
+			if(versionType.getName().toString().equals(type.getName().toString())){
+				for(MethodDeclaration versionMethod : versionType.getMethods()){
+					if(!ComparatorMethod.isDiffMethodByNameAndReturn(versionMethod, method)){
+						methodVersionOld =  versionMethod;
+					}
+				}
+			}
+		}
+		return methodVersionOld;
+	}
+	
+	/**
+	 * Retorna o método da classe que possui o mesmo nome e assinatura. Retorna nulo se o método não for encontrado.
+	 * @param method
+	 * @param type
+	 * @return
+	 */
+	public MethodDeclaration findMethodByNameAndParameters(MethodDeclaration method, TypeDeclaration type){
+		MethodDeclaration methodVersionOld = null;
+		for (TypeDeclaration versionType : this.apiAccessibleTypes) {
+			if(versionType.getName().toString().equals(type.getName().toString())){
+				for(MethodDeclaration versionMethod : versionType.getMethods()){
+					if(!ComparatorMethod.isDiffMethodByNameAndParameters(versionMethod, method)){
+						methodVersionOld =  versionMethod;
+					}
+				}
+			}
+		}
+		return methodVersionOld;
+	}
 
 	/**
-	 * Retorna o método na versão corrente que possuem o mesmo nome do método recebido como parâmetro.
+	 * Retorna o método na versão corrente que possuem o mesmo nome, assinatura, e retorno, se comparado ao método recebido.
+	 * Se não encontrar, busca um método com mesmo nome e retorno.
+	 * Se não encontrar, busca método com mesmo nome e assinatura.
+	 * Se não encontrar, busca um método com o mesmo nome.
 	 * Retorna nulo se o método não for encontrado.
 	 * @param method
 	 * @param type
 	 * @return
 	 */
 	public MethodDeclaration getEqualVersionMethod(MethodDeclaration method, TypeDeclaration type){
+		//Procura 
 		for(MethodDeclaration methodInThisVersion : this.getAllEqualMethodsByName(method, type)){
 			if(UtilTools.isEqualMethod(method, methodInThisVersion)){
 				return methodInThisVersion;

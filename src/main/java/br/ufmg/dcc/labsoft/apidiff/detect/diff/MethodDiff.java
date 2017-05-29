@@ -4,12 +4,12 @@ import java.util.List;
 
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.UtilTools;
+import br.ufmg.dcc.labsoft.apidiff.detect.diff.comparator.ComparatorMethod;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class MethodDiff {
@@ -139,7 +139,7 @@ public class MethodDiff {
 							Boolean isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
 							
 							if(exceptionsVersion1.size() != exceptionsVersion2.size() || (this.diffListExceptions(exceptionsVersion1, exceptionsVersion2))) {
-								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), category, isBreakingChange));
+								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion1), category, isBreakingChange));
 							}
 						}
 					}
@@ -148,33 +148,7 @@ public class MethodDiff {
 		}
 	}
 	
-	/**
-	 * Retorna verdadeiro se dois métodos tem assinaturas diferentes, incluindo a ordem dos parâmetros.
-	 * Exemplo:
-	 * 
-	 * int, String -- int, String : iguais.
-	 * String, Integer -- Integer, String: Diferentes.
-	 * float, boolean -- boolean: diferentes.
-	 * 
-	 * @return
-	 */
-	private Boolean diffListParameter(MethodDeclaration methodVersion1, MethodDeclaration methodVersion2){
-		//Se a lista de parâmetros tem tamanhos diferentes.
-		if(methodVersion1.parameters().size() != methodVersion2.parameters().size()){
-			return true;
-		}
-		else{
-			//Se tem o mesma quantidade de parâmetros, mas eles são diferentes.
-			for(int i = 0; i < methodVersion1.parameters().size(); i++){
-				String parameterVersion1[] = methodVersion1.parameters().get(i).toString().split(" ");
-				String parameterVersion2[] = methodVersion2.parameters().get(i).toString().split(" ");
-				if(parameterVersion1.length == 2 && parameterVersion2.length == 2 && !parameterVersion1[0].equals(parameterVersion2[0])){
-					return true;
-				}
-			}
-		}
-		return false;
-	}
+
 
 	/**
 	 * Verifica se ocorreu mudanças na assinatura dos métodos. 
@@ -188,39 +162,22 @@ public class MethodDiff {
 			if(version2.containsAccessibleType(typeVersion1)){
 				//Percorre os métodos da classe.
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
-					//Se era um método acessível na versão anterior, e não foi entrado na versão atual, pode ser uma mudança de parâmetros.
-					if(this.isMethodAcessible(methodVersion1) && (version2.getEqualVersionMethod(methodVersion1, typeVersion1) == null)){
+					//Se era um método acessível na versão anterior, e não foi encontrado na versão atual, pode ser uma mudança de parâmetros.
+					if(this.isMethodAcessible(methodVersion1) && (version2.findMethodByNameAndParametersAndReturn(methodVersion1, typeVersion1) == null)){
 						//Busca métodos na versão 2 com o mesmo nome.
 						ArrayList<MethodDeclaration> methodsVersion2 = version2.getAllEqualMethodsByName(methodVersion1, typeVersion1);
 						for(MethodDeclaration methodVersion2: methodsVersion2){
-							if(this.isMethodAcessible(methodVersion2) && version1.getEqualVersionMethod(methodVersion2, typeVersion1) == null && this.diffListParameter(methodVersion1, methodVersion2)){
+							if(this.isMethodAcessible(methodVersion2) && version1.getEqualVersionMethod(methodVersion2, typeVersion1) == null && ComparatorMethod.isDiffByParameters(methodVersion1, methodVersion2)){
 								String category = this.isDeprecated(methodVersion1, typeVersion1)? this.CATEGORY_METHOD_CHANGED_PARAMETERS_DEPRECIATED: this.CATEGORY_METHOD_CHANGED_PARAMETERS;
 								category += UtilTools.getSufixJavadoc(methodVersion2);
 								Boolean isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
-								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), category, isBreakingChange));
+								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion1), category, isBreakingChange));
 							}
 						}
 					}
 				}
 			}
 		}
-	}
-
-	/**
-	 * Retorna verdadeiro se os métodos tem tipos de retornos diferentes.
-	 * Falso se os métodos são iguais.
-	 * @param methodVersion1
-	 * @param methodVersion2
-	 * @return
-	 */
-	private Boolean diffReturnType(MethodDeclaration methodVersion1, MethodDeclaration methodVersion2){
-		Type returnType1 = methodVersion1.getReturnType2();
-		Type returnType2 = methodVersion2.getReturnType2();
-		
-		if(returnType1 != null && returnType2 != null &&  !returnType1.toString().equals(returnType2.toString())){
-			return true;
-		}
-		return false;
 	}
 	
 	/**
@@ -234,13 +191,14 @@ public class MethodDiff {
 			if(version2.containsAccessibleType(typeVersion1)){
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
 					if(this.isMethodAcessible(methodVersion1)){
-						MethodDeclaration methodVersion2 = version2.getEqualVersionMethod(methodVersion1, typeVersion1);
-						if(this.isMethodAcessible((methodVersion2))){
-							if(this.diffReturnType(methodVersion1, methodVersion2)){
+						MethodDeclaration methodVersion2 = version2.findMethodByNameAndParametersAndReturn(methodVersion1, typeVersion1);
+						if(methodVersion2 == null){//Método não foi encontrado (com mesmo nome, parâmtros e tipo de retorno).
+							methodVersion2 = version2.findMethodByNameAndParameters(methodVersion1, typeVersion1);
+							if(methodVersion2 != null){//Existe um método com mesmo nome e parâmetros, mas tipo de retorno diferente.
 								String category = this.isDeprecated(methodVersion1, typeVersion1)? this.CATEGORY_METHOD_CHANGED_RETURN_TYPE_DEPRECIATED: this.CATEGORY_METHOD_CHANGED_RETURN_TYPE;
 								category += UtilTools.getSufixJavadoc(methodVersion2);
 								Boolean isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
-								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion1.getName().toString(), category, isBreakingChange));
+								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion1), category, isBreakingChange));
 							}
 						}
 					}
@@ -278,7 +236,7 @@ public class MethodDiff {
 					isBreakingChange = false;
 				}
 				category += UtilTools.getSufixJavadoc(methodVersion2);
-				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(typeVersion1), methodVersion2.getName().toString(), category, isBreakingChange));
+				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(typeVersion1), this.getFullNameMethod(methodVersion2), category, isBreakingChange));
 			}
 		}
 	}
@@ -313,10 +271,10 @@ public class MethodDiff {
 				//Se não estava depreciado na versão anterior, insere na saída.
 				//Se o type foi criado depreciado, insere na saída.
 				if(this.isMethodAcessible(methodVersion2) && this.isDeprecated(methodVersion2, typeVersion2)){
-					MethodDeclaration methodInVersion1 = version1.getEqualVersionMethod(methodVersion2, typeVersion2);
+					MethodDeclaration methodInVersion1 = version1.findMethodByNameAndParametersAndReturn(methodVersion2, typeVersion2);
 					if(methodInVersion1 == null || !this.isDeprecated(methodInVersion1, version1.getVersionAccessibleType(typeVersion2))){
 						String category =  this.CATEGORY_METHOD_DEPRECIATED +  UtilTools.getSufixJavadoc(methodVersion2);
-						this.listBreakingChange.add(new BreakingChange(typeVersion2.resolveBinding().getQualifiedName(), methodVersion2.getName().toString(), category,false));
+						this.listBreakingChange.add(new BreakingChange(typeVersion2.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion2), category,false));
 					}
 				}
 			}
@@ -336,12 +294,12 @@ public class MethodDiff {
 			if(version2.containsAccessibleType(typeInVersion1)){//Se a classe não foi removida.
 				for (MethodDeclaration methodInVersion1 : typeInVersion1.getMethods()) {
 					if(this.isMethodAcessible(methodInVersion1)){
-						MethodDeclaration methodInVersion2 = version2.getEqualVersionMethod(methodInVersion1, typeInVersion1);
+						MethodDeclaration methodInVersion2 = version2.findMethodByNameAndParameters(methodInVersion1, typeInVersion1);
 						if(methodInVersion2 == null){ //Se método foi removido na última versão.
 							String category = this.isDeprecated(methodInVersion1, typeInVersion1)? this.CATEGORY_METHOD_REMOVED_DEPRECIATED: this.CATEGORY_METHOD_REMOVED;
 							category += UtilTools.getSufixJavadoc(methodInVersion1);
 							Boolean isBreakingChange = this.isDeprecated(methodInVersion1, typeInVersion1)? false: true;
-							this.listBreakingChange.add(new BreakingChange(typeInVersion1.resolveBinding().getQualifiedName(), methodInVersion1.getName().toString(), category, isBreakingChange));
+							this.listBreakingChange.add(new BreakingChange(typeInVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodInVersion1), category, isBreakingChange));
 						}
 					}
 				}
@@ -361,10 +319,10 @@ public class MethodDiff {
 			if(version1.containsType(typeInVersion2)){//Se type já existia, verifica quais são os novos métodos.
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){
 					if(this.isMethodAcessible(methodInVersion2)){
-						MethodDeclaration methodInVersion1 = version1.getEqualVersionMethod(methodInVersion2, typeInVersion2);
+						MethodDeclaration methodInVersion1 = version1.findMethodByNameAndParameters(methodInVersion2, typeInVersion2);
 						if(methodInVersion1 == null){
 							String category = this.CATEGORY_METHOD_ADDED + UtilTools.getSufixJavadoc(methodInVersion1);
-							this.listBreakingChange.add(new BreakingChange(typeInVersion2.resolveBinding().getQualifiedName(), methodInVersion2.getName().toString(), category, false));
+							this.listBreakingChange.add(new BreakingChange(typeInVersion2.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodInVersion2), category, false));
 						}
 					}
 				}
@@ -372,7 +330,7 @@ public class MethodDiff {
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){//Se type foi adicionado.
 					if(this.isMethodAcessible(methodInVersion2)){
 						String category = this.CATEGORY_METHOD_ADDED + UtilTools.getSufixJavadoc(methodInVersion2);
-						this.listBreakingChange.add(new BreakingChange(typeInVersion2.resolveBinding().getQualifiedName(), methodInVersion2.getName().toString(), category, false));
+						this.listBreakingChange.add(new BreakingChange(typeInVersion2.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodInVersion2), category, false));
 					}
 				}
 			}
@@ -404,7 +362,7 @@ public class MethodDiff {
 			isBreakingChange = false;
 		}
 		category += UtilTools.getSufixJavadoc(methodVersion2);
-		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion2.getName().toString(), category, isBreakingChange));
+		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion2), category, isBreakingChange));
 	}
 	
 	/**
@@ -431,7 +389,7 @@ public class MethodDiff {
 			isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)?false:true;
 		}
 		category += UtilTools.getSufixJavadoc(methodVersion2);
-		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), methodVersion2.getName().toString(), category, isBreakingChange));
+		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion2), category, isBreakingChange));
 	}
 	
 	/**
@@ -445,7 +403,7 @@ public class MethodDiff {
 		for (TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()) {
 			if(version2.containsType(typeVersion1)){//Se type ainda existe.
 				for(MethodDeclaration methodVersion1: typeVersion1.getMethods()){
-					MethodDeclaration methodVersion2 = version2.getEqualVersionMethod(methodVersion1, typeVersion1);
+					MethodDeclaration methodVersion2 = version2.findMethodByNameAndParametersAndReturn(methodVersion1, typeVersion1);
 					if(this.isMethodAcessible(methodVersion1) && (methodVersion2 != null)){
 						this.diffModifierFinal(typeVersion1, methodVersion1, methodVersion2);
 						this.diffModifierStatic(typeVersion1, methodVersion1, methodVersion2);
@@ -453,6 +411,28 @@ public class MethodDiff {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Retorna nome completo do método.
+	 * @param methodVersion
+	 * @return
+	 */
+	private String getFullNameMethod(MethodDeclaration methodVersion){
+		String nameMethod = "";
+		if(methodVersion != null){
+			String modifiers = "";
+			for(int i = 0; i < methodVersion.modifiers().size() ; i++){
+				modifiers+= methodVersion.modifiers().get(i).toString() + " ";
+			}
+			String listParameters = "";
+			for(int i = 0; i < methodVersion.parameters().size(); i++){
+				listParameters += methodVersion.parameters().get(i).toString() + ",";
+			}
+			listParameters = listParameters.length() >0 ?listParameters.substring(0, listParameters.length()-1):listParameters;//Remove última vírgula.
+			nameMethod = modifiers + methodVersion.getReturnType2() + " " + methodVersion.getName() + "(" + listParameters + ")";
+		}
+		return nameMethod;
 	}
 
 }
