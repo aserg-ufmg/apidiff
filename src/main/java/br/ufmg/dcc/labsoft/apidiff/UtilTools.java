@@ -26,6 +26,8 @@ import br.ufmg.dcc.labsoft.apidiff.enums.ClassifierAPI;
 
 public class UtilTools {
 	
+	private static Properties properties = null;
+	
 	public static boolean isEqualAnnotationMember(AnnotationTypeMemberDeclaration member1, AnnotationTypeMemberDeclaration member2){
 		if(!member1.getName().toString().equals(member2.getName().toString())){
 			return false;
@@ -245,18 +247,19 @@ public class UtilTools {
 	
 	public static Properties getProperties() throws IOException{
 		try {
-			Properties prop = new Properties();
-	    	InputStream input = Main.class.getClassLoader().getResourceAsStream("config.properties");
-    		prop.load(input);
-    		return prop;
-		} catch (IOException e) {
-			throw new IOException("Path project not found, check the properties file.");
+			if(properties == null){
+				properties = new Properties();
+		    	InputStream input = Main.class.getClassLoader().getResourceAsStream("config.properties");
+		    	properties.load(input);
+			}
+    		return properties;
+		} catch (Exception e) {
+			throw new IOException("Path project not found, check the properties file.", e);
 		}
 	}
 	
 	public static String getPathProjects() throws IOException{
-		Properties properties = UtilTools.getProperties();
-		return properties.getProperty("PATH_PROJECT");
+		return UtilTools.getProperties().getProperty("PATH_PROJECT");
 	}
 	
 	/**
