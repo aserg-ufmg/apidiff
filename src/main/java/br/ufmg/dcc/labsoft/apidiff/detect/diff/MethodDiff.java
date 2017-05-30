@@ -2,6 +2,8 @@ package br.ufmg.dcc.labsoft.apidiff.detect.diff;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -163,7 +165,7 @@ public class MethodDiff {
 				//Percorre os métodos da classe.
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
 					//Se era um método acessível na versão anterior, e não foi encontrado na versão atual, pode ser uma mudança de parâmetros.
-					if(this.isMethodAcessible(methodVersion1) && (version2.findMethodByNameAndParametersAndReturn(methodVersion1, typeVersion1) == null)){
+					if(this.isMethodAcessible(methodVersion1) && (version2.findMethodByNameAndParameters(methodVersion1, typeVersion1) == null)){
 						//Busca métodos na versão 2 com o mesmo nome.
 						ArrayList<MethodDeclaration> methodsVersion2 = version2.getAllEqualMethodsByName(methodVersion1, typeVersion1);
 						for(MethodDeclaration methodVersion2: methodsVersion2){
@@ -414,23 +416,17 @@ public class MethodDiff {
 	}
 	
 	/**
-	 * Retorna nome completo do método.
+	 * Retorna nome completo do método. [modificador de acesso + retorno + nome + ( + listas de paraâmetros + )]
 	 * @param methodVersion
 	 * @return
 	 */
 	private String getFullNameMethod(MethodDeclaration methodVersion){
 		String nameMethod = "";
 		if(methodVersion != null){
-			String modifiers = "";
-			for(int i = 0; i < methodVersion.modifiers().size() ; i++){
-				modifiers+= methodVersion.modifiers().get(i).toString() + " ";
-			}
-			String listParameters = "";
-			for(int i = 0; i < methodVersion.parameters().size(); i++){
-				listParameters += methodVersion.parameters().get(i).toString() + ",";
-			}
-			listParameters = listParameters.length() >0 ?listParameters.substring(0, listParameters.length()-1):listParameters;//Remove última vírgula.
-			nameMethod = modifiers + methodVersion.getReturnType2() + " " + methodVersion.getName() + "(" + listParameters + ")";
+			String modifiersMethod = (methodVersion.modifiers() != null) ? (StringUtils.join(methodVersion.modifiers(), " ") + " ") : " ";
+			String returnMethod = (methodVersion.getReturnType2() != null) ? (methodVersion.getReturnType2().toString() + " ") : "";
+			String parametersMethod = (methodVersion.parameters() != null) ? StringUtils.join(methodVersion.parameters(), ", ") : " ";
+			nameMethod = modifiersMethod + returnMethod + methodVersion.getName() + "(" + parametersMethod + ")";
 		}
 		return nameMethod;
 	}
