@@ -95,8 +95,10 @@ public class APIVersion {
 				this.parse(UtilTools.readFileToString(file.getAbsolutePath()), file, ignoreTreeDiff);		
 			}
 		} else {
-			for (File f : file.listFiles()) {
-				this.parseFilesInDir(f, ignoreTreeDiff);
+			if(file.listFiles() != null){
+				for (File f : file.listFiles()) {
+					this.parseFilesInDir(f, ignoreTreeDiff);
+				}
 			}
 		}
 	}
@@ -124,6 +126,7 @@ public class APIVersion {
 		parser.setBindingsRecovery(true);
 
 		final CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
+		
 
 		TypeDeclarationVisitor visitorType = new TypeDeclarationVisitor();
 		EnumDeclarationVisitor visitorEnum = new EnumDeclarationVisitor();
