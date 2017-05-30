@@ -27,15 +27,24 @@ public class ComparatorMethod {
 		else{
 			//Se tem o mesma quantidade de parâmetros, mas eles são diferentes.
 			for(int i = 0; i < methodVersion1.parameters().size(); i++){
-				String parameterVersion1[] = methodVersion1.parameters().get(i).toString().split(" ");
-				String parameterVersion2[] = methodVersion2.parameters().get(i).toString().split(" ");
-				if(parameterVersion1.length == 2 && parameterVersion2.length == 2 && !parameterVersion1[0].equals(parameterVersion2[0])){
+				
+				String parameterVersion1 = methodVersion1.parameters().get(i).toString();
+				String parameterVersion2 = methodVersion2.parameters().get(i).toString();
+				
+				int indexVersion1 = parameterVersion1.lastIndexOf(" "); //índice para o início do nome da variável.
+				int indexVersion2 = parameterVersion2.lastIndexOf(" "); //índice para o início do nome da variável.
+				
+				parameterVersion1 = parameterVersion1.substring(0, indexVersion1);
+				parameterVersion2 = parameterVersion2.substring(0, indexVersion2);
+				
+				if(!parameterVersion1.equals(parameterVersion2)){
 					return true;
 				}
 			}
 		}
 		return false;
 	}
+	
 	
 	/**
 	 * Retorna verdadeiro se os métodos tem tipos de retornos diferentes.
