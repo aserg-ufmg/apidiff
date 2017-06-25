@@ -51,12 +51,12 @@ Comparing the source code from two folders that contain the code before and afte
   APIDiff diff = new APIDiff("alinebrito/breaking-changes-toy-example");
   diff.calculateDiffProject("v1/alinebrito/breaking-changes-toy-example", "v2/alinebrito/breaking-changes-toy-example", ClassifierAPI.API);
 ```
-Detecting breaking changes in new commits of git repositories:
+Detecting breaking changes in new commits of git repository:
 ```java
   APIDiff diff = new APIDiff("alinebrito/breaking-changes-toy-example", "https://github.com/alinebrito/breaking-changes-toy-example.git");
   diff.calculateDiffCommit();
 ```
-Detecting breaking changes in specific commits of git repositories (the commit is identified by its SHA key):
+Detecting breaking changes in specific commit of git repository (the commit is identified by its SHA key):
 ```java
   String url = "https://github.com/alinebrito/breaking-changes-toy-example.git";
   String nameLibray = "breaking-changes-toy-example";
