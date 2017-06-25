@@ -56,4 +56,12 @@ Detecting breaking changes in new commits of git repositories:
   APIDiff diff = new APIDiff("alinebrito/breaking-changes-toy-example", "https://github.com/alinebrito/breaking-changes-toy-example.git");
   diff.calculateDiffCommit();
 ```
+Detecting breaking changes in specific commits of git repositories (the commit is identified by its SHA key):
+```java
+  String url = "https://github.com/alinebrito/breaking-changes-toy-example.git";
+  String nameLibray = "breaking-changes-toy-example";
+  String commidId = "48bb9fbdccbd9587b332cd7320ef5f00a6fd7869";
+  APIDiff diff = new APIDiff(nameLibray, url);
+  diff.calculateDiffAtCommit(commidId, ClassifierAPI.API);
+```
 The output is a CSV file (output.csv).
