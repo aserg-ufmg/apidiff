@@ -82,6 +82,7 @@ public class APIDiff {
 		APIVersion version2 = new APIVersion(nameProjectVersion2, classifierAPI);
 		this.diff(version1, version2);
 		this.printAll(null, classifierAPI);//Escreve saída em arquivo.
+		logger.info("Finished!");
 	}
 	
 	
