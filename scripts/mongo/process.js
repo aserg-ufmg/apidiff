@@ -2,28 +2,29 @@
 
 
 //[1] Cria coleção com BCs com javadoc:
-db.getCollection('day_8').find({
+db.getCollection('day_31').find({
     $and: [
         {"classifierAPI" : "API"},
+		{"changedType": { $not: /^\d*$/}},
         {"isBreakingChange" : "true"},
         {"category": {$not: /JAVADOC$/}}
     ]
 }).forEach(function (val){
-    db.getCollection('day_8_comJavadocCodigo').insert(val)
+    db.getCollection('day_31_comJavadocCodigo').insert(val)
 })
 
 //[2] Remove que já teve email enviado anteriormente.
-db.getCollection('day_9_comJavadocCodigo').find({}).forEach(function(val){
+db.getCollection('day_31_comJavadocCodigo').find({}).forEach(function(val){
     
         var emailJaEnviado = db.getCollection('email_enviados').find({"email" : val.email})[0];
         
         if(emailJaEnviado){
-            val.day = "9";
+            val.day = "31";
             print(val);
            
            db.getCollection('bcs_nao_enviadas_email_repetido').insert(val);
              
-           db.getCollection('day_9_comJavadocCodigo').remove({"_id" : val._id})
+           db.getCollection('day_31_comJavadocCodigo').remove({"_id" : val._id})
         }
         
     
@@ -31,9 +32,9 @@ db.getCollection('day_9_comJavadocCodigo').find({}).forEach(function(val){
 
 
 
-//[2]  Agrupa por commit.
+//[3]  Agrupa por commit.
 //Mudar estruturam, para não repetir dados da BC.
-db.getCollection('day_8_comJavadocCodigo').aggregate(
+db.getCollection('day_31_comJavadocCodigo').aggregate(
    [
      { $group : { _id : "$idCommit", breakingChanges: { $push: "$$ROOT" } } }
    ]
@@ -44,17 +45,21 @@ db.getCollection('day_8_comJavadocCodigo').aggregate(
 	bc.author = val.breakingChanges[0].author;
 	bc.email = val.breakingChanges[0].email;
     print(bc)
-    db.getCollection('day_8_comJavadocCodigoGroupCommit').insert(bc)
+    db.getCollection('day_31_comJavadocCodigoGroupCommit').insert(bc)
 })
 
 
 //Exibe dados para análise
 var j = 1;
-db.getCollection('day_8_comJavadocCodigoGroupCommit').find({}).sort({"author": -1}).forEach(function(val){
+db.getCollection('day_26_comJavadocCodigoGroupCommit').find({}).sort({"author": -1}).forEach(function(val){
    
+ 
     print( j +  "; " + val.author + "; " + val.email + "; " + val.breakingChanges[0].linkGitHubCommit + "; " + val.breakingChanges[0].nameLibrary);
            for(var i =0; i < val.breakingChanges.length; i++){
-            print(val.breakingChanges[i].changedType + ", " + val.breakingChanges[i].structureName + ", " + val.breakingChanges[i].category)        
+                   if(val.breakingChanges[i].changedType ){
+                       print(val.breakingChanges[i].changedType + ", " + val.breakingChanges[i].structureName + ", " + val.breakingChanges[i].category)        
+                   }
+            
         }
     j++
     print("\n")
@@ -85,6 +90,13 @@ db.getCollection('day_8_comJavadocCodigoGroupCommit').find({"commit" : "9b1ec9f3
 
             }
 
+			if(val.breakingChanges[i].category === "TYPE RENAMED"){
+                code = '<b>Rename  Class </b>:';
+                code += '<br>class <code>' + val.breakingChanges[i].structureName + '</code>';
+                code += '<br> renamed to <code>' + val.breakingChanges[i].structureName + '</code>';
+				code += '<br> in package <code>' + val.breakingChanges[i].changedType + '</code>';
+            }
+
    
             if(val.breakingChanges[i].category === "METHOD LOST VISIBILITY"){
     
@@ -101,6 +113,18 @@ db.getCollection('day_8_comJavadocCodigoGroupCommit').find({"commit" : "9b1ec9f3
 
             }
             
+            if(val.breakingChanges[i].category === "METHOD REMOVED"){
+                code += '<b>Remove  Method</b>:'
+                code += '<br>method <code>' + val.breakingChanges[i].structureName + '</code><br>'
+                code += 'removed  from class <code>' + val.breakingChanges[i].changedType + '</code>';
+            }
+
+           if(val.breakingChanges[i].category === "METHOD RENAMED"){
+                code += '<b>Remove  Method</b>:'
+                code += '<br>method <code>' + val.breakingChanges[i].structureName + '</code><br>'
+                code += 'removed  from class <code>' + val.breakingChanges[i].changedType + '</code>';
+            }
+
             if(val.breakingChanges[i].category === "METHOD CHANGED EXCEPTION"){
                 code += '<b>Change Method Exceptions</b>:'
                 code += 'method <code>' + val.breakingChanges[i].structureName + '</code><br>changed the list exception from <code>IOException</code> to <code>IOException</code>'
@@ -112,10 +136,15 @@ db.getCollection('day_8_comJavadocCodigoGroupCommit').find({"commit" : "9b1ec9f3
                 code += 'class <code>' + val.breakingChanges[i].structureName + '</code> changed to <code>' + val.breakingChanges[i].structureName + '</code>'
                 code += '<br>in class <code>' + val.breakingChanges[i].changedType + '</code>';
             }
+
+			if(val.breakingChanges[i].category === "SUPER TYPE REMOVED"){
+                code += '<b>Remove Superclass</b>:'
+                code += 'superclass <code>' + val.breakingChanges[i].structureName + '</code> removed from <code>' + val.breakingChanges[i].changedType + '</code>';
+            }
               
             if(val.breakingChanges[i].category === "CONSTRUCTOR CHANGED PARAMETERS"){
                 code += '<b>Change Constructor Parameters</b>:'
-                code += 'constructor <code>' + val.breakingChanges[i].structureName + '</code> changed the list parameters to <code>' + val.breakingChanges[i].structureName + '</code>'
+                code += '<br>constructor <code>' + val.breakingChanges[i].structureName + '</code><br> changed the list parameters to <br><code>' + val.breakingChanges[i].structureName + '</code>'
                 code += '<br>in class <code>' + val.breakingChanges[i].changedType + '</code>';
             }
             
@@ -130,14 +159,29 @@ db.getCollection('day_8_comJavadocCodigoGroupCommit').find({"commit" : "9b1ec9f3
                 code += '<br>method <code>' + val.breakingChanges[i].structureName + '</code><br> changed the list parameters to <code>' + val.breakingChanges[i].structureName + '</code>'
                 code += '<br>in class <code>' + val.breakingChanges[i].changedType + '</code>';
             }
-            
+
+			if(val.breakingChanges[i].category === "METHOD CHANGED RETURN TYPE"){
+                code += '<b>Change Return  Type  of Method</b>:'
+                code += '<br>method <code>' + val.breakingChanges[i].structureName + '</code><br> changed to <code>' + val.breakingChanges[i].structureName + '</code>'
+                code += '<br>in class <code>' + val.breakingChanges[i].changedType + '</code>';
+            }
+
+
+			if(val.breakingChanges[i].category === "FIELD CHANGED DEFAULT VALUE"){
+						    code += '<b>Change Default Value</b>:'
+						    code += '<br>field <code>' + val.breakingChanges[i].structureName + '</code><br> changed default value from <code>' + 'true'+ '</code> to <code>false</code>'
+						    code += '<br>in class <code>' + val.breakingChanges[i].changedType + '</code>';
+            }        
+
+
+   
             
             
             if(code){
-                //print(code)
-                var bc = val.breakingChanges[i];
-                bc.breakingChangeMessage = code;
-                print(bc)
+               print(code)
+               // var bc = val.breakingChanges[i];
+                //bc.breakingChangeMessage = code;
+                //print(bc)
             }
 
         }
