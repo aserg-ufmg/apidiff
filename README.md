@@ -2,7 +2,9 @@
 Tool to identify breaking changes and non-breaking changes between  versions of a Java library.
 
 ### Contributors
-The code has been developed by [Laerte Xavier](https://github.com/xavierlaerte) and [Aline Brito](https://github.com/alinebrito).
+The current version is maintained by [Aline Brito](https://github.com/alinebrito). The initial algorithm ([v0.0.1](https://github.com/alinebrito/apidiff/releases/tag/v0.0.1)) was developed by [Laerte Xavier](https://github.com/xavierlaerte). 
+
+The class [GitService](https://github.com/alinebrito/apidiff/blob/master/src/main/java/br/ufmg/dcc/labsoft/apidiff/detect/diff/service/git/GitService.java) was inspired in [RefDiff](https://github.com/aserg-ufmg/RefDiff.git).
 
 ### Requirements
 
