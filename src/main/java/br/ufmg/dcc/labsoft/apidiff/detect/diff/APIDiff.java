@@ -1,6 +1,7 @@
 package br.ufmg.dcc.labsoft.apidiff.detect.diff;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -50,6 +51,9 @@ public class APIDiff {
 		this.nameProject = nameProject;
 	}
 
+	/**
+	 * Detecta breaking changes nos novos commits do projeto.
+	 */
 	public void calculateDiffCommit() {
 		try {
 			GitService service = new GitServiceImpl();
@@ -71,6 +75,22 @@ public class APIDiff {
 		this.logger.info("Finished processing. Check the output file <" + this.nameFile + ">");
 	}
 	
+	/**
+	 * Detecta breaking changes e non-breaking changes no commit recebido como parâmetro.
+	 * @param commitId - sha do commit.
+	 */ 
+	public void calculateDiffAtCommit(String commitId, ClassifierAPI classifierAPI) {
+		try {
+			GitService service = new GitServiceImpl();
+			Repository repository = service.openRepositoryAndCloneIfNotExists(this.nameProject, this.url);
+			RevCommit commit = service.createRevCommitByCommitId(repository, commitId);
+			this.diffCommit(commit, repository, this.nameProject, classifierAPI);
+			this.logger.info("Finished processing. Check the output file <" + this.nameFile + ">");
+		} catch (Exception e) {
+			this.logger.error("Error in calculating commitn diff ", e);
+		}
+	}
+	
 	
 	/**
 	 * Calcula a diferença entre dois projetos.
@@ -82,7 +102,7 @@ public class APIDiff {
 		APIVersion version2 = new APIVersion(nameProjectVersion2, classifierAPI);
 		this.diff(version1, version2);
 		this.printAll(null, classifierAPI);//Escreve saída em arquivo.
-		logger.info("Finished!");
+		this.logger.info("Finished processing. Check the output file <" + this.nameFile + ">");
 	}
 	
 	
@@ -97,7 +117,7 @@ public class APIDiff {
 		
 		File projectFolder = new File(UtilTools.getPathProjects() + "/" + nameProject);
 		APIVersion versionNew = this.getAPIVersionByCommit(currentCommit.getId().getName(), projectFolder, repository, currentCommit, classifierAPI); //versao atual
-		APIVersion versionOld = this.getAPIVersionByCommit(currentCommit.getParent(0).getName(), projectFolder, repository, currentCommit,classifierAPI);////versao antiga
+		APIVersion versionOld = this.getAPIVersionByCommit(currentCommit.getParent(0).getName(), projectFolder, repository, currentCommit,classifierAPI);//versao antiga
 		this.diff(versionOld, versionNew);
 		this.printAll(currentCommit, classifierAPI);//Escreve saída em arquivo.
 	}
@@ -181,7 +201,7 @@ public class APIDiff {
 		if(r != null){
 			for(BreakingChange bc: r.getListBreakingChange()){
 				list.add(personIdent.getName() + ";" + personIdent.getEmailAddress() + ";" + this.nameProject  + ";" + bc.getPath() + ";" + bc.getStruture() + ";" + bc.getCategory()
-				+ ";" + currentCommit.getId().getName() + ";" + this.formatMessage(currentCommit.getFullMessage()) + ";" + currentCommit.getCommitTime() + "000" + ";" + date.getTime() + ";" + sdf.format(date) +  ";" + bc.isBreakingChange()
+				+ ";" + currentCommit.getId().getName() + ";" + this.formatMessage(currentCommit.getFullMessage()) + ";" + personIdent.getWhen().getTime() + ";" + date.getTime() + ";" + sdf.format(date) +  ";" + bc.isBreakingChange()
 				+ ";" + classifierAPI);
 			}
 		}

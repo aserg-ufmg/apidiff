@@ -35,7 +35,7 @@ public class GitServiceImpl implements GitService {
 	
 	private static final String REMOTE_REFS_PREFIX = "refs/remotes/origin/";
 	
-	private DefaultCommitsFilter commitsFilter = new DefaultCommitsFilter();
+	private RevFilterCommitValid commitsFilter = new RevFilterCommitValid();
 	
 	private Logger logger = LoggerFactory.getLogger(GitServiceImpl.class);
 	
@@ -44,33 +44,46 @@ public class GitServiceImpl implements GitService {
 	private static final Long DAY = HOUR * 24;
 	private static final Long SEVEN_DAYS = DAY * 7; //7 dias em milissegundos.
 	
-	private class DefaultCommitsFilter extends RevFilter {
+	/**
+	 * Filtra commits que possui mais de um parent, ou seja, são merges.
+	 * Filtra commits que velhos (adicionados a mais de 7 dias).
+	 * @author aline
+	 */
+	private class RevFilterCommitValid extends RevFilter {
+		
 		@Override
 		public final boolean include(final RevWalk walker, final RevCommit c) {
-			//Se c.getParentCount() > 1, temos um merge de branches. 
-			Long diffTimestamp = 0L;
-			if(c.getParentCount() > 1){
-				logger.info("Merge branches deleted. [commitId="+c.getId().getName()+"]");
-			}
-			//Se é um commit muito velho (mais de 7 dias)
-			Calendar timeNow = Calendar.getInstance();
-			Long timestampNow = timeNow.getTimeInMillis();
 			
-			Long timestampCommit = (long)c.getCommitTime() * 1000;
+			Long diffTimestamp = 0L;
+			diffTimestamp = this.calcDiffTimeCommit(c);
+			
+			if(c.getParentCount() > 1){//merge
+				logger.info("Merge of the branches deleted. [commitId=" + c.getId().getName() + "]");
+				return false;
+			}
+					
+			if(diffTimestamp > SEVEN_DAYS){//old
+				logger.info("Old commit old deleted. [commitId=" + c.getId().getName() + "][date=" + getDateCommitFormat(c) + "]");
+				return false;
+			}
+			
+			return true;
+		}
+		
+		private Long calcDiffTimeCommit(final RevCommit c){
+			Long timestampNow = Calendar.getInstance().getTimeInMillis();
+			Long timestampCommit = c.getAuthorIdent().getWhen().getTime();
 			Calendar calendarCommit = Calendar.getInstance();
 			calendarCommit.setTime(new Date(timestampCommit));
-			
-			diffTimestamp = Math.abs(timestampCommit - timestampNow);
-					
-			//Apenas commits realizados a no máximo 1 semana.
-			if(diffTimestamp > SEVEN_DAYS){
-				SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
-				String formattedDateCommit = format.format(calendarCommit.getTime());
-				logger.info("Commit old deleted. [commitId="+c.getId().getName()+"][date="+formattedDateCommit+"]");
-			}
-			
-			
-			return ((c.getParentCount() == 1) && (!isCommitAnalyzed(c.getName())) && (diffTimestamp <= SEVEN_DAYS));
+			return Math.abs(timestampCommit - timestampNow);
+		}
+		
+		private String getDateCommitFormat(final RevCommit c){
+			Long timestampCommit = c.getAuthorIdent().getWhen().getTime();
+			Calendar calendarCommit = Calendar.getInstance();
+			calendarCommit.setTime(new Date(timestampCommit));
+			SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+			return format.format(this.getDateCommitFormat(c));
 		}
 
 		@Override
@@ -87,10 +100,6 @@ public class GitServiceImpl implements GitService {
 		public String toString() {
 			return "RegularCommitsFilter";
 		}
-	}
-	
-	public boolean isCommitAnalyzed(String sha1) {
-		return false;
 	}
 	
 	@Override
@@ -233,5 +242,13 @@ public class GitServiceImpl implements GitService {
 	        CheckoutCommand checkout = git.checkout().setName(commitId);
 	        checkout.call();
 	    }
+	}
+	
+	@Override
+	public RevCommit createRevCommitByCommitId(final Repository repository, final String commitId) throws Exception{
+		RevWalk walk = new RevWalk(repository);
+		RevCommit commit = walk.parseCommit(repository.resolve(commitId));
+		walk.parseCommit(commit.getParent(0));
+		return commit;
 	}
 }

@@ -48,7 +48,7 @@ public class APIVersion {
 		try {
 			this.classifierAPI = classifierAPI;
 			this.mapModifications = mapModifications;
-			
+			this.nameProject = path.getAbsolutePath().replaceAll(UtilTools.getPathProjects() + "/", "");
 	    	String prefix = path.getAbsolutePath() + "/";
 			for(ChangeType changeType : this.mapModifications.keySet()){
 				for(GitFile gitFile: mapModifications.get(changeType)){
