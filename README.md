@@ -31,7 +31,7 @@ The file APIDiff.jar is built  in target. Copy APIDiff.jar for a path with permi
 
 `ClassifierAPI.NON_API_INTERNAL`: Contains the package `internal`.
 
-`ClassifierAPI.NON_API_TEST`: Contains the packages `test`|`tests`, or is in source file `src/test`, or ends with test.java|tests.java.
+`ClassifierAPI.NON_API_TEST`: Contains the packages `test`|`tests`, or is in source file `src/test`, or ends with `test.java|tests.java`.
 
 `ClassifierAPI.NON_API_EXAMPLE`: Contains the packages `example`|`examples`|`sample`|`samples`|`demo`|`demos`
 
