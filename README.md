@@ -23,12 +23,31 @@ For Windows, run the script buit.bat. Example:
 ```
 The file APIDiff.jar is built  in target. Copy APIDiff.jar for a path with permission write.
 
-### Execute Aplication Command Line
+### Type of APIs
 
-Run APIDiff using the following syntax:
+`ClassifierAPI.NON_API_INTERNAL`: Contains the package `internal`.
 
+`ClassifierAPI.NON_API_TEST`: Contains the packages `test`|`tests`, or is in source file `src/test`, or ends with test.java|tests.java.
+
+`ClassifierAPI.NON_API_EXAMPLE`: Contains the packages `example`|`examples`|`sample`|`samples`|`demo`|`demos`
+
+`ClassifierAPI.NON_API_EXPERIMENTAL`: Contains the packages `experimental`.
+
+`ClassifierAPI.NON_API`: Internal, test, example or experimental APIs.
+
+`ClassifierAPI.API`: Other APIs.
+
+### API usage guidelines
+
+Comparing the source code from two folders that contain the code before and after the breaking changes:
+
+```java
+  APIDiff diff = new APIDiff("alinebrito/breaking-changes-toy-example");
+  diff.calculateDiffProject("v1/alinebrito/breaking-changes-toy-example", "v2/alinebrito/breaking-changes-toy-example", ClassifierAPI.API);
 ```
-java -jar APIDiff.jar <path library>
+Detecting breaking changes in new commits of git repositories:
+```java
+  APIDiff diff = new APIDiff("alinebrito/breaking-changes-toy-example", "https://github.com/alinebrito/breaking-changes-toy-example.git");
+  diff.calculateDiffCommit();
 ```
-
 The output is a CSV file (output.csv).
