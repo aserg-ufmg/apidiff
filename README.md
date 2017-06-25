@@ -11,6 +11,8 @@ The code has been developed by [Laerte Xavier](https://github.com/xavierlaerte) 
 
 ### Build aplication.
 
+Set the path of the projetc or the path to clone the projects in file `config.properties`.
+
 For Linux, run the script buil.sh. Example:
 
 ```
