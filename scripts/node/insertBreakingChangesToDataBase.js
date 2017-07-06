@@ -4,14 +4,16 @@
 // -------
 
 // Path e nome do arquivo de entrada.
-var file = "./input/survey/day_1_output.csv";
+var file = "./input/survey1/day_40_output.csv";
+//var file = "./input/survey2/day_40_output.csv";
 
 // Dados para conexão com o MongoDB
 var dbUrl = 'mongodb://127.0.0.1:27017/APIs-BreakingChange-survey';
 var db = null;
 
 //Dados da coleção onde os dados serão inseridos.
-var nameCollection = "day_1";
+//var nameCollection = "day_1_surveyII";
+var nameCollection = "day_40";
 var collection = null;
 
 //Bibliotecas para acessar banco de dados e ler o arquivo de entrada.
@@ -61,6 +63,7 @@ var parserFile = function(){
 			registry.dateCommit = new Date(new Number(registry.timestampCommit));
 			registry.isBreakingChange = data[11];
 			registry.classifierAPI = data[12];
+			registry.description = data[13];
 			registry.linkGitHubCommit = "https://github.com/"+registry.nameLibrary+ "/commit/" + registry.idCommit;
 
 			console.log(registry.nameLibrary)
