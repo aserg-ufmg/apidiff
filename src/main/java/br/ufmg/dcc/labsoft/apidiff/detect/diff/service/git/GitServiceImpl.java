@@ -83,7 +83,7 @@ public class GitServiceImpl implements GitService {
 			Calendar calendarCommit = Calendar.getInstance();
 			calendarCommit.setTime(new Date(timestampCommit));
 			SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
-			return format.format(this.getDateCommitFormat(c));
+			return format.format(timestampCommit);
 		}
 
 		@Override
