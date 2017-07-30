@@ -202,7 +202,7 @@ public class APIDiff {
 			for(BreakingChange bc: r.getListBreakingChange()){
 				list.add(personIdent.getName() + ";" + personIdent.getEmailAddress() + ";" + this.nameProject  + ";" + bc.getPath() + ";" + bc.getStruture() + ";" + bc.getCategory()
 				+ ";" + currentCommit.getId().getName() + ";" + this.formatMessage(currentCommit.getFullMessage()) + ";" + personIdent.getWhen().getTime() + ";" + date.getTime() + ";" + sdf.format(date) +  ";" + bc.isBreakingChange()
-				+ ";" + classifierAPI);
+				+ ";" + classifierAPI + ";" + bc.getDescription());
 			}
 		}
 		return list;
@@ -223,7 +223,7 @@ public class APIDiff {
 			for(BreakingChange bc: r.getListBreakingChange()){
 				list.add(this.nameProject  + ";" + bc.getPath() + ";" + bc.getStruture() + ";" + bc.getCategory()
 				+ ";" + date.getTime() + ";" + sdf.format(date) +  ";" + bc.isBreakingChange()
-				+ ";" + classifierAPI);
+				+ ";" + classifierAPI + ";" + bc.getDescription());
 			}
 		}
 		return list;

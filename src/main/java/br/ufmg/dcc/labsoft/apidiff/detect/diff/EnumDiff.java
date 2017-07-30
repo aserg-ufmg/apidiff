@@ -70,7 +70,7 @@ public class EnumDiff {
 	private EnumDeclaration findEnumDeclarationInList(List<EnumDeclaration> list, EnumDeclaration type){
 		for(int i=0; i< list.size(); i++){
 			EnumDeclaration typeDeclaration = list.get(i);
-			if(UtilTools.getNameNode(type).equals(UtilTools.getNameNode(typeDeclaration))){
+			if(UtilTools.getPath(type).equals(UtilTools.getPath(typeDeclaration))){
 				return typeDeclaration;
 			}
 		}
@@ -117,7 +117,7 @@ public class EnumDiff {
 						isBreakingChange = false;
 					}
 					category += UtilTools.getSufixJavadoc(enum2);
-					this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(enum2), enum2.getName().toString(), category, isBreakingChange));
+					this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(enum2), enum2.getName().toString(), category, isBreakingChange));
 				}
 			}
 		}

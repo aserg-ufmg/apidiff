@@ -49,13 +49,13 @@ public class EnumConstantDiff {
 				if(enumVersion1 != null && !UtilTools.isVisibilityPrivate(enumVersion1)){
 					for(Object constant : enumVersion2.enumConstants()){
 						if(version1.getEqualVersionConstant((EnumConstantDeclaration) constant, enumVersion2) == null){
-							this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(enumVersion1), constant.toString(), this.CATEGORY_ENUM_CONSTANT_ADD, false));
+							this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(enumVersion1), constant.toString(), this.CATEGORY_ENUM_CONSTANT_ADD, false));
 						}
 					}
 				} else {
 					//Se é um novo Enum, aciona suas constantes.
 					for(Object constant : enumVersion2.enumConstants()){
-						this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(enumVersion1), constant.toString(), this.CATEGORY_ENUM_CONSTANT_ADD, false));
+						this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(enumVersion1), constant.toString(), this.CATEGORY_ENUM_CONSTANT_ADD, false));
 					}
 				}
 			}
@@ -81,9 +81,9 @@ public class EnumConstantDiff {
 						if(version2.getEqualVersionConstant((EnumConstantDeclaration) constantVersion1, enumVersion1) == null){
 							if(((EnumConstantDeclaration)constantVersion1).resolveVariable() != null &&
 									((EnumConstantDeclaration)constantVersion1).resolveVariable().isDeprecated()){
-								this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_REMOVED_DEPRECIATED, false));
+								this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_REMOVED_DEPRECIATED, false));
 							} else {
-								this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_REMOVED, true));
+								this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_REMOVED, true));
 							}
 						}
 					}
@@ -91,9 +91,9 @@ public class EnumConstantDiff {
 					for(Object constantVersion1 : enumVersion1.enumConstants()){
 						if(((EnumConstantDeclaration)constantVersion1).resolveVariable() != null &&
 								((EnumConstantDeclaration)constantVersion1).resolveVariable().isDeprecated()){
-							this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_REMOVED_DEPRECIATED, false));
+							this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_REMOVED_DEPRECIATED, false));
 						} else {
-							this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_REMOVED, true));
+							this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_REMOVED, true));
 						}
 					}
 				}
@@ -114,7 +114,7 @@ public class EnumConstantDiff {
 									((EnumConstantDeclaration) constantVersion2, enumVersion2);
 							if(constantVersion1 == null || (constantVersion1.resolveVariable() != null &&
 									!constantVersion1.resolveVariable().isDeprecated()))
-								this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_DEPRECIATED, false));
+								this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_DEPRECIATED, false));
 						}
 					}
 				}

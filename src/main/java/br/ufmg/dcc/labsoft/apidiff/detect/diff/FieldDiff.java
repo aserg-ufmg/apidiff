@@ -174,7 +174,7 @@ public class FieldDiff {
 				}
 				try {
 					category += UtilTools.getSufixJavadoc(fieldVersion2);
-					this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(typeVersion1), UtilTools.getFieldName(fieldVersion2), category, isBreakingChange));
+					this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(typeVersion1), UtilTools.getFieldName(fieldVersion2), category, isBreakingChange));
 				} catch (BindingException e) {
 					this.logger.error("Erro ao ler FildName.", e);
 					return;

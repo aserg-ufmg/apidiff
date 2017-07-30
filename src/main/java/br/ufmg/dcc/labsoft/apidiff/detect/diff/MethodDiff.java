@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.UtilTools;
 import br.ufmg.dcc.labsoft.apidiff.detect.diff.comparator.ComparatorMethod;
+import br.ufmg.dcc.labsoft.apidiff.detect.diff.description.MethodDescription;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class MethodDiff {
@@ -47,6 +48,8 @@ public class MethodDiff {
 	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
 	
 	private Logger logger = LoggerFactory.getLogger(MethodDiff.class);
+	
+	private MethodDescription description = new MethodDescription();
 
 	public Result calculateDiff(final APIVersion version1, final APIVersion version2) {
 		
@@ -141,7 +144,8 @@ public class MethodDiff {
 							Boolean isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
 							
 							if(exceptionsVersion1.size() != exceptionsVersion2.size() || (this.diffListExceptions(exceptionsVersion1, exceptionsVersion2))) {
-								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion1), category, isBreakingChange));
+								String description = isBreakingChange ? this.description.exception(this.getFullNameMethod(methodVersion1), UtilTools.getPath(typeVersion1)): "";
+								this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(typeVersion1), this.getFullNameMethod(methodVersion1), category, isBreakingChange, description));
 							}
 						}
 					}
@@ -173,7 +177,8 @@ public class MethodDiff {
 								String category = this.isDeprecated(methodVersion1, typeVersion1)? this.CATEGORY_METHOD_CHANGED_PARAMETERS_DEPRECIATED: this.CATEGORY_METHOD_CHANGED_PARAMETERS;
 								category += UtilTools.getSufixJavadoc(methodVersion2);
 								Boolean isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
-								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion1), category, isBreakingChange));
+								String description = isBreakingChange ? this.description.parameter(this.getFullNameMethod(methodVersion1), UtilTools.getPath(typeVersion1)): "";
+								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion1), category, isBreakingChange, description));
 							}
 						}
 					}
@@ -200,7 +205,8 @@ public class MethodDiff {
 								String category = this.isDeprecated(methodVersion1, typeVersion1)? this.CATEGORY_METHOD_CHANGED_RETURN_TYPE_DEPRECIATED: this.CATEGORY_METHOD_CHANGED_RETURN_TYPE;
 								category += UtilTools.getSufixJavadoc(methodVersion2);
 								Boolean isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
-								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion1), category, isBreakingChange));
+								String description = isBreakingChange ? this.description.returnType(this.getFullNameMethod(methodVersion1), UtilTools.getPath(typeVersion1)): "";
+								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion1), category, isBreakingChange, description));
 							}
 						}
 					}
@@ -238,7 +244,8 @@ public class MethodDiff {
 					isBreakingChange = false;
 				}
 				category += UtilTools.getSufixJavadoc(methodVersion2);
-				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(typeVersion1), this.getFullNameMethod(methodVersion2), category, isBreakingChange));
+				String description = isBreakingChange ? this.description.visibility(this.getFullNameMethod(methodVersion2), UtilTools.getPath(typeVersion1), visibilityMethod1, visibilityMethod2): "";
+				this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(typeVersion1), this.getFullNameMethod(methodVersion2), category, isBreakingChange, description));
 			}
 		}
 	}
@@ -301,7 +308,8 @@ public class MethodDiff {
 							String category = this.isDeprecated(methodInVersion1, typeInVersion1)? this.CATEGORY_METHOD_REMOVED_DEPRECIATED: this.CATEGORY_METHOD_REMOVED;
 							category += UtilTools.getSufixJavadoc(methodInVersion1);
 							Boolean isBreakingChange = this.isDeprecated(methodInVersion1, typeInVersion1)? false: true;
-							this.listBreakingChange.add(new BreakingChange(typeInVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodInVersion1), category, isBreakingChange));
+							String description = isBreakingChange ? this.description.remove(this.getFullNameMethod(methodInVersion1), UtilTools.getPath(typeInVersion1)): "";
+							this.listBreakingChange.add(new BreakingChange(typeInVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodInVersion1), category, isBreakingChange, description));
 						}
 					}
 				}
@@ -353,10 +361,12 @@ public class MethodDiff {
 		}
 		String category = "";
 		Boolean isBreakingChange = false;
+		Boolean isGain = false;
 		//Se ganhou o modificador "final"
 		if((!UtilTools.isFinal(methodVersion1) && UtilTools.isFinal(methodVersion2))){
 			category = this.isDeprecated(methodVersion1, typeVersion1)?this.CATEGORY_METHOD_GAIN_MODIFIER_FINAL_DEPRECIATED:CATEGORY_METHOD_GAIN_MODIFIER_FINAL;
 			isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)?false:true;
+			isGain = true;
 		}
 		else{
 			//Se perdeu o modificador "final"
@@ -364,7 +374,10 @@ public class MethodDiff {
 			isBreakingChange = false;
 		}
 		category += UtilTools.getSufixJavadoc(methodVersion2);
-		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion2), category, isBreakingChange));
+		String nameClass = UtilTools.getPath(typeVersion1);
+		String nameMethod = this.getFullNameMethod(methodVersion2);
+		String description = isBreakingChange ? this.description.modifierFinal(nameMethod, nameClass, isGain): "";
+		this.listBreakingChange.add(new BreakingChange(nameClass, nameMethod, category, isBreakingChange, description));
 	}
 	
 	/**
@@ -380,10 +393,12 @@ public class MethodDiff {
 		}
 		String category = "";
 		Boolean isBreakingChange = false;
+		Boolean isGain = false;
 		//Se ganhou o modificador "static"
 		if((!UtilTools.isStatic(methodVersion1) && UtilTools.isStatic(methodVersion2))){
 			category = CATEGORY_METHOD_GAIN_MODIFIER_STATIC;
 			isBreakingChange = false;
+			isGain = true;
 		}
 		else{
 			//Se perdeu o modificador "static"
@@ -391,7 +406,10 @@ public class MethodDiff {
 			isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)?false:true;
 		}
 		category += UtilTools.getSufixJavadoc(methodVersion2);
-		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion2), category, isBreakingChange));
+		String nameClass = UtilTools.getPath(typeVersion1);
+		String nameMethod = this.getFullNameMethod(methodVersion2);
+		String description = isBreakingChange ? this.description.modifierStatic(nameMethod, nameClass, isGain) : "";
+		this.listBreakingChange.add(new BreakingChange(nameClass, nameMethod, category, isBreakingChange, description));
 	}
 	
 	/**

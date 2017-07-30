@@ -157,7 +157,7 @@ public class UtilTools {
 	 * @return Retorna o  path da classe/nó. Exemplo: io.reactivex.annotations.BackpressureKind
 	 * 		   String vazia se não foi possível ler o binding.
 	 */
-	public static  String getNameNode(final AbstractTypeDeclaration node){
+	public static  String getPath(final AbstractTypeDeclaration node){
 		return ((node == null) || (node.resolveBinding() == null) || (node.resolveBinding().getQualifiedName() == null))? "" : node.resolveBinding().getQualifiedName();
 	}
 	
@@ -329,6 +329,24 @@ public class UtilTools {
 	 */
 	public static String getSufixJavadoc(final FieldDeclaration fieldInVersion){
 		return ((fieldInVersion != null) && (fieldInVersion.getJavadoc() != null) && (!fieldInVersion.getJavadoc().equals("")))? "" : " WITHOUT JAVADOC";
+	}
+	
+	/**
+	 * Muda a primeira letra da palavra para maiúsculo.
+	 * @param str
+	 * @return
+	 */
+	public static String upperCaseFirstLetter(String str){
+		return str.substring(0, 1).toUpperCase() + str.substring(1);
+	}
+	
+	/**
+	 * Muda a primeira letra da palavra para minúsculo.
+	 * @param str
+	 * @return
+	 */
+	public static String downCaseFirstLetter(String str){
+		return str.substring(0, 1).toLowerCase() + str.substring(1);
 	}
 	
 }

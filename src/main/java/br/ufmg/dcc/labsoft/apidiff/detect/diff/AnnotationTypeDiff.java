@@ -59,7 +59,7 @@ public class AnnotationTypeDiff {
 			if(accessibleAnnotationTypeVersion2 != null){
 				if(!this.isDeprecated(accessibleAnnotationTypeVersion1) && this.isDeprecated(accessibleAnnotationTypeVersion2)){
 					String category = this.CATEGORY_ANNOTATION_TYPE_DEPRECIATED + UtilTools.getSufixJavadoc(accessibleAnnotationTypeVersion2);
-					this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(accessibleAnnotationTypeVersion1), accessibleAnnotationTypeVersion1.getName().toString(), category, false));
+					this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(accessibleAnnotationTypeVersion1), accessibleAnnotationTypeVersion1.getName().toString(), category, false));
 				}
 			}
 		}
@@ -68,7 +68,7 @@ public class AnnotationTypeDiff {
 		for(AnnotationTypeDeclaration accessibleTypeVersion2 : version2.getApiAccessibleAnnotation()){
 			if(!version1.containsAccessibleAnnotationType(accessibleTypeVersion2) && this.isDeprecated(accessibleTypeVersion2)){
 				String category = this.CATEGORY_ANNOTATION_TYPE_DEPRECIATED + UtilTools.getSufixJavadoc(accessibleTypeVersion2);
-				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(accessibleTypeVersion2), accessibleTypeVersion2.getName().toString(), category, false));
+				this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(accessibleTypeVersion2), accessibleTypeVersion2.getName().toString(), category, false));
 			}
 		}
 	}
@@ -83,7 +83,7 @@ public class AnnotationTypeDiff {
 	private AnnotationTypeDeclaration findAnnotationTypeDeclarationInList(List<AnnotationTypeDeclaration> list, AnnotationTypeDeclaration type){
 		for(int i=0; i< list.size(); i++){
 			AnnotationTypeDeclaration annotationTypeDeclaration = list.get(i);
-			if(UtilTools.getNameNode(type).equals(UtilTools.getNameNode(annotationTypeDeclaration))){
+			if(UtilTools.getPath(type).equals(UtilTools.getPath(annotationTypeDeclaration))){
 				return annotationTypeDeclaration;
 			}
 		}
@@ -129,7 +129,7 @@ public class AnnotationTypeDiff {
 						isBreakingChange = false;
 					}
 					category += UtilTools.getSufixJavadoc(annotation2);
-					this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(annotation2), annotation2.getName().toString(), category, isBreakingChange));
+					this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(annotation2), annotation2.getName().toString(), category, isBreakingChange));
 				}
 			}
 		}
@@ -146,7 +146,7 @@ public class AnnotationTypeDiff {
 		for (AnnotationTypeDeclaration annotationVersion2 : listAnnotationTypesVersion2) {
 			//Busca entre as anotações acessíveis e não acessíveis porque pode ser um type que já existia e ganhou visibilidade.
 			if(!version1.containsAccessibleAnnotationType(annotationVersion2) && !version1.containsNonAccessibleAnnotationType(annotationVersion2)){
-				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(annotationVersion2), annotationVersion2.getName().toString(), this.CATEGORY_ANNOTATION_TYPE_ADD + UtilTools.getSufixJavadoc(annotationVersion2), false));
+				this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(annotationVersion2), annotationVersion2.getName().toString(), this.CATEGORY_ANNOTATION_TYPE_ADD + UtilTools.getSufixJavadoc(annotationVersion2), false));
 			}
 		}
 	}
@@ -164,7 +164,7 @@ public class AnnotationTypeDiff {
 				String category = this.isDeprecated(annotation)? this.CATEGORY_ANNOTATION_TYPE_REMOVED_DEPRECIATED: this.CATEGORY_ANNOTATION_TYPE_REMOVED;
 				category += UtilTools.getSufixJavadoc(annotation);
 				Boolean isBreakingChange = this.isDeprecated(annotation)? false: true;
-				this.listBreakingChange.add(new BreakingChange(UtilTools.getNameNode(annotation), annotation.getName().toString(), category, isBreakingChange));
+				this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(annotation), annotation.getName().toString(), category, isBreakingChange));
 			}
 		}
 	}
