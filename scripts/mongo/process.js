@@ -3,7 +3,7 @@
 var day = '38';
 
 //[1] Cria coleção com BCs com javadoc:
-db.getCollection('day_'+ eval(day)).find({
+db.getCollection('day_'+ day).find({
 	$and: [
 	{"classifierAPI" : "API"},
 	{"changedType": { $not: /^\d*$/}},
@@ -11,23 +11,23 @@ db.getCollection('day_'+ eval(day)).find({
 	{"category": {$not: /JAVADOC$/}}
 	]
 }).forEach(function (val){
-	db.getCollection('day_' + eval(day) + '_comJavadocCodigo').insert(val)
+	db.getCollection('day_' + day + '_comJavadocCodigo').insert(val)
 })
 
 //[2] Remove que já teve email enviado anteriormente.
-db.getCollection('day_' + eval(day) + '_comJavadocCodigo').find({}).forEach(function(val){
+db.getCollection('day_' + day + '_comJavadocCodigo').find({}).forEach(function(val){
 	var emailJaEnviado = db.getCollection('email_enviados').find({ $or: [ {"email" : val.email}, {"author" : val.author} ] })[0];
 	if(emailJaEnviado){
 		val.day = day ;
 		print(val);
 		db.getCollection('bcs_nao_enviadas_email_repetido').insert(val);
-		db.getCollection('day_' + eval(day) + '_comJavadocCodigo').remove({"_id" : val._id})
+		db.getCollection('day_' + day + '_comJavadocCodigo').remove({"_id" : val._id})
 	}
 })
 
 //[3]  Agrupa por commit.
 //Mudar estruturam, para não repetir dados da BC.
-db.getCollection('day_' + eval(day) + '_comJavadocCodigo').aggregate(
+db.getCollection('day_' + day + '_comJavadocCodigo').aggregate(
 	[
 	{ $group : { _id : "$idCommit", breakingChanges: { $push: "$$ROOT" } } }
 	]
@@ -38,11 +38,15 @@ db.getCollection('day_' + eval(day) + '_comJavadocCodigo').aggregate(
 		bc.author = val.breakingChanges[0].author;
 		bc.email = val.breakingChanges[0].email;
 		print(bc)
-		db.getCollection('day_' + eval(day) + '_comJavadocCodigoGroupCommit').insert(bc)
+		db.getCollection('day_' + day + '_comJavadocCodigoGroupCommit').insert(bc)
 	})
 
+// -------------------------------
+
+var day = '38';
+
 //[4] atualiza a lista de emails enviados.
-db.getCollection('day_' + eval(day) + '_comJavadocCodigoGroupCommit').find({}).forEach(function(val){
+db.getCollection('day_' + day + '_comJavadocCodigoGroupCommit').find({}).forEach(function(val){
 	var contato = {};
 	contato.author = val.breakingChanges[0].author;
 	contato.email = val.breakingChanges[0].email;

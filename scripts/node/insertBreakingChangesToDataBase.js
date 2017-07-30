@@ -4,16 +4,16 @@
 // -------
 
 // Path e nome do arquivo de entrada.
-var file = "./input/survey1/day_40_output.csv";
-//var file = "./input/survey2/day_40_output.csv";
+ var file = "./input/survey2/day_12_output.csv";
+// var file = "./input/survey1/day_50_output.csv";
 
 // Dados para conexão com o MongoDB
 var dbUrl = 'mongodb://127.0.0.1:27017/APIs-BreakingChange-survey';
 var db = null;
 
 //Dados da coleção onde os dados serão inseridos.
-//var nameCollection = "day_1_surveyII";
-var nameCollection = "day_40";
+var nameCollection = "day_12";
+//var nameCollection = "day_40";
 var collection = null;
 
 //Bibliotecas para acessar banco de dados e ler o arquivo de entrada.
