@@ -113,7 +113,7 @@ public class TemplateDescription {
 		String message = "";
 		message += "<b>Change Return Type of " + UtilTools.upperCaseFirstLetter(typeStruture) + "</b>:";
 		message += "<br>" + UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
-		message += "changed the return type";
+		message += "<br>changed the return type";
 		message += "<br>in " + typePath + " <code>" + path + "</code>";
 		message += "<br>";
 		return message;
