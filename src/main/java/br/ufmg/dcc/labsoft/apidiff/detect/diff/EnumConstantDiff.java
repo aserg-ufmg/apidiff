@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.ufmg.dcc.labsoft.apidiff.UtilTools;
+import br.ufmg.dcc.labsoft.apidiff.detect.diff.description.EnumConstantDescription;
 import br.ufmg.dcc.labsoft.apidiff.detect.parser.APIVersion;
 
 public class EnumConstantDiff {
@@ -23,6 +24,8 @@ public class EnumConstantDiff {
 	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
 	
 	private Logger logger = LoggerFactory.getLogger(EnumConstantDiff.class);
+	
+	private EnumConstantDescription description = new EnumConstantDescription();
 	
 	public Result calculateDiff(final APIVersion version1, final APIVersion version2) {
 		
@@ -83,7 +86,10 @@ public class EnumConstantDiff {
 									((EnumConstantDeclaration)constantVersion1).resolveVariable().isDeprecated()){
 								this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_REMOVED_DEPRECIATED, false));
 							} else {
-								this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_REMOVED, true));
+								String path = UtilTools.getPath(enumVersion1);
+								String nameEnumConstant = constantVersion1.toString();
+								String description = this.description.remove(nameEnumConstant, path);
+								this.listBreakingChange.add(new BreakingChange(path, nameEnumConstant, this.CATEGORY_ENUM_CONSTANT_REMOVED, true, description));
 							}
 						}
 					}
@@ -93,7 +99,10 @@ public class EnumConstantDiff {
 								((EnumConstantDeclaration)constantVersion1).resolveVariable().isDeprecated()){
 							this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_REMOVED_DEPRECIATED, false));
 						} else {
-							this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(enumVersion1), constantVersion1.toString(), this.CATEGORY_ENUM_CONSTANT_REMOVED, true));
+							String path = UtilTools.getPath(enumVersion1);
+							String nameEnumConstant = constantVersion1.toString();
+							String description = this.description.remove(nameEnumConstant, path);
+							this.listBreakingChange.add(new BreakingChange(path, nameEnumConstant, this.CATEGORY_ENUM_CONSTANT_REMOVED, true, description));
 						}
 					}
 				}

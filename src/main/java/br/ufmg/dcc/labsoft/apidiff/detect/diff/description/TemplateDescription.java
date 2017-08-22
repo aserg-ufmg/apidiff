@@ -15,7 +15,7 @@ public class TemplateDescription {
 	protected String messageRemoveTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path){
 		String message = "";
 		message += "<b>Remove " + UtilTools.upperCaseFirstLetter(typeStruture) + ":</b>";
-		message += "<br>" + UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
+		message += "<br>" + typeStruture.toLowerCase() + " <code>" + nameStruture +"</code>";
 		message += "<br>removed  from " + typePath + " <code>" + path + "</code>";
 		message += "<br>";
 		return message;
