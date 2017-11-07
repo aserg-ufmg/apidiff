@@ -1,19 +1,15 @@
 /**
- * Scrip para inserir as breackin changes detectadas no banco de dados MongoDB
+ * Script para inserir as breackin changes detectadas no banco de dados MongoDB
  */
 // -------
 
-// Path e nome do arquivo de entrada.
- var file = "./input/survey2/day_12_output.csv";
-// var file = "./input/survey1/day_50_output.csv";
-
 // Dados para conexão com o MongoDB
-var dbUrl = 'mongodb://127.0.0.1:27017/APIs-BreakingChange-survey';
+var dbUrl = 'mongodb://127.0.0.1:27017/APIs-BreakingChange-survey-resultado';
 var db = null;
 
 //Dados da coleção onde os dados serão inseridos.
-var nameCollection = "day_12";
-//var nameCollection = "day_40";
+var nameCollection = "email-repetidos";
+
 var collection = null;
 
 //Bibliotecas para acessar banco de dados e ler o arquivo de entrada.
@@ -36,18 +32,19 @@ var insertRegistry = function(registry, last){
 	});
 }
 
-var parserFile = function(){
+var parserFile = function(day, file){
 
 	var i = 1;
 	//last == true se fim do arquivo.
 	lineReader.eachLine(file, function(line, last) {
-	    
+
 		//Quebra a linha pelo separador (;)
 		var data = line.split(";");
 		console.log(i);
 		i++;
 		if(data.length >= 12){
 			var registry = new Object();
+			registry.day = day;
 			registry.author	= data[0];
 			registry.email	= data[1];
 			registry.nameLibrary = data[2];
@@ -70,7 +67,7 @@ var parserFile = function(){
 			insertRegistry(registry,last);
 		}
 		else{
-			console.log("ERROR: Data invalid! " + i + ": [" + line + "]");
+			console.log("ERROR: Data invalid! " + i + ": [DAY" + day + "][" + line + "]");
 		}
 		
 	});
@@ -87,8 +84,11 @@ var initParser = function(){
 		  		db = dbMongo;
 			  	collection = dbMongo.collection(nameCollection);
 			  	console.log("\nConnected to " + dbUrl);
-			  	console.log("\nReading file " + file + "...\n");
-			  	parserFile();
+
+			  	day = 0002;
+			  	file = "./input/survey1/day_1_output.csv"
+			  	parserFile(day, file);
+			  	console.log("\n\n FIM !!")
 		  }
 
 	});

@@ -37,6 +37,8 @@ db.getCollection('day_' + day + '_comJavadocCodigo').aggregate(
 		bc.breakingChanges = val.breakingChanges;
 		bc.author = val.breakingChanges[0].author;
 		bc.email = val.breakingChanges[0].email;
+		bc.messageCommit = val.breakingChanges[0].messageCommit;
+		bc.nameLibrary = val.breakingChanges[0].nameLibrary;
 		print(bc)
 		db.getCollection('day_' + day + '_comJavadocCodigoGroupCommit').insert(bc)
 	})
