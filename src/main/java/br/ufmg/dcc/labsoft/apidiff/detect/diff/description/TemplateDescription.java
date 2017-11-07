@@ -92,7 +92,7 @@ public class TemplateDescription {
 	 */
 	protected String messageStaticTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path, final Boolean gain){
 		String message = "";
-		message += "<b>Change <code>final</code> modifier</b>:";
+		message += "<b>Change <code>static</code> modifier</b>:";
 		message += "<br>" + UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
 		message += gain ? "<br>received the modifier <code>static</code>" : "<br>lost the modifier <code>static</code>";
 		message += "<br>in " + typePath + " <code>" + path + "</code>";
