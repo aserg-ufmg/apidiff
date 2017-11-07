@@ -42,6 +42,25 @@ public class APIDiff {
 	
 	private Logger logger = LoggerFactory.getLogger(APIDiff.class);
 
+	
+	public String getNameProject() {
+		return nameProject;
+	}
+
+	public void setNameProject(String nameProject) {
+		this.nameProject = nameProject;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+
+	public APIDiff(){}
+	
 	public APIDiff(final String nameProject, final String url) {
 		this.url = url;
 		this.nameProject = nameProject;

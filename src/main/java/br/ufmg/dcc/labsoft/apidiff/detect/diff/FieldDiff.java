@@ -302,25 +302,6 @@ public class FieldDiff {
 					}
 
 				}
-			} else{ 
-				//tipo foi removido na versao 2, todos os fields foram removidos
-				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
-					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
-						try {
-							if(this.isDeprecatedField(fieldInVersion1)){
-								String category = this.CATEGORY_FIELD_REMOVED_FIELD_DEPRECIATED +  UtilTools.getSufixJavadoc(fieldInVersion1);
-								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), category, false));
-							} 
-							else{
-								String category = this.CATEGORY_FIELD_REMOVED_FIELD +  UtilTools.getSufixJavadoc(fieldInVersion1);
-								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), category, true));
-							} 
-						}catch (BindingException e) {
-								continue;
-						}
-					}
-				
-				}
 			}
 		}
 	}

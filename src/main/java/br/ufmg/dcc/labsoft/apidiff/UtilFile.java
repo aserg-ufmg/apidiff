@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,37 @@ public class UtilFile {
 		    	else{
 		    		System.err.println("File format invalid! " + line);
 		    	}
+		    }
+		}
+		finally {
+		    br.close();
+		}
+		return result;
+	}
+	
+	
+	/**
+	 * Transforma um csv numa lista de maps.
+	 * A primeira linha define os nomes dos cabeçalhos.
+	 * A primeira coluna define a chave do map.
+	 * @param nameFile
+	 * @return
+	 * @throws IOException
+	 */
+	public static List<Map<String, String>> csvToMapList(final String nameFile) throws IOException{
+		BufferedReader br = new BufferedReader(new FileReader(nameFile));
+		String SEPARATOR = ";";
+		String line = "";
+		List<Map<String, String>> result = new ArrayList<Map<String, String>>();
+		try {
+			String[] header = br.readLine().split(SEPARATOR);
+		    while ((line = br.readLine()) != null){
+		    	String [] data = line.split(SEPARATOR);
+		    	Map<String, String> value = new HashMap<String, String>();
+		    	for(int i = 0; i < data.length; i++){
+	    			value.put(header[i], data[i]);
+	    		}
+		    	result.add(value);
 		    }
 		}
 		finally {

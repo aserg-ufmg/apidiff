@@ -90,7 +90,7 @@ public class APIVersion {
 	 */
 	public void parseFilesInDir(File file, final Boolean ignoreTreeDiff) throws IOException {
 		if (file.isFile()) {
-			String simpleNameFile = file.getAbsolutePath().replaceAll(UtilTools.getPathProjects() + "/" + this.nameProject, "");
+			String simpleNameFile = UtilTools.getSimpleNameFileWithouPackageWithNameLibrary(file.getAbsolutePath(), this.nameProject);
 			if (UtilTools.isJavaFile(file.getName()) && this.isFileModification(file, ignoreTreeDiff) && UtilTools.isAPIByClassifier(simpleNameFile, this.classifierAPI)) {
 				this.parse(UtilTools.readFileToString(file.getAbsolutePath()), file, ignoreTreeDiff);		
 			}

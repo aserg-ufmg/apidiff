@@ -1,5 +1,9 @@
 package br.ufmg.dcc.labsoft.apidiff.detect.diff.comparator;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 
@@ -31,13 +35,12 @@ public class ComparatorMethod {
 				String parameterVersion1 = methodVersion1.parameters().get(i).toString();
 				String parameterVersion2 = methodVersion2.parameters().get(i).toString();
 				
-				int indexVersion1 = parameterVersion1.lastIndexOf(" "); //índice para o início do nome da variável.
-				int indexVersion2 = parameterVersion2.lastIndexOf(" "); //índice para o início do nome da variável.
+				List<String> listParameterVersion1 = new ArrayList<String>(Arrays.asList(parameterVersion1.split(" ")));
+				List<String> listParameterVersion2 = new ArrayList<String>(Arrays.asList(parameterVersion2.split(" ")));
 				
-				parameterVersion1 = parameterVersion1.substring(0, indexVersion1);
-				parameterVersion2 = parameterVersion2.substring(0, indexVersion2);
-				
-				if(!parameterVersion1.equals(parameterVersion2)){
+				String type1 = listParameterVersion1.get(listParameterVersion1.size()-2);
+				String type2 = listParameterVersion2.get(listParameterVersion2.size()-2);
+				if(!type1.equals(type2)){
 					return true;
 				}
 			}

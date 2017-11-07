@@ -191,6 +191,22 @@ public class UtilTools {
 		return (pathAPI !=null  && !"".equals(pathAPI) && checkCountainsByRegex(regexTest, pathAPI))?true:false;
 	}
 	
+	/**
+	 * Remove possíveis pacotes com o nome da biblioteca. O nome muitas vezes pode ser iterpretado como um pacote de teste, internal, etc.
+	 * @param path - path da API analisada.
+	 * @param nameProject - nome do projeto.
+	 * @return
+	 * @throws IOException 
+	 */
+	public static String getSimpleNameFileWithouPackageWithNameLibrary(String absolutePath, final String nameProject) throws IOException{
+		String simpleNameFile = absolutePath.replaceAll(UtilTools.getPathProjects() + "/" + nameProject, "");
+		String[] names = nameProject.split("/");
+		for(int i=0; i<names.length; i++){
+			simpleNameFile = simpleNameFile.replaceAll(names[i] + "/", "");
+		}
+		return simpleNameFile;
+	}
+	
 	public static Boolean isNonAPIInternal(String pathAPI){
 		return (pathAPI !=null  && !"".equals(pathAPI)  && pathAPI.toLowerCase().contains("/internal/"))?true:false;
 	}
@@ -205,7 +221,7 @@ public class UtilTools {
 	}
 	
 	public static Boolean isNonAPISample(String pathAPI){
-		String regexSample = "(?i)(\\/sample)|(sample\\/)|(samples\\/)";
+		String regexSample = "(?i)(sample\\/)|(samples\\/)";
 		return (pathAPI !=null  && !"".equals(pathAPI)  && checkCountainsByRegex(regexSample, pathAPI))?true:false;
 	}
 	
