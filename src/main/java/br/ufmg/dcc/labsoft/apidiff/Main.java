@@ -29,7 +29,7 @@ public class Main {
 				APIDiff diff = new APIDiff(nameLibray, url);
 				logger.info("\n\n["+nameLibray+"][" + index + "/" + projects.size()+ "]");
 				index++;
-				diff.calculateDiff();
+				diff.calculateDiffCommit();
 			}
 		} catch (IOException e) {
 			logger.error("Erro ao ler arquivo com a lista de projetos.", e);
