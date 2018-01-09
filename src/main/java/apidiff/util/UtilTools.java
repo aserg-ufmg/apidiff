@@ -20,8 +20,8 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-import apidiff.Main;
-import apidiff.enums.ClassifierAPI;
+import apidiff.APIDiff;
+import apidiff.enums.Classifier;
 import apidiff.exception.BindingException;
 import apidiff.visitor.APIVersion;
 
@@ -51,16 +51,19 @@ public class UtilTools {
 		return true;
 	}
 	
-	public static String getFieldName(FieldDeclaration field) throws BindingException{
+	public static String getFieldName(FieldDeclaration field){
 		String name = null;
 		List<VariableDeclarationFragment> variableFragments = field.fragments();
 		for (VariableDeclarationFragment variableDeclarationFragment : variableFragments) {
-			if(variableDeclarationFragment.resolveBinding() == null){
-				throw new BindingException();
+			if(variableDeclarationFragment.resolveBinding() != null){
+				name = variableDeclarationFragment.resolveBinding().getName();
 			}
-			name = variableDeclarationFragment.resolveBinding().getName();
 		}
 		return name;
+	}
+	
+	public static String getTypeName(TypeDeclaration type){
+		return type.resolveBinding() == null ? "" : type.resolveBinding().getQualifiedName();
 	}
 	
 	public static boolean isVisibilityPrivate(BodyDeclaration node){
@@ -163,19 +166,19 @@ public class UtilTools {
 	}
 	
 	
-	public static Boolean isAPIByClassifier(String pathLibrary, ClassifierAPI classifierAPI) throws IOException{
+	public static Boolean isAPIByClassifier(String pathLibrary, Classifier classifierAPI) throws IOException{
 		Boolean isAPI = false;
 		switch (classifierAPI){
-			case NON_API_EXAMPLE:
+			case EXAMPLE:
 				isAPI = isNonAPIExample(pathLibrary)?true:false;
 				break;
-			case NON_API_INTERNAL:
+			case INTERNAL:
 				isAPI = isNonAPIInternal(pathLibrary)?true:false;
 				break;
-			case NON_API_TEST:
+			case TEST:
 				isAPI = isNonAPITest(pathLibrary)?true:false;
 				break;
-			case NON_API_EXPERIMENTAL:
+			case EXPERIMENTAL:
 				isAPI = isNonAPIExperimental(pathLibrary)?true:false;
 				break;
 			case API:
@@ -199,8 +202,8 @@ public class UtilTools {
 	 * @return
 	 * @throws IOException 
 	 */
-	public static String getSimpleNameFileWithouPackageWithNameLibrary(String absolutePath, final String nameProject) throws IOException{
-		String simpleNameFile = absolutePath.replaceAll(UtilTools.getPathProjects() + "/" + nameProject, "");
+	public static String getSimpleNameFileWithouPackageWithNameLibrary(String path, String absolutePath, final String nameProject) throws IOException{
+		String simpleNameFile = absolutePath.replaceAll(path + "/" + nameProject, "");
 		String[] names = nameProject.split("/");
 		for(int i=0; i<names.length; i++){
 			simpleNameFile = simpleNameFile.replaceAll(names[i] + "/", "");
@@ -262,21 +265,31 @@ public class UtilTools {
 		return (nameFile!=null && nameFile.endsWith(".java"))?true:false;
 	}
 	
-	public static Properties getProperties() throws IOException{
-		try {
-			if(properties == null){
-				properties = new Properties();
-		    	InputStream input = Main.class.getClassLoader().getResourceAsStream("config.properties");
-		    	properties.load(input);
-			}
-    		return properties;
-		} catch (Exception e) {
-			throw new IOException("Path project not found, check the properties file.", e);
-		}
+//	public static Properties getProperties() throws IOException{
+//		try {
+//			if(properties == null){
+//				properties = new Properties();
+//		    	InputStream input = APIDiff.class.getClassLoader().getResourceAsStream("config.properties");
+//		    	properties.load(input);
+//			}
+//    		return properties;
+//		} catch (Exception e) {
+//			throw new IOException("Path project not found, check the properties file.", e);
+//		}
+//	}
+	
+//	public static String getPathProjects() throws IOException{
+//		return UtilTools.getProperties().getProperty("PATH_PROJECT");
+//	}
+	
+	public static String getPathProject(final String path, final String nameProject) throws IOException{
+		String pathComplete = isNullOrEmpty(path) ? "./" : path + "/";
+		pathComplete += isNullOrEmpty(nameProject) ? "" : nameProject;
+		return pathComplete;
 	}
 	
-	public static String getPathProjects() throws IOException{
-		return UtilTools.getProperties().getProperty("PATH_PROJECT");
+	public static Boolean isNullOrEmpty(final String text){
+		return (text == null || "".equals(text));
 	}
 	
 	/**
@@ -285,9 +298,9 @@ public class UtilTools {
 	 * @param version
 	 * @return
 	 */
-	public static  List<TypeDeclaration> getAcessibleTypes(APIVersion version){
-		List<TypeDeclaration> list = new ArrayList<TypeDeclaration>();
-		for(TypeDeclaration type: version.getApiAcessibleTypes()){
+	public static List<AbstractTypeDeclaration> getAcessibleTypes(APIVersion version){
+		List<AbstractTypeDeclaration> list = new ArrayList<AbstractTypeDeclaration>();
+		for(AbstractTypeDeclaration type: version.getTypesPublicAndProtected()){
 			if(UtilTools.isVisibilityPublic(type) || UtilTools.isVisibilityProtected(type)){
 				list.add(type);
 			}
@@ -312,6 +325,11 @@ public class UtilTools {
 		return list;
 	}
 	
+
+	public static Boolean containsJavadoc(final AbstractTypeDeclaration node){
+		return ((node != null) && (node.getJavadoc() != null) && (!node.getJavadoc().equals("")))? true : false;
+	} 
+	
 	/**
 	 * Se o nó não possui javadoc, retorna prefixo.
 	 * @param node
@@ -319,6 +337,19 @@ public class UtilTools {
 	 */
 	public static String getSufixJavadoc(final AbstractTypeDeclaration node){
 		return ((node != null) && (node.getJavadoc() != null) && (!node.getJavadoc().equals("")))? "" : " WITHOUT JAVADOC";
+	}
+	
+	public static Boolean containsJavadoc(final AbstractTypeDeclaration node, final MethodDeclaration methodDeclaration){
+		Boolean typeContainsJavadoc = containsJavadoc(node);
+		return (typeContainsJavadoc && (methodDeclaration != null) && (methodDeclaration.getJavadoc() != null) && (!methodDeclaration.getJavadoc().equals("")))? true : false;
+	}
+	
+	public static Boolean containsJavadoc(final AbstractTypeDeclaration node, final FieldDeclaration fieldInVersion){
+		return containsJavadoc(node) && containsJavadoc(fieldInVersion);
+	}
+	
+	public static Boolean containsJavadoc(final FieldDeclaration fieldInVersion){
+		return ((fieldInVersion != null) && (fieldInVersion.getJavadoc() != null) && (!fieldInVersion.getJavadoc().equals("")))? true : false;
 	}
 	
 	/**

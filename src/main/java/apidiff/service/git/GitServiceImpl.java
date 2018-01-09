@@ -61,11 +61,12 @@ public class GitServiceImpl implements GitService {
 				logger.info("Merge of the branches deleted. [commitId=" + c.getId().getName() + "]");
 				return false;
 			}
-					
-			if(diffTimestamp > SEVEN_DAYS){//old
-				logger.info("Old commit old deleted. [commitId=" + c.getId().getName() + "][date=" + getDateCommitFormat(c) + "]");
-				return false;
-			}
+				
+			//TODO: create other filter to date.
+//			if(diffTimestamp > SEVEN_DAYS){//old
+//				logger.info("Old commit old deleted. [commitId=" + c.getId().getName() + "][date=" + getDateCommitFormat(c) + "]");
+//				return false;
+//			}
 			
 			return true;
 		}
@@ -103,8 +104,8 @@ public class GitServiceImpl implements GitService {
 	}
 	
 	@Override
-	public Repository openRepositoryAndCloneIfNotExists(String projectName, String cloneUrl) throws Exception {
-		File folder = new File(UtilTools.getPathProjects() + "/" + projectName);
+	public Repository openRepositoryAndCloneIfNotExists(String path, String projectName, String cloneUrl) throws Exception {
+		File folder = new File(UtilTools.getPathProject(path , projectName));
 		Repository repository = null;
 		//Se repositório existe, carrega as propriedades.
 		if (folder.exists()) {
@@ -149,6 +150,25 @@ public class GitServiceImpl implements GitService {
 		}
 		for (ObjectId oldRef : currentRemoteRefs) {
 			walk.markUninteresting(walk.parseCommit(oldRef));
+		}
+		walk.setRevFilter(commitsFilter);
+		return walk;
+	}
+	
+	public RevWalk createAllRevsWalk(Repository repository, String branch) throws Exception {
+		List<ObjectId> currentRemoteRefs = new ArrayList<ObjectId>(); 
+		for (Ref ref : repository.getAllRefs().values()) {
+			String refName = ref.getName();
+			if (refName.startsWith(REMOTE_REFS_PREFIX)) {
+				if (branch == null || refName.endsWith("/" + branch)) {
+					currentRemoteRefs.add(ref.getObjectId());
+				}
+			}
+		}
+		
+		RevWalk walk = new RevWalk(repository);
+		for (ObjectId newRef : currentRemoteRefs) {
+			walk.markStart(walk.parseCommit(newRef));
 		}
 		walk.setRevFilter(commitsFilter);
 		return walk;

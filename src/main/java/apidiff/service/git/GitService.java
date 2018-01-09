@@ -17,7 +17,7 @@ public interface GitService {
 	 * @return
 	 * @throws Exception
 	 */
-	Repository openRepositoryAndCloneIfNotExists(String projectName, String cloneUrl) throws Exception;
+	Repository openRepositoryAndCloneIfNotExists(String path, String projectName, String cloneUrl) throws Exception;
 	
 	RevWalk fetchAndCreateNewRevsWalk(Repository repository, String branch) throws Exception;
 	
@@ -28,4 +28,6 @@ public interface GitService {
 	void checkout(Repository repository, String commitId) throws Exception;
 	
 	RevCommit createRevCommitByCommitId(final Repository repository, final String commitId) throws Exception;
+	
+	public RevWalk createAllRevsWalk(Repository repository, String branch) throws Exception;
 }

@@ -89,6 +89,13 @@
 	       <artifactId>slf4j-log4j12</artifactId>
 	       <version>1.7.5</version>
 	   </dependency>
+	   
+		<dependency>
+			<groupId>com.github.aserg-ufmg</groupId>
+			<artifactId>refdiff-core</artifactId>
+			<version>0.1.1</version>
+		</dependency>
+
     </dependencies>
     
     <build>

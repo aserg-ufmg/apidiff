@@ -53,7 +53,7 @@ public class TemplateDescription {
 	 */
 	protected String messageChangeDefaultValueTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path,  final String value1, final String value2){
 		String message = "";
-		message += "<b>Change Default Value:</b>";
+		message += "<b>Category Default Value:</b>";
 		message += "<br>" + UtilTools.downCaseFirstLetter(typeStruture) + "<code>" + nameStruture +"</code>";
 		message += "<br>changed default value from " + value1  + " to "  + value2;
 		message += "<br>in " + typePath + " <code>" + path + "</code>";
@@ -73,7 +73,7 @@ public class TemplateDescription {
 	 */
 	protected String messageFinalTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path, final Boolean gain){
 		String message = "";
-		message += "<b>Change <code>final</code> modifier</b>:";
+		message += "<b>Category <code>final</code> modifier</b>:";
 		message += "<br>" + UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
 		message += gain ? "<br>received the modifier <code>final</code>" : "<br>lost the modifier <code>final</code>";
 		message += "<br>in " + typePath + " <code>" + path + "</code>";
@@ -92,7 +92,7 @@ public class TemplateDescription {
 	 */
 	protected String messageStaticTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path, final Boolean gain){
 		String message = "";
-		message += "<b>Change <code>static</code> modifier</b>:";
+		message += "<b>Category <code>static</code> modifier</b>:";
 		message += "<br>" + UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
 		message += gain ? "<br>received the modifier <code>static</code>" : "<br>lost the modifier <code>static</code>";
 		message += "<br>in " + typePath + " <code>" + path + "</code>";
@@ -111,7 +111,7 @@ public class TemplateDescription {
 	 */
 	protected String messageReturnTypeTemplate(final String typeStruture,  final String nameStruture, final String typePath, final String path){
 		String message = "";
-		message += "<b>Change Return Type of " + UtilTools.upperCaseFirstLetter(typeStruture) + "</b>:";
+		message += "<b>Category Return Type of " + UtilTools.upperCaseFirstLetter(typeStruture) + "</b>:";
 		message += "<br>" + UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
 		message += "<br>changed the return type";
 		message += "<br>in " + typePath + " <code>" + path + "</code>";
@@ -127,11 +127,12 @@ public class TemplateDescription {
 	 * @param path
 	 * @return
 	 */
-	protected String messageParameterTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path){
+	protected String messageParameterTemplate(final String typeStruture, final String nameStrutureAfter, final String nameStrutureBefore, final String typePath, final String path){
 		String message = "";
-		message += "<b>Change " + UtilTools.upperCaseFirstLetter(typeStruture) + " Parameters</b>:";
-		message += "<br><code>" + nameStruture +"</code>";
+		message += "<b>Category " + UtilTools.upperCaseFirstLetter(typeStruture) + " Parameters</b>:";
+		message += "<br><code>" + nameStrutureBefore +"</code>";
 		message += "<br>changed the list parameters";
+		message += "<br>to <code>" + nameStrutureAfter +"</code>";
 		message += "<br>in " + typePath + " <code>" + path + "</code>";
 		message += "<br>";
 		return message;
@@ -147,10 +148,20 @@ public class TemplateDescription {
 	 */
 	protected String messageExceptionTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path){
 		String message = "";
-		message += "<b>Change " + UtilTools.upperCaseFirstLetter(typeStruture) + " Exceptions</b>:";
+		message += "<b>Category " + UtilTools.upperCaseFirstLetter(typeStruture) + " Exceptions</b>:";
 		message += "<br><code>" + nameStruture +"</code>";
 		message += "<br>changed the list exception";
 		message += "<br>in " + typePath + " <code>" + path + "</code>";
+		message += "<br>";
+		return message;
+	}
+	
+	protected String messageMoveTemplate(final String typeStruture, final String fullName, final String pathBefore, final String pathAfter){
+		String message = "";
+		message += "<b>" + typeStruture + ":</b>";
+		message += "<br><code>" + fullName +"</code>";
+		message += "<br>moved from  <code>" + pathBefore +"</code>";
+		message += "<br>to <code>" + pathAfter +"</code>";
 		message += "<br>";
 		return message;
 	}

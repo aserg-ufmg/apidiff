@@ -1,17 +1,19 @@
 package apidiff.analysis;
 
+import apidiff.enums.Category;
+
 /**
  * Classe para armazenar a saída
  * @author aline
  *
  */
-public class BreakingChange {
+public class Change {
 	
-	public BreakingChange(){
+	public Change(){
 		
 	}
 	
-	public BreakingChange(final String path, final String struture, final String category, final Boolean isBreakingChange, final String description){
+	public Change(final String path, final String struture, final Category category, final Boolean isBreakingChange, final String description){
 		this.path = path;
 		this.struture = struture;
 		this.category = category;
@@ -19,7 +21,7 @@ public class BreakingChange {
 		this.breakingChange = isBreakingChange;
 	}
 	
-	public BreakingChange(final String path, final String struture, final String category, final Boolean isBreakingChange){
+	public Change(final String path, final String struture, final Category category, final Boolean isBreakingChange){
 		this.path = path;
 		this.struture = struture;
 		this.category = category;
@@ -27,7 +29,7 @@ public class BreakingChange {
 		this.description = "";
 	}
 	
-	public BreakingChange(final String path, final String struture, final String category) {
+	public Change(final String path, final String struture, final Category category) {
 		this.path = path;
 		this.struture = struture;
 		this.category = category;
@@ -46,11 +48,15 @@ public class BreakingChange {
 	/**
 	 * Categoria da breaking change. 
 	 */
-	private String category;
+	private Category category;
 	
 	private Boolean breakingChange;
 	
 	private String description;
+	
+	private Boolean javadoc;
+	
+	private Boolean depreciated;
 
 	public String getPath() {
 		return path;
@@ -60,7 +66,7 @@ public class BreakingChange {
 		this.path = path;
 	}
 	
-	public BreakingChange path(String path) {
+	public Change path(String path) {
 		this.path = path;
 		return this;
 	}
@@ -73,21 +79,8 @@ public class BreakingChange {
 		this.struture = struture;
 	}
 	
-	public BreakingChange struture(String struture) {
+	public Change struture(String struture) {
 		this.struture = struture;
-		return this;
-	}
-
-	public String getCategory() {
-		return category;
-	}
-
-	public void setCategory(String category) {
-		this.category = category;
-	}
-	
-	public BreakingChange category(String category) {
-		this.category = category;
 		return this;
 	}
 
@@ -99,7 +92,7 @@ public class BreakingChange {
 		this.breakingChange = breakingChange;
 	}
 	
-	public BreakingChange isBreakingChange(Boolean breakingChange) {
+	public Change isBreakingChange(Boolean breakingChange) {
 		this.breakingChange = breakingChange;
 		return this;
 	}
@@ -112,9 +105,37 @@ public class BreakingChange {
 		this.description = description;
 	}
 	
-	public BreakingChange description(String description) {
+	public Change description(String description) {
 		this.description = description;
 		return this;
+	}
+
+	public Boolean getJavadoc() {
+		return this.javadoc;
+	}
+
+	public void setJavadoc(Boolean javadoc) {
+		this.javadoc = javadoc;
+	}
+
+	public Boolean getDepreciated() {
+		return this.depreciated;
+	}
+
+	public void setDepreciated(Boolean depreciated) {
+		this.depreciated = depreciated;
+	}
+
+	public Category getCategory() {
+		return category;
+	}
+
+	public void setCategory(Category category) {
+		this.category = category;
+	}
+
+	public Boolean getBreakingChange() {
+		return breakingChange;
 	}
 	
 }

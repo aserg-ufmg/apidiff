@@ -1,77 +1,171 @@
 package apidiff.analysis;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import apidiff.analysis.comparator.ComparatorMethod;
 import apidiff.analysis.description.MethodDescription;
+import apidiff.enums.Category;
 import apidiff.util.UtilTools;
 import apidiff.visitor.APIVersion;
+import refdiff.core.api.RefactoringType;
+import refdiff.core.rm2.model.refactoring.SDRefactoring;
 
 public class MethodDiff {
 	
-	private final String CATEGORY_METHOD_CHANGED_EXCEPTION = "METHOD CHANGED EXCEPTION"; //breaking change
-	private final String CATEGORY_METHOD_CHANGED_EXCEPTION_DEPRECIATED = "METHOD CHANGED EXCEPTION DEPRECIATED"; //non-breaking change
-	
-	private final String CATEGORY_METHOD_LOST_MODIFIER_FINAL = "METHOD LOST MODIFIER FINAL"; //non-breaking change
-	private final String CATEGORY_METHOD_GAIN_MODIFIER_FINAL = "METHOD GAIN MODIFIER FINAL"; //breaking change
-	private final String CATEGORY_METHOD_GAIN_MODIFIER_FINAL_DEPRECIATED = "METHOD GAIN MODIFIER FINAL DEPRECIATED"; //non-breaking change
-	
-	private final String CATEGORY_METHOD_LOST_MODIFIER_STATIC = "METHOD LOST MODIFIER STATIC"; //breaking change
-	private final String CATEGORY_METHOD_LOST_MODIFIER_STATIC_DEPRECIATED = "METHOD LOST MODIFIER STATIC DEPRECIATED"; //non-breaking change
-	private final String CATEGORY_METHOD_GAIN_MODIFIER_STATIC = "METHOD GAIN MODIFIER STATIC"; //non-breaking change
-	
-	private final String CATEGORY_METHOD_CHANGED_PARAMETERS = "METHOD CHANGED PARAMETERS"; //breaking change
-	private final String CATEGORY_METHOD_CHANGED_PARAMETERS_DEPRECIATED = "METHOD CHANGED PARAMETERS DEPRECIATED"; //non-breaking change
-	
-	private final String CATEGORY_METHOD_CHANGED_RETURN_TYPE = "METHOD CHANGED RETURN TYPE"; //breaking change
-	private final String CATEGORY_METHOD_CHANGED_RETURN_TYPE_DEPRECIATED = "METHOD CHANGED RETURN TYPE DEPRECIATED"; //non-breaking change
-	
-	private final String CATEGORY_METHOD_REMOVED = "METHOD REMOVED"; //breaking change
-	private final String CATEGORY_METHOD_REMOVED_DEPRECIATED = "METHOD REMOVED DEPRECIATED"; //non-breaking change
-	
-	private final String CATEGORY_METHOD_ADDED = "METHOD ADDED"; //non-breaking change
-	
-	private final String CATEGORY_METHOD_DEPRECIATED = "METHOD DEPRECIATED"; //non-breaking change
-	
-	private final String CATEGORY_METHOD_LOST_VISIBILITY = "METHOD LOST VISIBILITY"; //breaking change
-	private final String CATEGORY_METHOD_LOST_VISIBILITY_DEPRECIATED = "METHOD LOST VISIBILITY DEPRECIATED"; //non-breaking change
-	private final String CATEGORY_METHOD_GAIN_VISIBILITY = "METHOD GAIN VISIBILITY"; //non-breaking change
-	
-	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
+	private List<Change> listChange = new ArrayList<Change>();
 	
 	private Logger logger = LoggerFactory.getLogger(MethodDiff.class);
 	
 	private MethodDescription description = new MethodDescription();
+	
+	private Map<RefactoringType, List<SDRefactoring>> refactorings = new HashMap<RefactoringType, List<SDRefactoring>>();
+	
+	private List<String> methodsWithPathChanged = new ArrayList<String>();
 
-	public Result calculateDiff(final APIVersion version1, final APIVersion version2) {
-		
+	public List<Change> detectChange(final APIVersion version1, final APIVersion version2, final Map<RefactoringType, List<SDRefactoring>> refactorings) {
 		this.logger.info("Processing Methods...");
-		
-		//Lista breaking changes.
-		this.findRemovedMethods(version1, version2);
+		this.refactorings = refactorings;
+		this.findRemoveAndRefactoringMethods(version1, version2);
 		this.findChangedVisibilityMethods(version1, version2);
 		this.findChangedReturnTypeMethods(version1, version2);
-		this.findChangedParametersMethods(version1, version2);
 		this.findChangedExceptionTypeMethods(version1, version2);
 		this.findChangedFinalAndStatic(version1, version2);
-		
-		//Lista non-breaking changes.
 		this.findAddedMethods(version1, version2);
 		this.findAddedDeprecatedMethods(version1, version2);
-		
-		Result result = new Result();
-		result.setListBreakingChange(this.listBreakingChange);
-		return result;
+		return this.listChange;
 	}
 
+	private void addChange(final TypeDeclaration type, final MethodDeclaration method, Category category, Boolean isBreakingChange, final String description){
+		Change change = new Change();
+		change.setJavadoc(UtilTools.containsJavadoc(type, method));
+		change.setDepreciated(this.isDeprecated(method, type));
+		change.setBreakingChange(this.isDeprecated(method, type) ? false : isBreakingChange);
+		change.setPath(UtilTools.getPath(type));
+		change.setStruture(this.getFullNameMethod(method));
+		change.setCategory(category);
+		change.setDescription(description);
+		this.listChange.add(change);
+	}
+	
+	private List<SDRefactoring> getAllMoveOperations(){
+		List<SDRefactoring> listMove = new ArrayList<SDRefactoring>();
+		if(this.refactorings.containsKey(RefactoringType.PULL_UP_OPERATION)){
+			listMove.addAll(this.refactorings.get(RefactoringType.PULL_UP_OPERATION));
+		}
+		if(this.refactorings.containsKey(RefactoringType.PUSH_DOWN_OPERATION)){
+			listMove.addAll(this.refactorings.get(RefactoringType.PUSH_DOWN_OPERATION));
+		}
+		if(this.refactorings.containsKey(RefactoringType.MOVE_OPERATION)){
+			listMove.addAll(this.refactorings.get(RefactoringType.MOVE_OPERATION));
+		}
+		if(this.refactorings.containsKey(RefactoringType.INLINE_OPERATION)){
+			listMove.addAll(this.refactorings.get(RefactoringType.INLINE_OPERATION));
+		}
+		return listMove;
+	}
+	
+	private Category getCategory(RefactoringType refactoringType){
+		Category category;
+		switch (refactoringType) {
+			case MOVE_OPERATION:
+				category = Category.METHOD_MOVE;
+				break;
+	
+			case PUSH_DOWN_ATTRIBUTE:
+				category = Category.METHOD_PUSH_DOWN;
+				break;
+				
+			case INLINE_OPERATION:
+				category = Category.METHOD_INLINE;
+				break;
+				
+			default:
+				category = Category.METHOD_PULL_UP;
+				break;
+		}
+		return category;
+	}
+	
+	/**
+	 * Processa refactoring em movimentação de métodos (move, pull up, push down, inline method).
+	 * @param method
+	 * @param type
+	 * @return
+	 */
+	private Boolean processMoveMethod(final MethodDeclaration method, final TypeDeclaration type){
+		List<SDRefactoring> listMove = this.getAllMoveOperations();
+		if(listMove != null){
+			for(SDRefactoring ref : listMove){
+				String fullNameAndPath = this.getFullNameMethodAndPath(method, type);
+				if(fullNameAndPath.equals(ref.getEntityBefore().fullName())){
+					String nameClassBefore = ref.getEntityBefore().fullName().split("#")[0];
+					String nameClassAfter = ref.getEntityAfter().fullName().split("#")[0];
+					Boolean isBreakingChange = RefactoringType.PULL_UP_OPERATION.equals(ref.getRefactoringType())? false:true;
+					String description = this.description.move(ref.getRefactoringType().getDisplayName(), this.getFullNameMethod(method), nameClassBefore, nameClassAfter); 
+					this.addChange(type, method, this.getCategory(ref.getRefactoringType()), isBreakingChange, description);
+					this.methodsWithPathChanged.add(ref.getEntityAfter().fullName());
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private Boolean processRenameMethod(final MethodDeclaration method, final TypeDeclaration type){
+		List<SDRefactoring> listRename = this.refactorings.get(RefactoringType.RENAME_METHOD);
+		if(listRename != null){
+			for(SDRefactoring ref : listRename){
+				String fullNameAndPath = this.getFullNameMethodAndPath(method, type);
+				if(fullNameAndPath.equals(ref.getEntityBefore().fullName())){
+					String nameClassBefore = ref.getEntityBefore().fullName().split("#")[0];
+					String nameClassAfter = ref.getEntityAfter().fullName().split("#")[0];
+					String description = this.description.move(ref.getRefactoringType().getDisplayName(), this.getFullNameMethod(method), nameClassBefore, nameClassAfter); 
+					this.addChange(type, method, Category.METHOD_RENAME, true, description);
+					this.methodsWithPathChanged.add(ref.getEntityAfter().fullName());
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private Boolean processChangeListParametersMethod(final MethodDeclaration method, final TypeDeclaration type){
+		List<SDRefactoring> listRename = this.refactorings.get(RefactoringType.CHANGE_METHOD_SIGNATURE);
+		if(listRename != null){
+			for(SDRefactoring ref : listRename){
+				String fullNameAndPath = this.getFullNameMethodAndPath(method, type);
+				if(fullNameAndPath.equals(ref.getEntityBefore().fullName())){
+					String description = this.description.parameter(ref.getEntityAfter().simpleName(), ref.getEntityBefore().simpleName(), UtilTools.getPath(type)); 
+					this.addChange(type, method, Category.METHOD_CHANGE_PARAMETER_LIST, true, description);
+					this.methodsWithPathChanged.add(ref.getEntityAfter().fullName());
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private void processRemoveMethod(final MethodDeclaration method, final TypeDeclaration type){
+		String description = this.description.remove(this.getFullNameMethod(method), UtilTools.getPath(type));
+		this.addChange(type, method, Category.METHOD_REMOVE, true, description);
+	}
+
+	private Boolean checkAndProcessRefactoring(final MethodDeclaration method, final TypeDeclaration type){
+		Boolean rename = this.processRenameMethod(method, type);
+		Boolean move = this.processMoveMethod(method, type);
+		Boolean listParameters = this.processChangeListParametersMethod(method, type);
+		return rename || move || listParameters;
+	}
+	
 	/**
 	 * Verifica se uma exceção está contida na lista recebida.
 	 * @param list
@@ -111,13 +205,21 @@ public class MethodDiff {
 		return false;
 	}
 	
+	/**
+	 * Se o type está depreciado, retorna o sufixo.
+	 * @param node
+	 * @return
+	 */
+	private String getSufixDepreciated(final MethodDeclaration method, final TypeDeclaration type){
+		return this.isDeprecated(method, type) ? " DEPRECIATED" : "";
+	}
 	
 	/**
 	 * Retorna verdadeiro se o método está depreciado ou a classe do método está depreciada.
 	 * @param type
 	 * @return
 	 */
-	private Boolean isDeprecated(MethodDeclaration method, TypeDeclaration type){
+	private Boolean isDeprecated(MethodDeclaration method, AbstractTypeDeclaration type){
 		Boolean isMethodDeprecated =  (method != null && method.resolveBinding() != null && method.resolveBinding().isDeprecated()) ? true: false;
 		Boolean isTypeDeprecated = (type != null && type.resolveBinding() != null && type.resolveBinding().isDeprecated()) ? true: false;
 		
@@ -138,47 +240,9 @@ public class MethodDiff {
 						if(this.isMethodAcessible(methodVersion2)){
 							List<SimpleType> exceptionsVersion1 = methodVersion1.thrownExceptionTypes();
 							List<SimpleType> exceptionsVersion2 = methodVersion2.thrownExceptionTypes();
-							
-							String category = this.isDeprecated(methodVersion1, typeVersion1)? this.CATEGORY_METHOD_CHANGED_EXCEPTION_DEPRECIATED: this.CATEGORY_METHOD_CHANGED_EXCEPTION;
-							category += UtilTools.getSufixJavadoc(methodVersion2);
-							Boolean isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
-							
 							if(exceptionsVersion1.size() != exceptionsVersion2.size() || (this.diffListExceptions(exceptionsVersion1, exceptionsVersion2))) {
-								String description = isBreakingChange ? this.description.exception(this.getFullNameMethod(methodVersion1), UtilTools.getPath(typeVersion1)): "";
-								this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(typeVersion1), this.getFullNameMethod(methodVersion1), category, isBreakingChange, description));
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	
-
-
-	/**
-	 * Verifica se ocorreu mudanças na assinatura dos métodos. 
-	 * Mundanças: parâmetro foi adicionado, removido, trocado, ou ordem dos parâmetros foi modificada.
-	 * @param version1
-	 * @param version2
-	 */
-	private void findChangedParametersMethods(APIVersion version1, APIVersion version2) {
-		
-		for(TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()){
-			if(version2.containsAccessibleType(typeVersion1)){
-				//Percorre os métodos da classe.
-				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
-					//Se era um método acessível na versão anterior, e não foi encontrado na versão atual, pode ser uma mudança de parâmetros.
-					if(this.isMethodAcessible(methodVersion1) && (version2.findMethodByNameAndParameters(methodVersion1, typeVersion1) == null)){
-						//Busca métodos na versão 2 com o mesmo nome.
-						ArrayList<MethodDeclaration> methodsVersion2 = version2.getAllEqualMethodsByName(methodVersion1, typeVersion1);
-						for(MethodDeclaration methodVersion2: methodsVersion2){
-							if(this.isMethodAcessible(methodVersion2) && version1.getEqualVersionMethod(methodVersion2, typeVersion1) == null && ComparatorMethod.isDiffByParameters(methodVersion1, methodVersion2)){
-								String category = this.isDeprecated(methodVersion1, typeVersion1)? this.CATEGORY_METHOD_CHANGED_PARAMETERS_DEPRECIATED: this.CATEGORY_METHOD_CHANGED_PARAMETERS;
-								category += UtilTools.getSufixJavadoc(methodVersion2);
-								Boolean isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
-								String description = isBreakingChange ? this.description.parameter(this.getFullNameMethod(methodVersion1), UtilTools.getPath(typeVersion1)): "";
-								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion1), category, isBreakingChange, description));
+								String description = this.description.exception(this.getFullNameMethod(methodVersion1), UtilTools.getPath(typeVersion1));
+								this.addChange(typeVersion1, methodVersion1, Category.METHOD_CHANGE_EXCEPTION_LIST, true, description);
 							}
 						}
 					}
@@ -193,7 +257,6 @@ public class MethodDiff {
 	 * @param version2
 	 */
 	private void findChangedReturnTypeMethods(APIVersion version1, APIVersion version2) {
-		
 		for(TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()){
 			if(version2.containsAccessibleType(typeVersion1)){
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
@@ -202,11 +265,8 @@ public class MethodDiff {
 						if(methodVersion2 == null){//Método não foi encontrado (com mesmo nome, parâmtros e tipo de retorno).
 							methodVersion2 = version2.findMethodByNameAndParameters(methodVersion1, typeVersion1);
 							if(methodVersion2 != null){//Existe um método com mesmo nome e parâmetros, mas tipo de retorno diferente.
-								String category = this.isDeprecated(methodVersion1, typeVersion1)? this.CATEGORY_METHOD_CHANGED_RETURN_TYPE_DEPRECIATED: this.CATEGORY_METHOD_CHANGED_RETURN_TYPE;
-								category += UtilTools.getSufixJavadoc(methodVersion2);
-								Boolean isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
-								String description = isBreakingChange ? this.description.returnType(this.getFullNameMethod(methodVersion1), UtilTools.getPath(typeVersion1)): "";
-								this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion1), category, isBreakingChange, description));
+								String description = this.description.returnType(this.getFullNameMethod(methodVersion1), UtilTools.getPath(typeVersion1));
+								this.addChange(typeVersion1, methodVersion1, Category.METHOD_CHANGE_RETURN_TYPE, true, description);
 							}
 						}
 					}
@@ -223,29 +283,20 @@ public class MethodDiff {
 	 * @param methodVersion2
 	 */
 	private void checkGainOrLostVisibility(TypeDeclaration typeVersion1, MethodDeclaration methodVersion1, MethodDeclaration methodVersion2){
-		
 		if(methodVersion2 != null && methodVersion1!=null){//Se o método ainda existe na versão atual.
-			
 			String visibilityMethod1 = UtilTools.getVisibility(methodVersion1);
 			String visibilityMethod2 = UtilTools.getVisibility(methodVersion2);
-			
 			if(!visibilityMethod1.equals(visibilityMethod2)){ // Se o modificador de acesso foi alterado.
-				String category = "";
-				Boolean isBreakingChange = false;
-				
+				String description = this.description.visibility(this.getFullNameMethod(methodVersion2), UtilTools.getPath(typeVersion1), visibilityMethod1, visibilityMethod2);
 				//Breaking change: public --> qualquer modificador de acesso, protected --> qualquer modificador de acesso, exceto public.
 				if(this.isMethodAcessible(methodVersion1) && !UtilTools.isVisibilityPublic(methodVersion2)){
-					category = this.isDeprecated(methodVersion1, typeVersion1)? this.CATEGORY_METHOD_LOST_VISIBILITY_DEPRECIATED: this.CATEGORY_METHOD_LOST_VISIBILITY;
-					isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)? false: true;
+					this.addChange(typeVersion1, methodVersion2, Category.METHOD_LOST_VISIBILITY, true, description);
 				}
 				else{
 					//non-breaking change: private ou default --> qualquer modificador de acesso, demais casos.
-					category = UtilTools.isVisibilityDefault(methodVersion1) && UtilTools.isVisibilityPrivate(methodVersion2)? this.CATEGORY_METHOD_LOST_VISIBILITY: this.CATEGORY_METHOD_GAIN_VISIBILITY;
-					isBreakingChange = false;
+					Category category = UtilTools.isVisibilityDefault(methodVersion1) && UtilTools.isVisibilityPrivate(methodVersion2)? Category.METHOD_LOST_VISIBILITY: Category.METHOD_GAIN_VISIBILITY;
+					this.addChange(typeVersion1, methodVersion2, category, false, description);
 				}
-				category += UtilTools.getSufixJavadoc(methodVersion2);
-				String description = isBreakingChange ? this.description.visibility(this.getFullNameMethod(methodVersion2), UtilTools.getPath(typeVersion1), visibilityMethod1, visibilityMethod2): "";
-				this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(typeVersion1), this.getFullNameMethod(methodVersion2), category, isBreakingChange, description));
 			}
 		}
 	}
@@ -282,8 +333,7 @@ public class MethodDiff {
 				if(this.isMethodAcessible(methodVersion2) && this.isDeprecated(methodVersion2, typeVersion2)){
 					MethodDeclaration methodInVersion1 = version1.findMethodByNameAndParametersAndReturn(methodVersion2, typeVersion2);
 					if(methodInVersion1 == null || !this.isDeprecated(methodInVersion1, version1.getVersionAccessibleType(typeVersion2))){
-						String category =  this.CATEGORY_METHOD_DEPRECIATED +  UtilTools.getSufixJavadoc(methodVersion2);
-						this.listBreakingChange.add(new BreakingChange(typeVersion2.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodVersion2), category,false));
+						this.addChange(typeVersion2, methodVersion2, Category.METHOD_DEPRECIATE, false, "");
 					}
 				}
 			}
@@ -297,19 +347,17 @@ public class MethodDiff {
 	 * @param version1
 	 * @param version2
 	 */
-	private void findRemovedMethods(APIVersion version1, APIVersion version2) {
-		
+	private void findRemoveAndRefactoringMethods(APIVersion version1, APIVersion version2) {
 		for (TypeDeclaration typeInVersion1 : version1.getApiAcessibleTypes()) {
 			if(version2.containsAccessibleType(typeInVersion1)){//Se a classe não foi removida.
 				for (MethodDeclaration methodInVersion1 : typeInVersion1.getMethods()) {
 					if(this.isMethodAcessible(methodInVersion1)){
 						MethodDeclaration methodInVersion2 = version2.findMethodByNameAndParameters(methodInVersion1, typeInVersion1);
 						if(methodInVersion2 == null){ //Se método foi removido na última versão.
-							String category = this.isDeprecated(methodInVersion1, typeInVersion1)? this.CATEGORY_METHOD_REMOVED_DEPRECIATED: this.CATEGORY_METHOD_REMOVED;
-							category += UtilTools.getSufixJavadoc(methodInVersion1);
-							Boolean isBreakingChange = this.isDeprecated(methodInVersion1, typeInVersion1)? false: true;
-							String description = isBreakingChange ? this.description.remove(this.getFullNameMethod(methodInVersion1), UtilTools.getPath(typeInVersion1)): "";
-							this.listBreakingChange.add(new BreakingChange(typeInVersion1.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodInVersion1), category, isBreakingChange, description));
+							Boolean refactoring = this.checkAndProcessRefactoring(methodInVersion1, typeInVersion1);
+							if(!refactoring){
+								this.processRemoveMethod(methodInVersion1, typeInVersion1);
+							}
 						}
 					}
 				}
@@ -324,29 +372,20 @@ public class MethodDiff {
 	 * @param version2
 	 */
 	private void findAddedMethods(APIVersion version1, APIVersion version2) {
-		
 		for (TypeDeclaration typeInVersion2 : version2.getApiAcessibleTypes()) {
 			if(version1.containsType(typeInVersion2)){//Se type já existia, verifica quais são os novos métodos.
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){
 					if(this.isMethodAcessible(methodInVersion2)){
 						MethodDeclaration methodInVersion1 = version1.findMethodByNameAndParameters(methodInVersion2, typeInVersion2);
-						if(methodInVersion1 == null){
-							String category = this.CATEGORY_METHOD_ADDED + UtilTools.getSufixJavadoc(methodInVersion1);
-							this.listBreakingChange.add(new BreakingChange(typeInVersion2.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodInVersion2), category, false));
+						String fullNameAndPathMethodVersion2 = this.getFullNameMethodAndPath(methodInVersion2, typeInVersion2);
+						if(methodInVersion1 == null && !this.methodsWithPathChanged.contains(fullNameAndPathMethodVersion2)){
+							this.addChange(typeInVersion2, methodInVersion2, Category.METHOD_ADD, false, "");
 						}
-					}
-				}
-			} else {
-				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){//Se type foi adicionado.
-					if(this.isMethodAcessible(methodInVersion2)){
-						String category = this.CATEGORY_METHOD_ADDED + UtilTools.getSufixJavadoc(methodInVersion2);
-						this.listBreakingChange.add(new BreakingChange(typeInVersion2.resolveBinding().getQualifiedName(), this.getFullNameMethod(methodInVersion2), category, false));
 					}
 				}
 			}
 		}
 	}
-	
 	
 	/**
 	 * Compara se dois métodos tem ou não o modificador "final".
@@ -359,25 +398,18 @@ public class MethodDiff {
 		if((UtilTools.isFinal(methodVersion1) && UtilTools.isFinal(methodVersion2)) || ((!UtilTools.isFinal(methodVersion1) && !UtilTools.isFinal(methodVersion2)))){
 			return;
 		}
-		String category = "";
-		Boolean isBreakingChange = false;
-		Boolean isGain = false;
+		String nameClass = UtilTools.getPath(typeVersion1);
+		String nameMethod = this.getFullNameMethod(methodVersion2);
 		//Se ganhou o modificador "final"
 		if((!UtilTools.isFinal(methodVersion1) && UtilTools.isFinal(methodVersion2))){
-			category = this.isDeprecated(methodVersion1, typeVersion1)?this.CATEGORY_METHOD_GAIN_MODIFIER_FINAL_DEPRECIATED:CATEGORY_METHOD_GAIN_MODIFIER_FINAL;
-			isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)?false:true;
-			isGain = true;
+			String description = this.description.modifierFinal(nameMethod, nameClass, true);
+			this.addChange(typeVersion1, methodVersion1, Category.METHOD_GAIN_MODIFIER_FINAL, true, description);
 		}
 		else{
 			//Se perdeu o modificador "final"
-			category = this.CATEGORY_METHOD_LOST_MODIFIER_FINAL;
-			isBreakingChange = false;
+			String description = this.description.modifierFinal(nameMethod, nameClass, false);
+			this.addChange(typeVersion1, methodVersion1, Category.METHOD_LOST_MODIFIER_FINAL, false, description);
 		}
-		category += UtilTools.getSufixJavadoc(methodVersion2);
-		String nameClass = UtilTools.getPath(typeVersion1);
-		String nameMethod = this.getFullNameMethod(methodVersion2);
-		String description = isBreakingChange ? this.description.modifierFinal(nameMethod, nameClass, isGain): "";
-		this.listBreakingChange.add(new BreakingChange(nameClass, nameMethod, category, isBreakingChange, description));
 	}
 	
 	/**
@@ -391,25 +423,18 @@ public class MethodDiff {
 		if((UtilTools.isStatic(methodVersion1) && UtilTools.isStatic(methodVersion2)) || ((!UtilTools.isStatic(methodVersion1) && !UtilTools.isStatic(methodVersion2)))){
 			return;
 		}
-		String category = "";
-		Boolean isBreakingChange = false;
-		Boolean isGain = false;
+		String nameClass = UtilTools.getPath(typeVersion1);
+		String nameMethod = this.getFullNameMethod(methodVersion2);
 		//Se ganhou o modificador "static"
 		if((!UtilTools.isStatic(methodVersion1) && UtilTools.isStatic(methodVersion2))){
-			category = CATEGORY_METHOD_GAIN_MODIFIER_STATIC;
-			isBreakingChange = false;
-			isGain = true;
+			String description = this.description.modifierStatic(nameMethod, nameClass, true);
+			this.addChange(typeVersion1, methodVersion1, Category.METHOD_GAIN_MODIFIER_STATIC, false, description);
 		}
 		else{
 			//Se perdeu o modificador "static"
-			category = this.isDeprecated(methodVersion1, typeVersion1)?this.CATEGORY_METHOD_LOST_MODIFIER_STATIC_DEPRECIATED:CATEGORY_METHOD_LOST_MODIFIER_STATIC;
-			isBreakingChange = this.isDeprecated(methodVersion1, typeVersion1)?false:true;
+			String description = this.description.modifierStatic(nameMethod, nameClass, false);
+			this.addChange(typeVersion1, methodVersion1, Category.METHOD_LOST_MODIFIER_STATIC, true, description);
 		}
-		category += UtilTools.getSufixJavadoc(methodVersion2);
-		String nameClass = UtilTools.getPath(typeVersion1);
-		String nameMethod = this.getFullNameMethod(methodVersion2);
-		String description = isBreakingChange ? this.description.modifierStatic(nameMethod, nameClass, isGain) : "";
-		this.listBreakingChange.add(new BreakingChange(nameClass, nameMethod, category, isBreakingChange, description));
 	}
 	
 	/**
@@ -447,6 +472,33 @@ public class MethodDiff {
 			nameMethod = modifiersMethod + returnMethod + methodVersion.getName() + "(" + parametersMethod + ")";
 		}
 		return nameMethod;
+	}
+	
+	/**
+	 * Retorna Type + Método. Exemplo: org.felines.Tiger#setAge(int)
+	 * @param method
+	 * @param type
+	 * @return
+	 */
+	private String getFullNameMethodAndPath(final MethodDeclaration method, final TypeDeclaration type){
+		String nameMethod = "";
+		if(method != null){
+			nameMethod = UtilTools.getPath(type) + "#" + method.getName() + "(" + this.getSignatureMethod(method) + ")";
+		}
+		return nameMethod;
+	}
+	
+	private String getSignatureMethod(final MethodDeclaration method){
+		List<String> signatureList = new ArrayList<String>();
+		String signature = "";
+		if(method != null){
+			for(Object p : method.parameters()){
+				String[] parameters = p.toString().split(" ");
+				signatureList.add(parameters[parameters.length - 2]);
+			}
+			signature = StringUtils.join(signatureList, ", ");
+		}
+		return signature; 
 	}
 
 }

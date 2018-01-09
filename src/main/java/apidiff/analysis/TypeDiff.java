@@ -1,70 +1,147 @@
 package apidiff.analysis;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import apidiff.analysis.description.MethodDescription;
 import apidiff.analysis.description.TypeDescription;
+import apidiff.enums.Category;
 import apidiff.util.UtilTools;
 import apidiff.visitor.APIVersion;
+import refdiff.core.api.RefactoringType;
+import refdiff.core.rm2.model.refactoring.SDRefactoring;
 
 public class TypeDiff {
 	
-	private final String CATEGORY_TYPE_REMOVED_DEPRECIATED = "TYPE REMOVED DEPRECIATED"; //non-breaking change
-	private final String CATEGORY_TYPE_REMOVED = "TYPE REMOVED"; //breaking change
-	
-	private final String CATEGORY_TYPE_LOST_VISIBILIT_DEPRECIATED = "TYPE LOST VISIBILIT DEPRECIATED"; //non-breaking change
-	private final String CATEGORY_TYPE_LOST_VISIBILITY = "TYPE LOST VISIBILIT"; //breaking change
-	private final String CATEGORY_TYPE_GAIN_VISIBILITY = "TYPE GAIN VISIBILITY"; //non-breaking change
-	
-	private final String CATEGORY_TYPE_LOST_MODIFIER_FINAL = "TYPE LOST MODIFIER FINAL"; //non-breaking change
-	private final String CATEGORY_TYPE_GAIN_MODIFIER_FINAL = "TYPE GAIN MODIFIER FINAL"; //breaking change
-	private final String CATEGORY_TYPE_GAIN_MODIFIER_FINAL_DEPRECIATED = "TYPE GAIN MODIFIER FINAL DEPRECIATED"; //non-breaking change
-	
-	private final String CATEGORY_TYPE_LOST_MODIFIER_STATIC = "TYPE LOST MODIFIER STATIC"; //breaking change
-	private final String CATEGORY_TYPE_LOST_MODIFIER_STATIC_DEPRECIATED = "TYPE LOST MODIFIER STATIC DEPRECIATED"; //non-breaking change
-	private final String CATEGORY_TYPE_GAIN_MODIFIER_STATIC = "TYPE GAIN MODIFIER STATIC"; //non-breaking change
-	
-	private final String CATEGORY_TYPE_ADD = "TYPE ADDED"; //non-breaking change
-	
-	private final String CATEGORY_TYPE_DEPRECIATED = "TYPE DEPRECIATED"; //non-breaking change
-	
-	private final String CATEGORY_SUPER_TYPE_CHANGED_DEPRECIATED = "SUPER TYPE CHANGED DEPRECIATED"; //non-breaking change
-	private final String CATEGORY_SUPER_TYPE_CHANGED = "SUPER TYPE CHANGED"; //breaking changes
-	private final String CATEGORY_SUPER_TYPE_REMOVED_DEPRECIATED = "SUPER TYPE REMOVED DEPRECIATED"; //non-breaking change
-	private final String CATEGORY_SUPER_TYPE_REMOVED = "SUPER TYPE REMOVED"; //breaking change
-	private final String CATEGORY_SUPER_TYPE_ADD = "SUPER TYPE ADDED"; //non-breaking change
-	private final String CATEGORY_SUPER_TYPE_ADD_DEPRECIATED = "SUPER TYPE ADDED DEPRECIATED"; //non-breaking change
-	
-	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
+	private List<Change> listChange = new ArrayList<Change>();
 	
 	private Logger logger = LoggerFactory.getLogger(TypeDiff.class);
 	
 	private TypeDescription description = new TypeDescription();
-
+	
+	private APIVersion version1;
+	
+	private APIVersion version2;
+	
+	private Map<RefactoringType, List<SDRefactoring>> refactorings = new HashMap<RefactoringType, List<SDRefactoring>>();
+	
+	private List<String> typesWithPathChanged = new ArrayList<String>();
+	
 	/**
 	 * Calculates the diff for classes
 	 * @param version1 older version of an API
 	 * @param version2 newer version of an API
 	 */
-	public Result calculateDiff(final APIVersion version1, final APIVersion version2) {
-		
+	public List<Change> detectChange(final APIVersion version1, final APIVersion version2, final Map<RefactoringType, List<SDRefactoring>> refactorings) {
+		this.version1 = version1;
+		this.version2 = version2;
+		this.refactorings = refactorings;
 		this.logger.info("Processing Types ...");
+		this.findRemovedAndRenameAndMoveTypes();
+		this.findAddedTypes();
+		this.findChangedVisibilityTypes();
+		this.findAddTypeDeprecate();
+		this.changedSuperTypes();
+		this.findChangedFinalAndStatic();
+		return this.listChange;
+	}
+	
+	private void addChange(final AbstractTypeDeclaration type, Category category, Boolean isBreakingChange, final String description){
+		Change change = new Change();
+		change.setJavadoc(UtilTools.containsJavadoc(type));
+		change.setDepreciated(this.isDeprecated(type));
+		change.setBreakingChange(this.isDeprecated(type) ? false : isBreakingChange);
+		change.setPath(UtilTools.getPath(type));
+		change.setStruture(type.getName().toString());
+		change.setCategory(category);
+		change.setDescription(description);
+		this.listChange.add(change);
+	}
+	
+	private Boolean processRenameType(final AbstractTypeDeclaration type){
+		List<SDRefactoring> listRenames = this.refactorings.get(RefactoringType.RENAME_CLASS);
+		if(listRenames != null){
+			for(SDRefactoring ref : listRenames){
+				if(UtilTools.getPath(type).equals(ref.getEntityBefore().fullName())){
+					String description = this.description.rename(ref.getEntityBefore().fullName(), ref.getEntityAfter().fullName());
+					this.typesWithPathChanged.add(ref.getEntityAfter().fullName());
+					this.addChange(type, Category.TYPE_RENAME, true, description);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private Boolean processMoveType(final AbstractTypeDeclaration type){
+		List<SDRefactoring> listRenames = this.refactorings.get(RefactoringType.MOVE_CLASS);
+		if(listRenames != null){
+			for(SDRefactoring ref : listRenames){
+				if(UtilTools.getPath(type).equals(ref.getEntityBefore().fullName())){
+					String description = this.description.move(ref.getEntityBefore().fullName(), ref.getEntityAfter().fullName());
+					this.typesWithPathChanged.add(ref.getEntityAfter().fullName());
+					this.addChange(type, Category.TYPE_MOVE, true, description);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private Boolean processMoveAndRenameType(final AbstractTypeDeclaration type){
+		List<SDRefactoring> listRenames = this.refactorings.get(RefactoringType.MOVE_RENAME_CLASS);
+		if(listRenames != null){
+			for(SDRefactoring ref : listRenames){
+				if(UtilTools.getPath(type).equals(ref.getEntityBefore().fullName())){
+					String description = this.description.moveAndRename(ref.getEntityBefore().fullName(), ref.getEntityAfter().fullName());
+					this.typesWithPathChanged.add(ref.getEntityAfter().fullName());
+					this.addChange(type, Category.TYPE_MOVE_AND_RENAME, true, description);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private Boolean processExtractSuperType(final AbstractTypeDeclaration type){
+		List<SDRefactoring> listRenames = new ArrayList<SDRefactoring>();
 		
-		this.findRemovedTypes(version1, version2);
-		this.findAddedTypes(version1, version2);
-		this.findChangedVisibilityTypes(version1, version2);
-		this.findAddedDeprecated(version1, version2);
-		this.changedSuperTypes(version1, version2);
-		this.findChangedFinalAndStatic(version1, version2);
+		if(this.refactorings.containsKey(RefactoringType.EXTRACT_SUPERCLASS)){
+			listRenames.addAll(this.refactorings.get(RefactoringType.EXTRACT_SUPERCLASS));
+		}
+		if(this.refactorings.containsKey(RefactoringType.EXTRACT_INTERFACE)){
+			listRenames.addAll(this.refactorings.get(RefactoringType.EXTRACT_INTERFACE));
+		}
 		
-		Result result = new Result();
-		result.setListBreakingChange(this.listBreakingChange);
-		return result;
+		if(listRenames != null){
+			for(SDRefactoring ref : listRenames){
+				if(UtilTools.getPath(type).equals(ref.getEntityBefore().fullName())){
+					this.typesWithPathChanged.add(ref.getEntityAfter().fullName());
+					this.addChange(type, Category.TYPE_EXTRACT_SUPERTYPE, false, ""); //TODO: create description
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	protected void processRemoveType(final AbstractTypeDeclaration type){
+		String description = this.description.remove(this.getSimpleNameClass(type), this.getNamePackage(type));
+		this.addChange(type, Category.TYPE_REMOVE, true, description);
+	}
+	
+	protected Boolean checkAndProcessRefactoring(final AbstractTypeDeclaration type){
+		Boolean rename = this.processRenameType(type);
+		Boolean move = this.processMoveType(type);
+		Boolean moveAndRename = this.processMoveAndRenameType(type);
+		Boolean extract = this.processExtractSuperType(type);
+		return rename || move || moveAndRename || extract;
 	}
 
 	/**
@@ -79,37 +156,30 @@ public class TypeDiff {
 	 * @param version1
 	 * @param version2
 	 */
-	private void changedSuperTypes(APIVersion version1, APIVersion version2) {
-		for(TypeDeclaration accessibleTypeVersion1 : version1.getApiAcessibleTypes()){
-			TypeDeclaration accessibleTypeVersion2 = version2.getVersionAccessibleType(accessibleTypeVersion1);
+	private void changedSuperTypes() {
+		for(AbstractTypeDeclaration accessibleTypeVersion1 : version1.getTypesPublicAndProtected()){
+			AbstractTypeDeclaration accessibleTypeVersion2 = version2.getVersionAccessibleType(accessibleTypeVersion1);
 			if(accessibleTypeVersion2 != null){
 				String super1 = this.getNameSuperClass(accessibleTypeVersion1);  
 				String super2 = this.getNameSuperClass(accessibleTypeVersion2);
 				
 				if(super1 != null && super2 != null){
-					Boolean isBreakingChange = !this.isDeprecated(accessibleTypeVersion1);
-					
+					Boolean isBreakingChange = true;
 					String nameClassComplete = UtilTools.getPath(accessibleTypeVersion2);
 					
 					//Se tinha super classe, e foi removida.
 					if(this.containsSuperClass(accessibleTypeVersion1) && !this.containsSuperClass(accessibleTypeVersion2)){
-						String category = this.isDeprecated(accessibleTypeVersion1)? this.CATEGORY_SUPER_TYPE_REMOVED_DEPRECIATED: this.CATEGORY_SUPER_TYPE_REMOVED;
-						category += UtilTools.getSufixJavadoc(accessibleTypeVersion2);
-						String description = isBreakingChange ? this.description.removeSuperClass(nameClassComplete, super1) : "";
-						this.listBreakingChange.add(new BreakingChange(nameClassComplete, accessibleTypeVersion1.getName().toString(), category, isBreakingChange, description));
+						String description = this.description.removeSuperClass(nameClassComplete, super1);
+						this.addChange(accessibleTypeVersion2, Category.TYPE_REMOVE_SUPERCLASS, isBreakingChange, description);
 					}
 					//Se não tinha super classe, e foi adicionada.
 					if(!this.containsSuperClass(accessibleTypeVersion1) && this.containsSuperClass(accessibleTypeVersion2)){
-						String category = this.isDeprecated(accessibleTypeVersion1)? this.CATEGORY_SUPER_TYPE_ADD_DEPRECIATED: this.CATEGORY_SUPER_TYPE_ADD;
-						category += UtilTools.getSufixJavadoc(accessibleTypeVersion2);
-						this.listBreakingChange.add(new BreakingChange(nameClassComplete, accessibleTypeVersion2.getName().toString(), category, false));
+						this.addChange(accessibleTypeVersion2, Category.TYPE_ADD_SUPER_CLASS, false, "");
 					}
 					//Se tinha super classe, e foi modificada.
 					if(this.containsSuperClass(accessibleTypeVersion1) && this.containsSuperClass(accessibleTypeVersion2) && !super1.equals(super2)){
-						String category = this.isDeprecated(accessibleTypeVersion1)? this.CATEGORY_SUPER_TYPE_CHANGED_DEPRECIATED: this.CATEGORY_SUPER_TYPE_CHANGED;
-						category += UtilTools.getSufixJavadoc(accessibleTypeVersion2);
-						String description = isBreakingChange ? this.description.changeSuperClass(nameClassComplete, super1, super2) : "";
-						this.listBreakingChange.add(new BreakingChange(nameClassComplete , accessibleTypeVersion2.getName().toString(), category, isBreakingChange, description));
+						String description = this.description.changeSuperClass(nameClassComplete, super1, super2);
+						this.addChange(accessibleTypeVersion2, Category.TYPE_CHANGE_SUPERCLASS, false, description);
 					}
 				}
 			}
@@ -121,23 +191,13 @@ public class TypeDiff {
 	 * @param version1
 	 * @param version2
 	 */
-	private void findAddedDeprecated(APIVersion version1, APIVersion version2) {
-		
-		for(TypeDeclaration accessibleTypeVersion1 : version1.getApiAcessibleTypes()){
-			TypeDeclaration accessibleTypeVersion2 = version2.getVersionAccessibleType(accessibleTypeVersion1);
+	private void findAddTypeDeprecate() {
+		for(AbstractTypeDeclaration accessibleTypeVersion1 : version1.getTypesPublicAndProtected()){
+			AbstractTypeDeclaration accessibleTypeVersion2 = version2.getVersionAccessibleType(accessibleTypeVersion1);
 			if(accessibleTypeVersion2 != null){
 				if(!this.isDeprecated(accessibleTypeVersion1) && this.isDeprecated(accessibleTypeVersion2)){
-					String category = this.CATEGORY_TYPE_DEPRECIATED +  UtilTools.getSufixJavadoc(accessibleTypeVersion2);
-					this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(accessibleTypeVersion1), accessibleTypeVersion1.getName().toString(), category, false));
+					this.addChange(accessibleTypeVersion1, Category.TYPE_DEPRECIATE, false, "");
 				}
-			}
-		}
-
-		//Se type não existia na versão 1, e foi adicionado na versão 2 já depreciado.
-		for(TypeDeclaration accessibleTypeVersion2 : version2.getApiAcessibleTypes()){
-			if(!version1.containsAccessibleType(accessibleTypeVersion2) && this.isDeprecated(accessibleTypeVersion2)){
-				String category = this.CATEGORY_TYPE_DEPRECIATED + UtilTools.getSufixJavadoc(accessibleTypeVersion2);
-				this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(accessibleTypeVersion2), accessibleTypeVersion2.getName().toString(), category, false));
 			}
 		}
 	}
@@ -149,17 +209,15 @@ public class TypeDiff {
 	 * @param type
 	 * @return
 	 */
-	private TypeDeclaration findTypeDeclarationInList(List<TypeDeclaration> list, TypeDeclaration type){
+	private AbstractTypeDeclaration findTypeDeclarationInList(List<AbstractTypeDeclaration> list, AbstractTypeDeclaration type){
 		for(int i=0; i< list.size(); i++){
-			TypeDeclaration typeDeclaration = list.get(i);
+			AbstractTypeDeclaration typeDeclaration = list.get(i);
 			if(UtilTools.getPath(type).equals(UtilTools.getPath(typeDeclaration))){
 				return typeDeclaration;
 			}
 		}
 		return null;
 	}
-	
-
 	
 	/**
 	 * Busca classes que tiveram perda ou ganho de visibilidade.
@@ -169,36 +227,26 @@ public class TypeDiff {
 	 * @param version1
 	 * @param version2
 	 */
-	private void findChangedVisibilityTypes(APIVersion version1, APIVersion version2) {
-		List<TypeDeclaration> listTypesVersion1 = version1.getAllTypes();
-		List<TypeDeclaration> listTypesVersion2 = version2.getAllTypes();
-		
+	private void findChangedVisibilityTypes() {
+		List<AbstractTypeDeclaration> listTypesVersion1 = version1.getAllTypes();
+		List<AbstractTypeDeclaration> listTypesVersion2 = version2.getAllTypes();
 		//Percorre types da versão anterior.
-		for(TypeDeclaration type1: listTypesVersion1){
-			TypeDeclaration type2 = this.findTypeDeclarationInList(listTypesVersion2, type1);
+		for(AbstractTypeDeclaration type1: listTypesVersion1){
+			AbstractTypeDeclaration type2 = this.findTypeDeclarationInList(listTypesVersion2, type1);
 			if(type2 != null){
 				String visibilityType1 = UtilTools.getVisibility(type1);
 				String visibilityType2 = UtilTools.getVisibility(type2);
 				if(!visibilityType1.equals(visibilityType2)){ //Se visibilidade mudou, verifica se houve perda ou ganho.
-					String category = "";
-					Boolean isBreakingChange = false;
+					String description = this.description.visibility(this.getSimpleNameClass(type2), this.getNamePackage(type2), visibilityType1, visibilityType2);
 					//Breaking change: public --> qualquer modificador de acesso, protected --> qualquer modificador de acesso, exceto public.
 					if(UtilTools.isVisibilityPublic(type1) || (UtilTools.isVisibilityProtected(type1) && !UtilTools.isVisibilityPublic(type2))){
-						category = this.isDeprecated(type1)? this.CATEGORY_TYPE_LOST_VISIBILIT_DEPRECIATED: this.CATEGORY_TYPE_LOST_VISIBILITY;
-						category += UtilTools.getSufixJavadoc(type2);
-						isBreakingChange = this.isDeprecated(type1)? false: true;
+						this.addChange(type2, Category.TYPE_LOST_VISIBILITY, true, description);
 					}
 					else{
 						//non-breaking change: private ou default --> qualquer modificador de acesso, demais casos.
-						category = UtilTools.isVisibilityDefault(type1) && UtilTools.isVisibilityPrivate(type2)? this.CATEGORY_TYPE_LOST_VISIBILITY: this.CATEGORY_TYPE_GAIN_VISIBILITY;
-						category += UtilTools.getSufixJavadoc(type2);
-						isBreakingChange = false;
+						Category category = UtilTools.isVisibilityDefault(type1) && UtilTools.isVisibilityPrivate(type2)? Category.TYPE_LOST_VISIBILITY: Category.TYPE_GAIN_VISIBILITY;
+						this.addChange(type2, category, false, description);
 					}
-					String nameClassComplete = UtilTools.getPath(type2);
-					String namePackage = this.getNamePackage(type2);
-					String nameClassSimple = this.getSimpleNameClass(type2);
-					String description = isBreakingChange ? this.description.visibility(nameClassSimple, namePackage, visibilityType1, visibilityType2) : "";
-					this.listBreakingChange.add(new BreakingChange(nameClassComplete, type2.getName().toString(), category, isBreakingChange, description));
 				}
 			}
 		}
@@ -209,32 +257,31 @@ public class TypeDiff {
 	 * @param version1
 	 * @param version2
 	 */
-	private void findAddedTypes(APIVersion version1, APIVersion version2) {
+	private void findAddedTypes() {
 		//Busca types na segunda versão que não estão na primeira.
-		List<TypeDeclaration> listTypesVersion2 = UtilTools.getAcessibleTypes(version2);
-		for (TypeDeclaration typeVersion2 : listTypesVersion2) {
+		List<AbstractTypeDeclaration> listTypesVersion2 = UtilTools.getAcessibleTypes(version2);
+		for (AbstractTypeDeclaration typeVersion2 : listTypesVersion2) {
 			//Busca entre os types acessíveis e não acessíveis porque pode ser um type que já existia e ganhou visibilidade.
-			if(!version1.containsAccessibleType(typeVersion2) && !version1.containsNonAccessibleType(typeVersion2)){
-				this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(typeVersion2), typeVersion2.getName().toString(), this.CATEGORY_TYPE_ADD + UtilTools.getSufixJavadoc(typeVersion2), false));
+			if(!version1.containsAccessibleType(typeVersion2) && !version1.containsNonAccessibleType(typeVersion2) && !this.typesWithPathChanged.contains(UtilTools.getPath(typeVersion2))){
+				this.addChange(typeVersion2, Category.TYPE_ADD, false, "");
 			}
 		}
 	}
 
 	/**
-	 * Busca classes que foram removidas. 
+	 * Busca classes que foram removidas, renomeadas ou movidas. 
 	 * Se a classe removida estava depreciada na versão anterior é uma non-breaking change [CATEGORY_REMOVED_DEPRECIATED_TYPE].
 	 * Caso contrário é uma breaking change [CATEGORY_REMOVED_TYPE] 
 	 * @param version1
 	 * @param version2
 	 */
-	private void findRemovedTypes(APIVersion version1, APIVersion version2) {
-		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
+	private void findRemovedAndRenameAndMoveTypes() {
+		for (AbstractTypeDeclaration type : version1.getTypesPublicAndProtected()) {
 			if(!version2.containsAccessibleType(type) && !version2.containsNonAccessibleType(type)){
-				String category = this.isDeprecated(type)? this.CATEGORY_TYPE_REMOVED_DEPRECIATED: this.CATEGORY_TYPE_REMOVED;
-				category += UtilTools.getSufixJavadoc(type);
-				Boolean isBreakingChange = this.isDeprecated(type)? false: true;
-				String description = isBreakingChange ? this.description.remove(this.getSimpleNameClass(type), this.getNamePackage(type)) : "";
-				this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(type), type.getName().toString(), category, isBreakingChange, description));
+				Boolean refactoring = this.checkAndProcessRefactoring(type);
+				if(!refactoring){
+					this.processRemoveType(type);
+				}
 			}
 		}
 	}
@@ -244,8 +291,17 @@ public class TypeDiff {
 	 * @param type
 	 * @return
 	 */
-	private Boolean isDeprecated(TypeDeclaration type){
+	private Boolean isDeprecated(final AbstractTypeDeclaration type){
 		return (type != null && type.resolveBinding() != null && type.resolveBinding().isDeprecated()) ? true: false;
+	}
+	
+	/**
+	 * Se o type está depreciado, retorna o sufixo.
+	 * @param node
+	 * @return
+	 */
+	private String getSufixDepreciated(final TypeDeclaration type){
+		return this.isDeprecated(type) ? " DEPRECIATED" : "";
 	}
 	
 	/**
@@ -253,7 +309,7 @@ public class TypeDiff {
 	 * @param type
 	 * @return
 	 */
-	private String getNameSuperClass(TypeDeclaration type){
+	private String getNameSuperClass(AbstractTypeDeclaration type){
 		if(type.resolveBinding() != null && type.resolveBinding().getSuperclass() != null){
 			return type.resolveBinding().getSuperclass().getQualifiedName().toString();
 		}
@@ -265,11 +321,10 @@ public class TypeDiff {
 	 * @param type
 	 * @return
 	 */
-	private boolean containsSuperClass(TypeDeclaration type){
+	private boolean containsSuperClass(AbstractTypeDeclaration type){
 		String nameSuperClass = this.getNameSuperClass(type);
 		return (nameSuperClass != null && !"java.lang.Object".equals(nameSuperClass))?true:false;
 	}
-	
 	
 	/**
 	 * Compara se dois métodos tem ou não o modificador "final".
@@ -281,28 +336,23 @@ public class TypeDiff {
 	 * @param methodInVersion1
 	 * @param methodInVersion2
 	 */
-	private void diffModifierFinal(TypeDeclaration typeVersion1, TypeDeclaration typeVersion2){
+	private void diffModifierFinal(AbstractTypeDeclaration typeVersion1, AbstractTypeDeclaration typeVersion2){
 		//Se não houve mudança no identificador final.
 		if((UtilTools.isFinal(typeVersion1) && UtilTools.isFinal(typeVersion2)) || ((!UtilTools.isFinal(typeVersion1) && !UtilTools.isFinal(typeVersion2)))){
 			return;
 		}
-		String category = "";
-		Boolean isBreakingChange = false;
-		Boolean isGain = false;
 		//Se ganhou o modificador "final"
 		if((!UtilTools.isFinal(typeVersion1) && UtilTools.isFinal(typeVersion2))){
-			category = this.isDeprecated(typeVersion1)?this.CATEGORY_TYPE_GAIN_MODIFIER_FINAL_DEPRECIATED:CATEGORY_TYPE_GAIN_MODIFIER_FINAL;
-			isBreakingChange = this.isDeprecated(typeVersion1)?false:true;
-			isGain = true;
+			String description = this.description.modifierFinal(this.getSimpleNameClass(typeVersion2), this.getNamePackage(typeVersion2), true);
+			System.out.println(typeVersion1.modifiers() + " -- " + typeVersion2.modifiers());
+			System.out.println(typeVersion1.resolveBinding().getQualifiedName() + " -- " + typeVersion2.resolveBinding().getQualifiedName());
+			this.addChange(typeVersion2, Category.TYPE_GAIN_MODIFIER_FINAL, true, description);
 		}
 		else{
 			//Se perdeu o modificador "final"
-			category = this.CATEGORY_TYPE_LOST_MODIFIER_FINAL;
-			isBreakingChange = false;
+			String description = this.description.modifierFinal(this.getSimpleNameClass(typeVersion2), this.getNamePackage(typeVersion2), false);
+			this.addChange(typeVersion2, Category.TYPE_LOST_MODIFIER_FINAL, false, description);
 		}
-		category += UtilTools.getSufixJavadoc(typeVersion2);
-		String description = isBreakingChange? this.description.modifierFinal(this.getSimpleNameClass(typeVersion2), this.getNamePackage(typeVersion2), isGain) : "" ;
-		this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(typeVersion2), typeVersion2.getName().toString(), category, isBreakingChange, description));
 	}
 	
 	/**
@@ -315,30 +365,24 @@ public class TypeDiff {
 	 * @param methodInVersion1
 	 * @param methodInVersion2
 	 */
-	private void diffModifierStatic(TypeDeclaration typeVersion1, TypeDeclaration typeVersion2){
+	private void diffModifierStatic(AbstractTypeDeclaration typeVersion1, AbstractTypeDeclaration typeVersion2){
 		//Se não houve mudança no identificador static.
 		if((UtilTools.isStatic(typeVersion1) && UtilTools.isStatic(typeVersion2)) || ((!UtilTools.isStatic(typeVersion1) && !UtilTools.isStatic(typeVersion2)))){
 			return;
 		}
-		String category = "";
-		Boolean isBreakingChange = false;
-		Boolean isGain = false;
+		String simpleNameClass = this.getSimpleNameClass(typeVersion2);
+		String namePackage = this.getNamePackage(typeVersion2);
 		//Se ganhou o modificador "static"
 		if((!UtilTools.isStatic(typeVersion1) && UtilTools.isStatic(typeVersion2))){
-			category =  this.CATEGORY_TYPE_GAIN_MODIFIER_STATIC;
-			isBreakingChange = false;
-			isGain = true;
+			String description = this.description.modifierStatic(simpleNameClass, namePackage, true);
+			this.addChange(typeVersion2, Category.TYPE_GAIN_MODIFIER_STATIC, false, description);
 		}
 		else{
 			//Se perdeu o modificador "static"
-			category = this.isDeprecated(typeVersion1)?this.CATEGORY_TYPE_LOST_MODIFIER_STATIC_DEPRECIATED:CATEGORY_TYPE_LOST_MODIFIER_STATIC;
-			isBreakingChange = this.isDeprecated(typeVersion1)?false:true;
+			String description = this.description.modifierStatic(simpleNameClass, namePackage, false);
+			this.addChange(typeVersion2, Category.TYPE_LOST_MODIFIER_STATIC, true, description);
 		}
-		category += UtilTools.getSufixJavadoc(typeVersion2);
-		String simpleNameClass = this.getSimpleNameClass(typeVersion2);
-		String namePackage = this.getNamePackage(typeVersion2);
-		String description = isBreakingChange ? this.description.modifierStatic(simpleNameClass, namePackage, isGain) : "";
-		this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(typeVersion2), simpleNameClass, category, isBreakingChange, description));
+		
 	}
 	
 	/**
@@ -347,10 +391,10 @@ public class TypeDiff {
 	 * @param version1
 	 * @param version2
 	 */
-	private void findChangedFinalAndStatic(APIVersion version1, APIVersion version2) {
+	private void findChangedFinalAndStatic() {
 		//Percorre todos os types da versão corrente.
-		for (TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()) {
-			TypeDeclaration typeVersion2 = version2.getVersionAccessibleType(typeVersion1);
+		for (AbstractTypeDeclaration typeVersion1 : version1.getTypesPublicAndProtected()) {
+			AbstractTypeDeclaration typeVersion2 = version2.getVersionAccessibleType(typeVersion1);
 			if(typeVersion2 != null){
 				this.diffModifierFinal(typeVersion1, typeVersion2);
 				this.diffModifierStatic(typeVersion1, typeVersion2);
@@ -358,11 +402,11 @@ public class TypeDiff {
 		}
 	}
 	
-	private String getSimpleNameClass(TypeDeclaration typeVersion){
+	private String getSimpleNameClass(AbstractTypeDeclaration typeVersion){
 		return typeVersion.getName().toString();
 	}
 	
-	private String getNamePackage(TypeDeclaration typeVersion){
+	private String getNamePackage(AbstractTypeDeclaration typeVersion){
 		String simpleName = this.getSimpleNameClass(typeVersion);
 		String nameComplete = UtilTools.getPath(typeVersion);
 		nameComplete = nameComplete.replaceAll("." + simpleName, "");

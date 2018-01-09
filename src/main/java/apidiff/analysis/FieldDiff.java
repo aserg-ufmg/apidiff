@@ -1,7 +1,10 @@
 package apidiff.analysis;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -9,55 +12,121 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import apidiff.enums.Category;
 import apidiff.exception.BindingException;
 import apidiff.util.UtilTools;
 import apidiff.visitor.APIVersion;
+import refdiff.core.api.RefactoringType;
+import refdiff.core.rm2.model.refactoring.SDRefactoring;
 
 public class FieldDiff {
 	
 	private Logger logger = LoggerFactory.getLogger(FieldDiff.class);
 	
-	private final String CATEGORY_FIELD_CHANGED_DEFAULT_VALUE = "FIELD CHANGED DEFAULT VALUE";
-	private final String CATEGORY_FIELD_CHANGED_DEFAULT_VALUE_DEPRECIATED = "FIELD CHANGED DEFAULT VALUE DEPRECIATED";
+	private Map<RefactoringType, List<SDRefactoring>> refactorings = new HashMap<RefactoringType, List<SDRefactoring>>();
 	
-	private final String CATEGORY_FIELD_CHANGED_TYPE_FIELD = "FIELD CHANGED TYPE";
-	private final String CATEGORY_FIELD_CHANGED_TYPE_FIELD_DEPRECIATED = "FIELD CHANGED TYPE FIELD DEPRECIATED";
+	private List<String> fieldWithPathChanged = new ArrayList<String>();
 	
-	private final String CATEGORY_FIELD_LOST_MODIFIER_FINAL = "FIELD LOST MODIFIER FINAL"; //non-breaking change
-	private final String CATEGORY_FIELD_GAIN_MODIFIER_FINAL = "FIELD GAIN MODIFIER FINAL"; //breaking change
-	private final String CATEGORY_FIELD_GAIN_MODIFIER_FINAL_DEPRECIATED = "FIELD GAIN MODIFIER FINAL DEPRECIATED"; //non-breaking change
+	private List<Change> listChange = new ArrayList<Change>();
 	
-	private final String CATEGORY_FIELD_LOST_VISIBILITY = "FIELD LOST VISIBILITY";
-	private final String CATEGORY_FIELD_LOST_VISIBILITY_DEPRECIATED = "FIELD LOST VISIBILITY DEPRECIATED";
-	private final String CATEGORY_FIELD_GAIN_VISIBILITY = "FIELD GAIN VISIBILITY";
-	
-	private final String CATEGORY_FIELD_REMOVED_FIELD = "FIELD REMOVED";
-	private final String CATEGORY_FIELD_REMOVED_FIELD_DEPRECIATED = "FIELD REMOVED DEPRECIATED";
-	
-	private final String CATEGORY_FIELD_ADD = "FIELD ADDED"; //non-breaking change
-	
-	private final String CATEGORY_FIELD_DEPRECIATED = "FIELD DEPRECIATED";
-	
-	private List<BreakingChange> listBreakingChange = new ArrayList<BreakingChange>();
-	
-	public Result calculateDiff(final APIVersion version1, final APIVersion version2){
-		
+	public List<Change> detectChange(final APIVersion version1, final APIVersion version2, final Map<RefactoringType, List<SDRefactoring>> refactorings){
 		this.logger.info("Processing Filds...");
-		
-		//Lista breaking changes.
+		this.refactorings = refactorings;
 		this.findDefaultValueFields(version1, version2);
 		this.findChangedTypeFields(version1, version2);
-		this.findRemovedFields(version1, version2);
+		this.findRemoveAndRefactoringFields(version1, version2);
 		this.findChangedVisibilityFields(version1, version2);
 		this.findChangedFinal(version1, version2);
 		this.findAddedFields(version1, version2);
 		this.findAddedDeprecatedFields(version1, version2);
-		
-		Result result = new Result();
-		result.setListBreakingChange(this.listBreakingChange);
-		return result;
+		return this.listChange;
 	}
 	
+	private void addChange(final TypeDeclaration type, final FieldDeclaration field, Category category, Boolean isBreakingChange, final String description){
+		
+		String name = UtilTools.getFieldName(field);
+		if(name != null){
+			Change change = new Change();
+			change.setJavadoc(UtilTools.containsJavadoc(type, field));
+			change.setDepreciated(this.isDeprecated(field, type));
+			change.setBreakingChange(this.isDeprecated(field, type) ? false : isBreakingChange);
+			change.setPath(UtilTools.getPath(type));
+			change.setStruture(name);
+			change.setCategory(category);
+			change.setDescription(description);
+			isBreakingChange = this.isDeprecated(field, type) ? false : isBreakingChange;
+			this.listChange.add(change);
+		}
+		else{
+			this.logger.error("Removing field with null name " + field);
+		}
+
+	}
+	
+	private List<SDRefactoring> getAllMoveOperations(){
+		List<SDRefactoring> listMove = new ArrayList<SDRefactoring>();
+		if(this.refactorings.containsKey(RefactoringType.PULL_UP_ATTRIBUTE)){
+			listMove.addAll(this.refactorings.get(RefactoringType.PULL_UP_ATTRIBUTE));
+		}
+		if(this.refactorings.containsKey(RefactoringType.PUSH_DOWN_ATTRIBUTE)){
+			listMove.addAll(this.refactorings.get(RefactoringType.PUSH_DOWN_ATTRIBUTE));
+		}
+		if(this.refactorings.containsKey(RefactoringType.MOVE_ATTRIBUTE)){
+			listMove.addAll(this.refactorings.get(RefactoringType.MOVE_ATTRIBUTE));
+		}
+		return listMove;
+	}
+	
+	private Category getCategory(RefactoringType refactoringType){
+		switch (refactoringType) {
+			case PULL_UP_ATTRIBUTE:
+				return Category.FIELD_PULL_UP;
+				
+			case PUSH_DOWN_ATTRIBUTE:
+				return Category.FIELD_PUSH_DOWN;
+				
+			default:
+				return Category.FIELD_MOVE;
+		}
+	}
+	
+	private Boolean processMoveField(final FieldDeclaration field, final TypeDeclaration type){
+		List<SDRefactoring> listMove = this.getAllMoveOperations();
+		if(listMove != null){
+			for(SDRefactoring ref : listMove){
+				String fullNameAndPath = this.getNameAndPath(field, type);
+				if(fullNameAndPath.equals(ref.getEntityBefore().fullName())){
+					String nameClassBefore = ref.getEntityBefore().fullName().split("#")[0];
+					String nameClassAfter = ref.getEntityAfter().fullName().split("#")[0];
+					Boolean isBreakingChange = RefactoringType.PULL_UP_OPERATION.equals(ref.getRefactoringType())? false:true;
+					String description = "";//TODO: add description.
+					this.addChange(type, field, this.getCategory(ref.getRefactoringType()), isBreakingChange, "");
+					this.fieldWithPathChanged.add(ref.getEntityAfter().fullName());
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * @param field
+	 * @param type
+	 * @return Return Name class + name field (e.g. : org.lib.Math#value)
+	 */
+	private String getNameAndPath(final FieldDeclaration field, final TypeDeclaration type){
+		return UtilTools.getPath(type) + "#" + UtilTools.getFieldName(field);
+	}
+	
+	private Boolean processRemoveField(final FieldDeclaration field, final TypeDeclaration type){
+		String description = ""; //TODO: create description
+		this.addChange(type, field, Category.FIELD_REMOVE, true, description);
+		return false;
+	}
+	
+	private Boolean checkAndProcessRefactoring(final FieldDeclaration field, final TypeDeclaration type){
+		return this.processMoveField(field, type);
+	}
 	
 	/**
 	 * Retorna verdadeiro se existe diferença entre os valores default de dois fields.
@@ -91,21 +160,13 @@ public class FieldDiff {
 	 * @param version2
 	 */
 	private void findDefaultValueFields(APIVersion version1, APIVersion version2){
-		
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
 			if(version2.containsAccessibleType(type)){
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
 					if(this.isFildAcessible(fieldInVersion1)){
-						try {
-							FieldDeclaration fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
-							if(this.isFildAcessible(fieldInVersion2) && this.diffValueDefaultField(fieldInVersion1, fieldInVersion2)){
-								String category = this.isDeprecated(fieldInVersion1, type)? this.CATEGORY_FIELD_CHANGED_DEFAULT_VALUE_DEPRECIATED: this.CATEGORY_FIELD_CHANGED_DEFAULT_VALUE;
-								category += UtilTools.getSufixJavadoc(fieldInVersion2);
-								Boolean isBreakingChange = this.isDeprecated(fieldInVersion1, type)? false: true;
-								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), category, isBreakingChange));
-							}
-						} catch (BindingException e) {
-							continue;
+						FieldDeclaration fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
+						if(this.isFildAcessible(fieldInVersion2) && this.diffValueDefaultField(fieldInVersion1, fieldInVersion2)){
+							this.addChange(type, fieldInVersion2, Category.FIELD_CHANGE_DEFAULT_VALUE, true, "");
 						}
 					}
 				}
@@ -114,28 +175,14 @@ public class FieldDiff {
 	}
 
 	private void findChangedTypeFields(APIVersion version1, APIVersion version2) {
-		
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
 			if(version2.containsAccessibleType(type)){
-
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
-					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
-						FieldDeclaration fieldInVersion2;
-						try {
-							fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
-						} catch (BindingException e) {
-							continue;
-						}
+					if(!UtilTools.isVisibilityPrivate(fieldInVersion1) && !UtilTools.isVisibilityDefault(fieldInVersion1)){
+						FieldDeclaration fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
 						if(fieldInVersion2 != null && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
 							if(!fieldInVersion1.getType().toString().equals(fieldInVersion2.getType().toString())){
-								try {
-									String category = this.isDeprecated(fieldInVersion1, type)? this.CATEGORY_FIELD_CHANGED_TYPE_FIELD_DEPRECIATED: this.CATEGORY_FIELD_CHANGED_TYPE_FIELD;
-									category += UtilTools.getSufixJavadoc(fieldInVersion2);
-									Boolean isBreakingChange = this.isDeprecated(fieldInVersion1, type)? false: true;
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), category, isBreakingChange));
-								} catch (BindingException e) {
-									continue;
-								}
+								this.addChange(type, fieldInVersion2, Category.FIELD_CHANGE_TYPE, true, "");
 							}
 						}
 					}
@@ -152,32 +199,18 @@ public class FieldDiff {
 	 * @param fieldVersion2
 	 */
 	private void checkGainOrLostVisibility(TypeDeclaration typeVersion1, FieldDeclaration fieldVersion1, FieldDeclaration fieldVersion2){
-		
 		if(fieldVersion2 != null && fieldVersion1!=null){//Se o método ainda existe na versão atual.
-			
 			String visibilityMethod1 = UtilTools.getVisibility(fieldVersion1);
 			String visibilityMethod2 = UtilTools.getVisibility(fieldVersion2);
-			
 			if(!visibilityMethod1.equals(visibilityMethod2)){ // Se o modificador de acesso foi alterado.
-				String category = "";
-				Boolean isBreakingChange = false;
-				
 				//Breaking change: public --> qualquer modificador de acesso, protected --> qualquer modificador de acesso, exceto public.
 				if(this.isFildAcessible(fieldVersion1) && !UtilTools.isVisibilityPublic(fieldVersion2)){
-					category = this.isDeprecated(fieldVersion1, typeVersion1)? this.CATEGORY_FIELD_LOST_VISIBILITY_DEPRECIATED: this.CATEGORY_FIELD_LOST_VISIBILITY;
-					isBreakingChange = this.isDeprecated(fieldVersion1, typeVersion1)? false: true;
+					this.addChange(typeVersion1, fieldVersion1, Category.FIELD_LOST_VISIBILITY, true, "");
 				}
 				else{
 					//non-breaking change: private ou default --> qualquer modificador de acesso, demais casos.
-					category = UtilTools.isVisibilityDefault(fieldVersion1) && UtilTools.isVisibilityPrivate(fieldVersion2)? this.CATEGORY_FIELD_LOST_VISIBILITY: this.CATEGORY_FIELD_GAIN_VISIBILITY;
-					isBreakingChange = false;
-				}
-				try {
-					category += UtilTools.getSufixJavadoc(fieldVersion2);
-					this.listBreakingChange.add(new BreakingChange(UtilTools.getPath(typeVersion1), UtilTools.getFieldName(fieldVersion2), category, isBreakingChange));
-				} catch (BindingException e) {
-					this.logger.error("Erro ao ler FildName.", e);
-					return;
+					Category category = UtilTools.isVisibilityDefault(fieldVersion1) && UtilTools.isVisibilityPrivate(fieldVersion2)? Category.FIELD_LOST_VISIBILITY: Category.FIELD_GAIN_VISIBILITY;
+					this.addChange(typeVersion1, fieldVersion1, category, false, "");
 				}
 			}
 		}
@@ -192,13 +225,8 @@ public class FieldDiff {
 		for(TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()){
 			if(version2.containsAccessibleType(typeVersion1)){
 				for (FieldDeclaration fieldVersion1 : typeVersion1.getFields()){
-					try {
-						FieldDeclaration fieldVersion2 = version2.getVersionField(fieldVersion1, typeVersion1);
-						this.checkGainOrLostVisibility(typeVersion1, fieldVersion1, fieldVersion2);
-					} catch (BindingException e) {
-						this.logger.error("Erro ao ler FildName.", e);
-						continue;
-					}
+					FieldDeclaration fieldVersion2 = version2.getVersionField(fieldVersion1, typeVersion1);
+					this.checkGainOrLostVisibility(typeVersion1, fieldVersion1, fieldVersion2);
 				}
 			}
 		}
@@ -210,22 +238,16 @@ public class FieldDiff {
 	 * @param version2
 	 */
 	private void findAddedDeprecatedFields(APIVersion version1, APIVersion version2) {
-		
 		//Percorre todos os types acessíveis da versão 2.
 		for(TypeDeclaration typeVersion2 : version2.getApiAcessibleTypes()){
 			for(FieldDeclaration fieldVersion2 : typeVersion2.getFields()){
 				//Se não estava depreciado na versão anterior, insere na saída.
 				//Se o type foi criado depreciado, insere na saída.
 				if(this.isFildAcessible(fieldVersion2) && this.isDeprecated(fieldVersion2, typeVersion2)){
-					try {
-						FieldDeclaration fieldInVersion1 = version1.getVersionField(fieldVersion2, typeVersion2);
-						//Se o field não estava depreciado na versão anterior ou não existia e foi criado depreciado.
-						if(fieldInVersion1 == null || !this.isDeprecated(fieldInVersion1, version1.getVersionAccessibleType(typeVersion2))){
-							String category = this.CATEGORY_FIELD_DEPRECIATED + UtilTools.getSufixJavadoc(fieldVersion2);
-							this.listBreakingChange.add(new BreakingChange(typeVersion2.resolveBinding().getQualifiedName(),  UtilTools.getFieldName(fieldVersion2), category, false));
-						}
-					} catch (BindingException e) {
-						continue;
+					FieldDeclaration fieldInVersion1 = version1.getVersionField(fieldVersion2, typeVersion2);
+					//Se o field não estava depreciado na versão anterior ou não existia e foi criado depreciado.
+					if(fieldInVersion1 == null || !this.isDeprecated(fieldInVersion1, version1.getVersionAccessibleType(typeVersion2))){
+						this.addChange(typeVersion2, fieldVersion2, Category.FIELD_DEPRECIATE, false, "");
 					}
 				}
 			}
@@ -233,37 +255,19 @@ public class FieldDiff {
 	}
 
 	private void findAddedFields(APIVersion version1, APIVersion version2) {
-		
-		for (TypeDeclaration type : version2.getApiAcessibleTypes()) {
-			if(version1.containsAccessibleType(type)){
-
-				for (FieldDeclaration fieldInVersion2 : type.getFields()) {
-					if(!UtilTools.isVisibilityPrivate(fieldInVersion2)){
+		for (TypeDeclaration typeVersion2 : version2.getApiAcessibleTypes()) {
+			if(version1.containsAccessibleType(typeVersion2)){
+				for (FieldDeclaration fieldInVersion2 : typeVersion2.getFields()) {
+					String fullNameAndPath = this.getNameAndPath(fieldInVersion2, typeVersion2);
+					if(!UtilTools.isVisibilityPrivate(fieldInVersion2) && !UtilTools.isVisibilityDefault(fieldInVersion2) && !this.fieldWithPathChanged.contains(fullNameAndPath)){
 						FieldDeclaration fieldInVersion1;
-						try {
-							fieldInVersion1 = version1.getVersionField(fieldInVersion2, type);
+							fieldInVersion1 = version1.getVersionField(fieldInVersion2, typeVersion2);
 							if(fieldInVersion1 == null){
-								String category = this.CATEGORY_FIELD_ADD + UtilTools.getSufixJavadoc(fieldInVersion2);
-								this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion2), category, false));
+								this.addChange(typeVersion2, fieldInVersion2, Category.FIELD_ADD, false, "");
 							}
-						} catch (BindingException e) {
-							continue;
-						}
 					}
 				}
-			} else{
-				//tipo foi adicionado na versao 2, todos os fields foram adicionados
-				for (FieldDeclaration field : type.getFields()) {
-					if(!UtilTools.isVisibilityPrivate(field)){
-						try {
-							String category = this.CATEGORY_FIELD_ADD + UtilTools.getSufixJavadoc(field);
-							this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(field), category, false));
-						} catch (BindingException e) {
-							continue;
-						}
-					}
-				}
-			}
+			} 
 		}
 	}
 
@@ -273,37 +277,31 @@ public class FieldDiff {
 	 * @param version1
 	 * @param version2
 	 */
-	private void findRemovedFields(APIVersion version1, APIVersion version2) {
-		
+	private void findRemoveAndRefactoringFields(APIVersion version1, APIVersion version2) {
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
 			if(version2.containsAccessibleType(type)){
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
-
 					if(!UtilTools.isVisibilityPrivate(fieldInVersion1)){
-						FieldDeclaration fieldInVersion2;
-						try {
-							fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
-							if(fieldInVersion2 == null){
-								if(this.isDeprecated(fieldInVersion1, type)){
-									String category = this.CATEGORY_FIELD_REMOVED_FIELD_DEPRECIATED +  UtilTools.getSufixJavadoc(fieldInVersion1);
-									this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), category, false));
-								} else{
-									try {
-										String category = this.CATEGORY_FIELD_REMOVED_FIELD +  UtilTools.getSufixJavadoc(fieldInVersion1);
-										this.listBreakingChange.add(new BreakingChange(type.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldInVersion1), category, true));
-									} catch (BindingException e) {
-										continue;
-									}
-								}
+						FieldDeclaration fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
+						if(fieldInVersion2 == null){
+							Boolean refactoring = this.checkAndProcessRefactoring(fieldInVersion1, type);
+							if(!refactoring){
+								this.processRemoveField(fieldInVersion1, type);
 							}
-						} catch (BindingException e) {
-							continue;
 						}
 					}
-
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Se o type está depreciado, retorna o sufixo.
+	 * @param node
+	 * @return
+	 */
+	private String getSufixDepreciated(final FieldDeclaration field, final AbstractTypeDeclaration type){
+		return this.isDeprecated(field, type) ? " DEPRECIATED" : "";
 	}
 	
 	/**
@@ -312,10 +310,9 @@ public class FieldDiff {
 	 * @param type
 	 * @return
 	 */
-	private Boolean isDeprecated(FieldDeclaration field, TypeDeclaration type){
+	private Boolean isDeprecated(FieldDeclaration field, AbstractTypeDeclaration type){
 		Boolean isFildDeprecated = this.isDeprecatedField(field);
 		Boolean isTypeDeprecated = (type != null && type.resolveBinding() != null && type.resolveBinding().isDeprecated()) ? true: false;
-		
 		return isFildDeprecated || isTypeDeprecated;
 	}
 	
@@ -352,27 +349,19 @@ public class FieldDiff {
 	 * @param fieldVersion2
 	 * @throws BindingException 
 	 */
-	private void diffModifierFinal(TypeDeclaration typeVersion1, FieldDeclaration fieldVersion1, FieldDeclaration fieldVersion2) throws BindingException{
-		
+	private void diffModifierFinal(TypeDeclaration typeVersion1, FieldDeclaration fieldVersion1, FieldDeclaration fieldVersion2){
 		//Se não houve mudança no identificador final.
 		if((UtilTools.isFinal(fieldVersion1) && UtilTools.isFinal(fieldVersion2)) || ((!UtilTools.isFinal(fieldVersion1) && !UtilTools.isFinal(fieldVersion2)))){
 			return;
 		}
-		
-		String category = "";
-		Boolean isBreakingChange = false;
 		//Se ganhou o modificador "final"
 		if((!UtilTools.isFinal(fieldVersion1) && UtilTools.isFinal(fieldVersion2))){
-			category = this.isDeprecated(fieldVersion1, typeVersion1)?this.CATEGORY_FIELD_GAIN_MODIFIER_FINAL_DEPRECIATED:CATEGORY_FIELD_GAIN_MODIFIER_FINAL;
-			isBreakingChange = this.isDeprecated(fieldVersion1, typeVersion1)?false:true;
+			this.addChange(typeVersion1, fieldVersion2, Category.FIELD_GAIN_MODIFIER_FINAL, true, ""); //TODO: create description
 		}
 		else{
 			//Se perdeu o modificador "final"
-			category = this.CATEGORY_FIELD_LOST_MODIFIER_FINAL;
-			isBreakingChange = false;
+			this.addChange(typeVersion1, fieldVersion2, Category.FIELD_LOST_MODIFIER_FINAL, false, ""); //TODO: create description
 		}
-		category += UtilTools.getSufixJavadoc(fieldVersion2);
-		this.listBreakingChange.add(new BreakingChange(typeVersion1.resolveBinding().getQualifiedName(), UtilTools.getFieldName(fieldVersion2), category, isBreakingChange));
 	}
 	
 	/**
@@ -386,14 +375,9 @@ public class FieldDiff {
 		for (TypeDeclaration typeInVersion1 : version1.getApiAcessibleTypes()) {
 			if(version2.containsType(typeInVersion1)){//Se type ainda existe.
 				for(FieldDeclaration fieldVersion1: typeInVersion1.getFields()){
-					try {
-						FieldDeclaration fieldVersion2 = version2.getVersionField(fieldVersion1, typeInVersion1);
-						if(this.isFildAcessible(fieldVersion1) && (fieldVersion2 != null)){
-							this.diffModifierFinal(typeInVersion1, fieldVersion1, fieldVersion2);
-						}
-					} catch (BindingException e) {
-						this.logger.error("Erro reading field path", e);
-						continue;
+					FieldDeclaration fieldVersion2 = version2.getVersionField(fieldVersion1, typeInVersion1);
+					if(this.isFildAcessible(fieldVersion1) && (fieldVersion2 != null)){
+						this.diffModifierFinal(typeInVersion1, fieldVersion1, fieldVersion2);
 					}
 				}
 			}
