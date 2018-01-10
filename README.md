@@ -8,60 +8,36 @@ This project has been developed  with the orientation of the teachers [Marco Tul
 
 The class [GitService](https://github.com/alinebrito/apidiff/blob/master/src/main/java/br/ufmg/dcc/labsoft/apidiff/detect/diff/service/git/GitService.java) was inspired in [RefDiff](https://github.com/aserg-ufmg/RefDiff.git).
 
-### Requirements
+### Filtering Packages
 
-* [Java 1.8+](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
-* [Maven 3.1+](https://maven.apache.org/download.cgi)
+`Classifier.INTERNAL`: Contains the package `internal`.
 
-### Build aplication
+`Classifier.TEST`: Contains the packages `test`|`tests`, or is in source file `src/test`, or ends with `test.java|tests.java`.
 
-Set the path of the projetc or the path to clone the projects in file `config.properties`.
+`Classifier.EXAMPLE`: Contains the packages `example`|`examples`|`sample`|`samples`|`demo`|`demos`
 
-For Linux, run the script buil.sh. Example:
+`Classifier.EXPERIMENTAL`: Contains the packages `experimental`.
 
-```
-sh buil.sh
-```
-For Windows, run the script buit.bat. Example:
+`Classifier.NON_API`: Internal, test, example or experimental APIs.
 
-```
-./buil.bat
-```
-The file APIDiff.jar is built  in target. Copy APIDiff.jar for a path with permission write.
-
-### API Types
-
-`ClassifierAPI.NON_API_INTERNAL`: Contains the package `internal`.
-
-`ClassifierAPI.NON_API_TEST`: Contains the packages `test`|`tests`, or is in source file `src/test`, or ends with `test.java|tests.java`.
-
-`ClassifierAPI.NON_API_EXAMPLE`: Contains the packages `example`|`examples`|`sample`|`samples`|`demo`|`demos`
-
-`ClassifierAPI.NON_API_EXPERIMENTAL`: Contains the packages `experimental`.
-
-`ClassifierAPI.NON_API`: Internal, test, example or experimental APIs.
-
-`ClassifierAPI.API`: Other APIs.
+`Classifier.API`: Other APIs.
 
 ### API usage guidelines
 
-Comparing the source code from two folders that contain the code before and after the breaking changes:
+Detecting changes in version histories:
 
 ```java
-  APIDiff diff = new APIDiff("alinebrito/breaking-changes-toy-example");
-  diff.calculateDiffProject("v1/alinebrito/breaking-changes-toy-example", "v2/alinebrito/breaking-changes-toy-example", ClassifierAPI.API);
 ```
-Detecting breaking changes in new commits of git repository:
+Detecting changes in specific commit:
+
 ```java
-  APIDiff diff = new APIDiff("alinebrito/breaking-changes-toy-example", "https://github.com/alinebrito/breaking-changes-toy-example.git");
-  diff.calculateDiffCommit();
 ```
-Detecting breaking changes in specific commit of git repository (the commit is identified by its SHA key):
+Fetching new commits:
+
 ```java
-  String url = "https://github.com/alinebrito/breaking-changes-toy-example.git";
-  String nameLibray = "breaking-changes-toy-example";
-  String commidId = "48bb9fbdccbd9587b332cd7320ef5f00a6fd7869";
-  APIDiff diff = new APIDiff(nameLibray, url);
-  diff.calculateDiffAtCommit(commidId, ClassifierAPI.API);
 ```
-The output is a CSV file (output.csv).
+
+Reading and writing a CSV file:
+
+```java
+```
