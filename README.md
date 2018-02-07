@@ -1,14 +1,15 @@
 # APIDiff
-Tool to identify breaking changes and non-breaking changes between  versions of a Java library.
+
+A tool to identify API breaking and non-breaking changes between two versions of a Java library. APIDiff analyses libraries hosted on the distributed version control system _git_.
 
 ### Contributors
 The current version is maintained by [Aline Brito](https://github.com/alinebrito) and the initial algorithm ([v0.0.1](https://github.com/alinebrito/apidiff/releases/tag/v0.0.1)) was developed by [Laerte Xavier](https://github.com/xavierlaerte). 
 
-This project has been developed  with the orientation of the teachers [Marco Tulio Valente](https://github.com/mtov) and [Andre Hora](https://github.com/andrehora) ([Aserg](http://aserg.labsoft.dcc.ufmg.br/) [UFMG](https://www.ufmg.br/)).
-
-The class [GitService](https://github.com/alinebrito/apidiff/blob/master/src/main/java/br/ufmg/dcc/labsoft/apidiff/detect/diff/service/git/GitService.java) was inspired in [RefDiff](https://github.com/aserg-ufmg/RefDiff.git).
+This project has been developed  with the orientation of the professor [Marco Tulio Valente](https://github.com/mtov) ([Aserg](http://aserg.labsoft.dcc.ufmg.br/) [UFMG](https://www.ufmg.br/)) and professor [Andre Hora](https://github.com/andrehora) ([UFMS](https://www.ufms.br/) [FACOM](https://www.facom.ufms.br/)).
 
 ### Filtering Packages
+
+It is possible to filter in or filter out packages according to their names. 
 
 `Classifier.INTERNAL`: Contains the package `internal`.
 
