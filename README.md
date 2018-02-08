@@ -28,49 +28,49 @@ Classifier.API: Elements that are not non-APIs.
 Detecting changes in version histories:
 
 ```java
-    APIDiff diff = new APIDiff("bumptech/glide", "https://github.com/bumptech/glide.git");
-    diff.setPath("/home/aline/Downloads/test");
+APIDiff diff = new APIDiff("bumptech/glide", "https://github.com/bumptech/glide.git");
+diff.setPath("/home/aline/Downloads/test");
 
-    Result result = diff.detectChangeAllHistory("master", Classifier.API);
-    for(Change changeMethod : result.getChangeMethod()){
-        System.out.println("\n" + changeMethod.getCategory().getDisplayName() + " - " + changeMethod.getDescription());
-    }
+Result result = diff.detectChangeAllHistory("master", Classifier.API);
+for(Change changeMethod : result.getChangeMethod()){
+    System.out.println("\n" + changeMethod.getCategory().getDisplayName() + " - " + changeMethod.getDescription());
+}
 ```
 Detecting changes in specific commit:
 
 ```java
-    APIDiff diff = new APIDiff("mockito/mockito", "https://github.com/mockito/mockito.git");
-    diff.setPath("/home/projects/github");
+APIDiff diff = new APIDiff("mockito/mockito", "https://github.com/mockito/mockito.git");
+diff.setPath("/home/projects/github");
 
-    Result result = diff.detectChangeAtCommit("4ad5fdc14ca4b979155d10dcea0182c82380aefa", Classifier.API);
-    for(Change changeMethod : result.getChangeMethod()){
-        System.out.println("\n" + changeMethod.getCategory().getDisplayName() + " - " + changeMethod.getDescription());
-    }
+Result result = diff.detectChangeAtCommit("4ad5fdc14ca4b979155d10dcea0182c82380aefa", Classifier.API);
+for(Change changeMethod : result.getChangeMethod()){
+    System.out.println("\n" + changeMethod.getCategory().getDisplayName() + " - " + changeMethod.getDescription());
+}
 ```
 Fetching new commits:
 
 ```java
-    APIDiff diff = new APIDiff("bumptech/glide", "https://github.com/bumptech/glide.git");
-    diff.setPath("/home/projects/github");
+APIDiff diff = new APIDiff("bumptech/glide", "https://github.com/bumptech/glide.git");
+diff.setPath("/home/projects/github");
     
-    Result result = diff.fetchAndDetectChange(Classifier.API);
-    for(Change changeMethod : result.getChangeMethod()){
-        System.out.println("\n" + changeMethod.getCategory().getDisplayName() + " - " + changeMethod.getDescription());
-    }
+Result result = diff.fetchAndDetectChange(Classifier.API);
+for(Change changeMethod : result.getChangeMethod()){
+    System.out.println("\n" + changeMethod.getCategory().getDisplayName() + " - " + changeMethod.getDescription());
+}
 ```
 
 Writing a CSV file:
 
 ```java
-    APIDiff diff = new APIDiff("mockito/mockito", "https://github.com/mockito/mockito.git");
-    diff.setPath("/home/aline/Downloads/test");
-    Result result = diff.detectChangeAtCommit("4ad5fdc14ca4b979155d10dcea0182c82380aefa", Classifier.API);
+APIDiff diff = new APIDiff("mockito/mockito", "https://github.com/mockito/mockito.git");
+diff.setPath("/home/aline/Downloads/test");
+Result result = diff.detectChangeAtCommit("4ad5fdc14ca4b979155d10dcea0182c82380aefa", Classifier.API);
 		
-    List<String> listChanges = new ArrayList<String>();
-    listChanges.add("Category;isDepreciated;containsJavadoc");
-    for(Change changeMethod : result.getChangeMethod()){
-        String change = changeMethod.getCategory().getDisplayName() + ";" + changeMethod.getDepreciated()  + ";" + changeMethod.getJavadoc() ;
-        listChanges.add(change);
-    }
-    UtilFile.writeFile("output.csv", listChanges);
+List<String> listChanges = new ArrayList<String>();
+listChanges.add("Category;isDepreciated;containsJavadoc");
+for(Change changeMethod : result.getChangeMethod()){
+    String change = changeMethod.getCategory().getDisplayName() + ";" + changeMethod.getDepreciated()  + ";" + changeMethod.getJavadoc() ;
+    listChanges.add(change);
+}
+UtilFile.writeFile("output.csv", listChanges);
 ```
