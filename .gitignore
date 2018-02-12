@@ -5,10 +5,12 @@
 *.*~
 *.log
 build.local.sh
+output.txt
 output.csv
 scripts/node/node_modules
 scripts/node/input
 *test.csv
+*Main.java
 
 #Projects Files
 *.class
