@@ -35,7 +35,7 @@ public enum Category {
 	METHOD_LOST_MODIFIER_STATIC("Lost Static Modifier in Method"),
 	METHOD_GAIN_MODIFIER_STATIC("Gain Static Modifier in Method"),
 	METHOD_DEPRECIATE("Depreciate Method"),
-	METHOD_ADD("Add Method"),
+	METHOD_ADD("Addition Method"),
 	
 	FIELD_REMOVE("Remove Field"),
 	FIELD_MOVE("Move Field"),
@@ -52,12 +52,23 @@ public enum Category {
 	
 	private String displayName;
 	
+	private Boolean isBreakingChange;
+	
+	private Category(final String displayName, final Boolean isBreakingChange) {
+		this.displayName = displayName;
+		this.isBreakingChange = isBreakingChange;
+	}
+	
 	private Category(final String displayName) {
 		this.displayName = displayName;
 	}
 
 	public String getDisplayName() {
 		return displayName;
+	}
+
+	public Boolean getIsBreakingChange() {
+		return isBreakingChange;
 	}
 
 }

@@ -14,9 +14,8 @@ public class TemplateDescription {
 	 */
 	protected String messageRemoveTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path){
 		String message = "";
-		message += "<b>Remove " + UtilTools.upperCaseFirstLetter(typeStruture) + ":</b>";
-		message += "<br>" + typeStruture.toLowerCase() + " <code>" + nameStruture +"</code>";
-		message += "<br>removed  from " + typePath + " <code>" + path + "</code>";
+		message += "<br>" + typeStruture + " <code>" + nameStruture +"</code>";
+		message += "<br>removed from <code>" + path + "</code>";
 		message += "<br>";
 		return message;
 	}
@@ -33,10 +32,9 @@ public class TemplateDescription {
 	 */
 	protected String messageVisibilityTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path,  final String visibility1, final String visibility2){
 		String message = "";
-		message += "<b>Loss of " + UtilTools.upperCaseFirstLetter(typeStruture) + " Visibility:</b>";
-		message += "<br><code>" + nameStruture +"</code>";
+		message += "<br> " + typeStruture + " <code>" + nameStruture +"</code>";
 		message += "<br> changed visibility from <code>" + visibility1  + "</code> to <code>"  + visibility2 + "</code>";
-		message += "<br>in " + typePath + " <code>" + path + "</code>";
+		message += "<br>in <code>" + path + "</code>";
 		message += "<br>";
 		return message;
 	}
@@ -73,10 +71,9 @@ public class TemplateDescription {
 	 */
 	protected String messageFinalTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path, final Boolean gain){
 		String message = "";
-		message += "<b>Category <code>final</code> modifier</b>:";
-		message += "<br>" + UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
+		message += UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
 		message += gain ? "<br>received the modifier <code>final</code>" : "<br>lost the modifier <code>final</code>";
-		message += "<br>in " + typePath + " <code>" + path + "</code>";
+		message += "<br>in <code>" + path + "</code>";
 		message += "<br>";
 		return message;
 	}
@@ -92,8 +89,7 @@ public class TemplateDescription {
 	 */
 	protected String messageStaticTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path, final Boolean gain){
 		String message = "";
-		message += "<b>Category <code>static</code> modifier</b>:";
-		message += "<br>" + UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
+		message += UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
 		message += gain ? "<br>received the modifier <code>static</code>" : "<br>lost the modifier <code>static</code>";
 		message += "<br>in " + typePath + " <code>" + path + "</code>";
 		message += "<br>";
@@ -111,10 +107,9 @@ public class TemplateDescription {
 	 */
 	protected String messageReturnTypeTemplate(final String typeStruture,  final String nameStruture, final String typePath, final String path){
 		String message = "";
-		message += "<b>Category Return Type of " + UtilTools.upperCaseFirstLetter(typeStruture) + "</b>:";
 		message += "<br>" + UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
 		message += "<br>changed the return type";
-		message += "<br>in " + typePath + " <code>" + path + "</code>";
+		message += "<br>in <code>" + path + "</code>";
 		message += "<br>";
 		return message;
 	}
@@ -138,32 +133,47 @@ public class TemplateDescription {
 		return message;
 	}
 	
-	/**
-	 * Template para mensagem de mudança da lista de exceções.
-	 * @param typeStruture
-	 * @param nameStruture
-	 * @param typePath
-	 * @param path
-	 * @return
-	 */
-	protected String messageExceptionTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path){
+	protected String messageMoveTemplate(final String typeStruture,final String fullName, final String pathBefore, final String pathAfter){
 		String message = "";
-		message += "<b>Category " + UtilTools.upperCaseFirstLetter(typeStruture) + " Exceptions</b>:";
-		message += "<br><code>" + nameStruture +"</code>";
-		message += "<br>changed the list exception";
-		message += "<br>in " + typePath + " <code>" + path + "</code>";
-		message += "<br>";
-		return message;
-	}
-	
-	protected String messageMoveTemplate(final String typeStruture, final String fullName, final String pathBefore, final String pathAfter){
-		String message = "";
-		message += "<b>" + typeStruture + ":</b>";
-		message += "<br><code>" + fullName +"</code>";
-		message += "<br>moved from  <code>" + pathBefore +"</code>";
+		message += UtilTools.downCaseFirstLetter(typeStruture) + "<code>" + fullName +"</code>";
+		message += "<br>moved from <code>" + pathBefore +"</code>";
 		message += "<br>to <code>" + pathAfter +"</code>";
 		message += "<br>";
 		return message;
 	}
 
+	protected String messageRenameTemplate(final String typeStruture, final String nameBefore, final String nameAfter, final String path){
+		String message = "";
+		message += UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameBefore +"</code>";
+		message += "<br>renamed to <code>" + nameAfter +"</code>";
+		message += "<br>in <code>" + path +"</code>";
+		message += "<br>";
+		return message;
+	}
+	
+	public String messagePullUpTemplate(final String typeStruture,  String nameStruture, final String nameClassBefore, final String nameClassAfter){
+		String message = "";
+		message += "<br> Pull Up " + UtilTools.upperCaseFirstLetter(typeStruture) +" <code>" + nameStruture +"</code>";
+		message += "<br>from <code>" + nameClassBefore +"</code>";
+		message += "<br>to <code>" + nameClassAfter +"</code>";
+		message += "<br>";
+		return message;
+	}
+	
+	public String messagePushDownTemplate(final String typeStruture,  String nameStruture, final String nameClassBefore, final String nameClassAfter){
+		String message = "";
+		message += "<br> Push Down" + UtilTools.downCaseFirstLetter(typeStruture) +" <code>" + nameStruture +"</code>";
+		message += "<br>from  <code>" + nameClassBefore +"</code>";
+		message += "<br>to  <code>" + nameClassAfter +"</code>";
+		message += "<br>";
+		return message;
+	}
+	
+	public String messageDeprecate(final String typeStruture, final String nameMethodBefore, final String nameClassBefore){
+		String message = "";
+		message += "<br>" + typeStruture + " <code>" + nameMethodBefore +"</code> was deprecated";
+		message += "<br>in <code>" + nameClassBefore +"</code>";
+		message += "<br>";
+		return message;
+	}
 }

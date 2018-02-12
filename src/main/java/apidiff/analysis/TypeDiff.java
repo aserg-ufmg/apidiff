@@ -344,8 +344,6 @@ public class TypeDiff {
 		//Se ganhou o modificador "final"
 		if((!UtilTools.isFinal(typeVersion1) && UtilTools.isFinal(typeVersion2))){
 			String description = this.description.modifierFinal(this.getSimpleNameClass(typeVersion2), this.getNamePackage(typeVersion2), true);
-			System.out.println(typeVersion1.modifiers() + " -- " + typeVersion2.modifiers());
-			System.out.println(typeVersion1.resolveBinding().getQualifiedName() + " -- " + typeVersion2.resolveBinding().getQualifiedName());
 			this.addChange(typeVersion2, Category.TYPE_GAIN_MODIFIER_FINAL, true, description);
 		}
 		else{
