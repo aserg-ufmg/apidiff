@@ -31,15 +31,15 @@ The refactorings catalog is reused from [RefDiff](https://github.com/aserg-ufmg/
 It is possible to filter in or filter out packages according to their names. 
 
 ```java 
-Classifier.INTERNAL: Contains the package "internal".
+Classifier.INTERNAL: Elements that are in packages with the term "internal".
 
-Classifier.TEST: Contains the packages "test"|"tests", or is in source file "src/test", or ends with "test.java"|"tests.java".
+Classifier.TEST: Elements that are in packages with the terms "test"|"tests", or is in source file "src/test", or ends with "test.java"|"tests.java".
 
-Classifier.EXAMPLE: Contains the packages "example"|"examples"|"sample"|"samples"|"demo"|"demos"
+Classifier.EXAMPLE: Elements that are in packages with the terms "example"|"examples"|"sample"|"samples"|"demo"|"demos"
 
-Classifier.EXPERIMENTAL: Contains the packages "experimental".
+Classifier.EXPERIMENTAL: Elements that are in packages with the term "experimental".
 
-Classifier.NON_API: Internal, test, example or experimental APIs.
+Classifier.NON_API: Internal, test, example or experimental elements.
 
 Classifier.API: Elements that are not non-APIs.
 ``` 
