@@ -12,7 +12,7 @@ public class TemplateDescription {
 	 * @param path
 	 * @return
 	 */
-	protected String messageRemoveTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path){
+	protected String messageRemoveTemplate(final String typeStruture, final String nameStruture, final String path){
 		String message = "";
 		message += "<br>" + typeStruture + " <code>" + nameStruture +"</code>";
 		message += "<br>removed from <code>" + path + "</code>";
@@ -171,8 +171,16 @@ public class TemplateDescription {
 	
 	public String messageDeprecate(final String typeStruture, final String nameMethodBefore, final String nameClassBefore){
 		String message = "";
-		message += "<br>" + typeStruture + " <code>" + nameMethodBefore +"</code> was deprecated";
-		message += "<br>in <code>" + nameClassBefore +"</code>";
+		message += "<br>" + typeStruture + " <code>" + nameMethodBefore +"</code> ";
+		message += "<br>deprecated in <code>" + nameClassBefore +"</code>";
+		message += "<br>";
+		return message;
+	}
+	
+	public String messageAddition(final String typeStruture, final String nameStruture, final String nameClass){
+		String message = "";
+		message += "<br>" + typeStruture + " <code>" + nameStruture +"</code>";
+		message += "<br>added in <code>" + nameClass +"</code>";
 		message += "<br>";
 		return message;
 	}

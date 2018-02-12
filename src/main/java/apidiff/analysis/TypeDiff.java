@@ -132,7 +132,7 @@ public class TypeDiff {
 	}
 	
 	protected void processRemoveType(final AbstractTypeDeclaration type){
-		String description = this.description.remove(this.getSimpleNameClass(type), this.getNamePackage(type));
+		String description = this.description.remove(UtilTools.getPath(type));
 		this.addChange(type, Category.TYPE_REMOVE, true, description);
 	}
 	

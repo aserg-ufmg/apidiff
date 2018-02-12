@@ -2,7 +2,6 @@ package apidiff.util;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,9 +19,7 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-import apidiff.APIDiff;
 import apidiff.enums.Classifier;
-import apidiff.exception.BindingException;
 import apidiff.visitor.APIVersion;
 
 public class UtilTools {

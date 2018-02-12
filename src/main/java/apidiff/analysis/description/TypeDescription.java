@@ -31,8 +31,12 @@ public class TypeDescription extends TemplateDescription {
 		return message;
 	}
 	
-	public String remove(final String nameClass, final String namePackage){
-		return super.messageRemoveTemplate("type", nameClass, "package", namePackage);
+	public String remove(final String nameClass){
+		String message = "";
+		message += "<br>type <code>" + nameClass +"</code> ";
+		message += "<br>was removed";
+		message += "<br>";
+		return message;
 	}
 	
 	public String visibility(final String nameClass, final String visibility1, final String visibility2){

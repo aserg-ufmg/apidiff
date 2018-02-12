@@ -12,6 +12,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import apidiff.analysis.description.FieldDescription;
 import apidiff.enums.Category;
 import apidiff.exception.BindingException;
 import apidiff.util.UtilTools;
@@ -28,6 +29,8 @@ public class FieldDiff {
 	private List<String> fieldWithPathChanged = new ArrayList<String>();
 	
 	private List<Change> listChange = new ArrayList<Change>();
+	
+	private FieldDescription description = new FieldDescription();
 	
 	public List<Change> detectChange(final APIVersion version1, final APIVersion version2, final Map<RefactoringType, List<SDRefactoring>> refactorings){
 		this.logger.info("Processing Filds...");
@@ -96,11 +99,10 @@ public class FieldDiff {
 			for(SDRefactoring ref : listMove){
 				String fullNameAndPath = this.getNameAndPath(field, type);
 				if(fullNameAndPath.equals(ref.getEntityBefore().fullName())){
-					String nameClassBefore = ref.getEntityBefore().fullName().split("#")[0];
-					String nameClassAfter = ref.getEntityAfter().fullName().split("#")[0];
 					Boolean isBreakingChange = RefactoringType.PULL_UP_OPERATION.equals(ref.getRefactoringType())? false:true;
-					String description = "";//TODO: add description.
-					this.addChange(type, field, this.getCategory(ref.getRefactoringType()), isBreakingChange, "");
+					Category category = this.getCategory(ref.getRefactoringType());
+					String description = this.description.refactorField(category, ref);
+					this.addChange(type, field, category, isBreakingChange, description);
 					this.fieldWithPathChanged.add(ref.getEntityAfter().fullName());
 					return true;
 				}
@@ -119,7 +121,7 @@ public class FieldDiff {
 	}
 	
 	private Boolean processRemoveField(final FieldDeclaration field, final TypeDeclaration type){
-		String description = ""; //TODO: create description
+		String description = this.description.remove( UtilTools.getFieldName(field), UtilTools.getPath(type));
 		this.addChange(type, field, Category.FIELD_REMOVE, true, description);
 		return false;
 	}
@@ -166,7 +168,8 @@ public class FieldDiff {
 					if(this.isFildAcessible(fieldInVersion1)){
 						FieldDeclaration fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
 						if(this.isFildAcessible(fieldInVersion2) && this.diffValueDefaultField(fieldInVersion1, fieldInVersion2)){
-							this.addChange(type, fieldInVersion2, Category.FIELD_CHANGE_DEFAULT_VALUE, true, "");
+							String description = this.description.changeDefaultValue(UtilTools.getFieldName(fieldInVersion2), UtilTools.getPath(type));
+							this.addChange(type, fieldInVersion2, Category.FIELD_CHANGE_DEFAULT_VALUE, true, description);
 						}
 					}
 				}
@@ -182,7 +185,8 @@ public class FieldDiff {
 						FieldDeclaration fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
 						if(fieldInVersion2 != null && !UtilTools.isVisibilityPrivate(fieldInVersion2)){
 							if(!fieldInVersion1.getType().toString().equals(fieldInVersion2.getType().toString())){
-								this.addChange(type, fieldInVersion2, Category.FIELD_CHANGE_TYPE, true, "");
+								String description = this.description.returnType(UtilTools.getFieldName(fieldInVersion2), UtilTools.getPath(type));
+								this.addChange(type, fieldInVersion2, Category.FIELD_CHANGE_TYPE, true, description);
 							}
 						}
 					}
@@ -203,14 +207,15 @@ public class FieldDiff {
 			String visibilityMethod1 = UtilTools.getVisibility(fieldVersion1);
 			String visibilityMethod2 = UtilTools.getVisibility(fieldVersion2);
 			if(!visibilityMethod1.equals(visibilityMethod2)){ // Se o modificador de acesso foi alterado.
+				String description = this.description.visibility(UtilTools.getFieldName(fieldVersion1), UtilTools.getPath(typeVersion1), visibilityMethod1, visibilityMethod2);
 				//Breaking change: public --> qualquer modificador de acesso, protected --> qualquer modificador de acesso, exceto public.
 				if(this.isFildAcessible(fieldVersion1) && !UtilTools.isVisibilityPublic(fieldVersion2)){
-					this.addChange(typeVersion1, fieldVersion1, Category.FIELD_LOST_VISIBILITY, true, "");
+					this.addChange(typeVersion1, fieldVersion1, Category.FIELD_LOST_VISIBILITY, true, description);
 				}
 				else{
 					//non-breaking change: private ou default --> qualquer modificador de acesso, demais casos.
 					Category category = UtilTools.isVisibilityDefault(fieldVersion1) && UtilTools.isVisibilityPrivate(fieldVersion2)? Category.FIELD_LOST_VISIBILITY: Category.FIELD_GAIN_VISIBILITY;
-					this.addChange(typeVersion1, fieldVersion1, category, false, "");
+					this.addChange(typeVersion1, fieldVersion1, category, false, description);
 				}
 			}
 		}
@@ -247,7 +252,8 @@ public class FieldDiff {
 					FieldDeclaration fieldInVersion1 = version1.getVersionField(fieldVersion2, typeVersion2);
 					//Se o field não estava depreciado na versão anterior ou não existia e foi criado depreciado.
 					if(fieldInVersion1 == null || !this.isDeprecated(fieldInVersion1, version1.getVersionAccessibleType(typeVersion2))){
-						this.addChange(typeVersion2, fieldVersion2, Category.FIELD_DEPRECIATE, false, "");
+						String description = this.description.deprecate(UtilTools.getFieldName(fieldVersion2), UtilTools.getPath(typeVersion2));
+						this.addChange(typeVersion2, fieldVersion2, Category.FIELD_DEPRECIATE, false, description);
 					}
 				}
 			}
@@ -263,7 +269,8 @@ public class FieldDiff {
 						FieldDeclaration fieldInVersion1;
 							fieldInVersion1 = version1.getVersionField(fieldInVersion2, typeVersion2);
 							if(fieldInVersion1 == null){
-								this.addChange(typeVersion2, fieldInVersion2, Category.FIELD_ADD, false, "");
+								String description = this.description.addition(UtilTools.getFieldName(fieldInVersion2), UtilTools.getPath(typeVersion2));
+								this.addChange(typeVersion2, fieldInVersion2, Category.FIELD_ADD, false, description);
 							}
 					}
 				}
@@ -354,13 +361,16 @@ public class FieldDiff {
 		if((UtilTools.isFinal(fieldVersion1) && UtilTools.isFinal(fieldVersion2)) || ((!UtilTools.isFinal(fieldVersion1) && !UtilTools.isFinal(fieldVersion2)))){
 			return;
 		}
+		String description = "";
 		//Se ganhou o modificador "final"
 		if((!UtilTools.isFinal(fieldVersion1) && UtilTools.isFinal(fieldVersion2))){
-			this.addChange(typeVersion1, fieldVersion2, Category.FIELD_GAIN_MODIFIER_FINAL, true, ""); //TODO: create description
+			description = this.description.modifierFinal(UtilTools.getFieldName(fieldVersion2), UtilTools.getPath(typeVersion1), true);
+			this.addChange(typeVersion1, fieldVersion2, Category.FIELD_GAIN_MODIFIER_FINAL, true, description);
 		}
 		else{
 			//Se perdeu o modificador "final"
-			this.addChange(typeVersion1, fieldVersion2, Category.FIELD_LOST_MODIFIER_FINAL, false, ""); //TODO: create description
+			description = this.description.modifierFinal(UtilTools.getFieldName(fieldVersion2), UtilTools.getPath(typeVersion1), false);
+			this.addChange(typeVersion1, fieldVersion2, Category.FIELD_LOST_MODIFIER_FINAL, false, description);
 		}
 	}
 	

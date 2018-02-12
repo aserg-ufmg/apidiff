@@ -11,15 +11,15 @@ import refdiff.core.rm2.model.refactoring.SDRefactoring;
 public class MethodDescription extends TemplateDescription {
 
 	public String remove(final String nameMethod, final String nameClass){
-		return super.messageRemoveTemplate("method", nameMethod, "class", nameClass);
+		return super.messageRemoveTemplate("method", nameMethod, nameClass);
 	}
 	
 	public String visibility(final String nameMethod, final String nameClass, final String visibility1, final String visibility2){
-		return super.messageVisibilityTemplate("method", nameMethod, "class", nameClass, visibility1, visibility2);
+		return super.messageVisibilityTemplate("method", nameMethod, "type", nameClass, visibility1, visibility2);
 	}
 	
 	public String parameter(final String nameMethodAfter, final String nameMethodBefore, final String nameClass){
-		return super.messageParameterTemplate("method", nameMethodAfter, nameMethodBefore, "class", nameClass);
+		return super.messageParameterTemplate("method", nameMethodAfter, nameMethodBefore, "type", nameClass);
 	}
 	
 	public String exception(final String nameMethodBefore, final List<SimpleType> listExceptionBefore, final List<SimpleType> listExceptionAfter, final String nameClassBefore){
@@ -112,11 +112,7 @@ public class MethodDescription extends TemplateDescription {
 	}
 	
 	public String addition(final String nameMethod, final String nameClass){
-		String message = "";
-		message += "<br>Method <code>" + nameMethod +"</code>";
-		message += "<br>added in <code>" + nameClass +"</code>";
-		message += "<br>";
-		return message;
+		return this.messageAddition("method", nameMethod, nameClass);
 	}
 	
 	public String inline(final String nameMethodBefore, final String nameMethodAfter,  final String nameClassBefore, final String nameClassAfter){
@@ -137,5 +133,7 @@ public class MethodDescription extends TemplateDescription {
 	public String move(final String nameMethodAfter, final String nameClassBefore, final String nameClassAfter){
 		return this.messageMoveTemplate("method", nameMethodAfter, nameClassBefore, nameClassAfter);
 	}
+	
+
 	
 }
