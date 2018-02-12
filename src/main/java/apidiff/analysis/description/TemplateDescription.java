@@ -162,9 +162,9 @@ public class TemplateDescription {
 	
 	public String messagePushDownTemplate(final String typeStruture,  String nameStruture, final String nameClassBefore, final String nameClassAfter){
 		String message = "";
-		message += "<br> Push Down" + UtilTools.downCaseFirstLetter(typeStruture) +" <code>" + nameStruture +"</code>";
-		message += "<br>from  <code>" + nameClassBefore +"</code>";
-		message += "<br>to  <code>" + nameClassAfter +"</code>";
+		message += "<br> Push Down " + UtilTools.downCaseFirstLetter(typeStruture) +" <code>" + nameStruture +"</code>";
+		message += "<br>from <code>" + nameClassBefore +"</code>";
+		message += "<br>to <code>" + nameClassAfter +"</code>";
 		message += "<br>";
 		return message;
 	}

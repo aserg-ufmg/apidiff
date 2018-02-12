@@ -17,20 +17,19 @@ public class FieldDescription extends TemplateDescription {
 		String[] entityAfter = ref.getEntityAfter().fullName().split("#");
 		String nameClassBefore = entityBefore[0];
 		String nameClassAfter = entityAfter[0];
-		String nameMethodAfter = entityAfter[1];
-		String nameMethodBefore = entityBefore[1];
+		String nameFieldAfter = entityAfter[1];
 		
 		switch (category) {
 			case FIELD_MOVE:
-				description = this.move(nameMethodAfter, nameClassBefore, nameClassAfter);
+				description = this.move(nameFieldAfter, nameClassBefore, nameClassAfter);
 				break;
 	
 			case FIELD_PULL_UP:
-				description = "";
+				description = this.pullUp(nameFieldAfter, nameClassBefore, nameClassAfter);;
 				break;
 				
 			case FIELD_PUSH_DOWN:
-				description = "";
+				description = this.pushDown(nameFieldAfter, nameClassBefore, nameClassAfter);;
 				break;
 				
 			default:
@@ -71,6 +70,14 @@ public class FieldDescription extends TemplateDescription {
 	
 	public String modifierFinal(final String nameFieldd, final String nameClass, final Boolean isGain){
 		return this.messageFinalTemplate("field", nameFieldd, "type", nameClass, isGain);
+	}
+	
+	public String pullUp(final String nameField, final String nameClassBefore, final String nameClassAfter){
+		return this.messagePullUpTemplate("field", nameField, nameClassBefore, nameClassAfter);
+	}
+	
+	public String pushDown(final String nameField, final String nameClassBefore, final String nameClassAfter){
+		return this.messagePushDownTemplate("field", nameField, nameClassBefore, nameClassAfter);
 	}
 	
 }
