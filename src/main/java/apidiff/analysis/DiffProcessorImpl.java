@@ -18,9 +18,9 @@ public class DiffProcessorImpl implements DiffProcessor {
 	public Result detectChange(final APIVersion version1, final APIVersion version2, final Repository repository, final RevCommit revCommit) {
 		Result result = new Result();
 		Map<RefactoringType, List<SDRefactoring>> refactorings = this.detectRefactoring(repository, revCommit.getId().getName());
-		result.getChangeType().addAll(new TypeDiff().detectChange(version1, version2, refactorings));
-		result.getChangeMethod().addAll(new MethodDiff().detectChange(version1, version2, refactorings));
-		result.getChangeField().addAll(new FieldDiff().detectChange(version1, version2, refactorings));
+		result.getChangeType().addAll(new TypeDiff().detectChange(version1, version2, refactorings, revCommit));
+		result.getChangeMethod().addAll(new MethodDiff().detectChange(version1, version2, refactorings, revCommit));
+		result.getChangeField().addAll(new FieldDiff().detectChange(version1, version2, refactorings, revCommit));
 		return result;
 	}
 

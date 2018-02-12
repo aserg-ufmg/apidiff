@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,14 +34,17 @@ public class TypeDiff {
 	
 	private List<String> typesWithPathChanged = new ArrayList<String>();
 	
+	private RevCommit revCommit;
+	
 	/**
 	 * Calculates the diff for classes
 	 * @param version1 older version of an API
 	 * @param version2 newer version of an API
 	 */
-	public List<Change> detectChange(final APIVersion version1, final APIVersion version2, final Map<RefactoringType, List<SDRefactoring>> refactorings) {
+	public List<Change> detectChange(final APIVersion version1, final APIVersion version2, final Map<RefactoringType, List<SDRefactoring>> refactorings, final RevCommit revCommit) {
 		this.version1 = version1;
 		this.version2 = version2;
+		this.revCommit = revCommit;
 		this.refactorings = refactorings;
 		this.logger.info("Processing Types ...");
 		this.findRemovedAndRenameAndMoveTypes();
@@ -61,6 +65,7 @@ public class TypeDiff {
 		change.setStruture(type.getName().toString());
 		change.setCategory(category);
 		change.setDescription(description);
+		change.setRevCommit(this.revCommit);
 		this.listChange.add(change);
 	}
 	
@@ -347,12 +352,12 @@ public class TypeDiff {
 		//Se ganhou o modificador "final"
 		if((!UtilTools.isFinal(typeVersion1) && UtilTools.isFinal(typeVersion2))){
 			String description = this.description.modifierFinal(UtilTools.getPath(typeVersion2), true);
-			this.addChange(typeVersion2, Category.TYPE_GAIN_MODIFIER_FINAL, true, description);
+			this.addChange(typeVersion2, Category.TYPE_ADD_MODIFIER_FINAL, true, description);
 		}
 		else{
 			//Se perdeu o modificador "final"
 			String description = this.description.modifierFinal(UtilTools.getPath(typeVersion2), false);
-			this.addChange(typeVersion2, Category.TYPE_LOST_MODIFIER_FINAL, false, description);
+			this.addChange(typeVersion2, Category.TYPE_REMOVE_MODIFIER_FINAL, false, description);
 		}
 	}
 	
@@ -374,12 +379,12 @@ public class TypeDiff {
 		//Se ganhou o modificador "static"
 		if((!UtilTools.isStatic(typeVersion1) && UtilTools.isStatic(typeVersion2))){
 			String description = this.description.modifierStatic(UtilTools.getPath(typeVersion2), true);
-			this.addChange(typeVersion2, Category.TYPE_GAIN_MODIFIER_STATIC, false, description);
+			this.addChange(typeVersion2, Category.TYPE_ADD_MODIFIER_STATIC, false, description);
 		}
 		else{
 			//Se perdeu o modificador "static"
 			String description = this.description.modifierStatic(UtilTools.getPath(typeVersion2), false);
-			this.addChange(typeVersion2, Category.TYPE_LOST_MODIFIER_STATIC, true, description);
+			this.addChange(typeVersion2, Category.TYPE_REMOVE_MODIFIER_STATIC, true, description);
 		}
 		
 	}

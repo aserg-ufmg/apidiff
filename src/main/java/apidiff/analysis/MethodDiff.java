@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,10 +31,13 @@ public class MethodDiff {
 	private Map<RefactoringType, List<SDRefactoring>> refactorings = new HashMap<RefactoringType, List<SDRefactoring>>();
 	
 	private List<String> methodsWithPathChanged = new ArrayList<String>();
+	
+	private RevCommit revCommit;
 
-	public List<Change> detectChange(final APIVersion version1, final APIVersion version2, final Map<RefactoringType, List<SDRefactoring>> refactorings) {
+	public List<Change> detectChange(final APIVersion version1, final APIVersion version2, final Map<RefactoringType, List<SDRefactoring>> refactorings, final RevCommit revCommit) {
 		this.logger.info("Processing Methods...");
 		this.refactorings = refactorings;
+		this.revCommit = revCommit;
 		this.findRemoveAndRefactoringMethods(version1, version2);
 		this.findChangedVisibilityMethods(version1, version2);
 		this.findChangedReturnTypeMethods(version1, version2);
@@ -53,6 +57,7 @@ public class MethodDiff {
 		change.setStruture(this.getFullNameMethod(method));
 		change.setCategory(category);
 		change.setDescription(description);
+		change.setRevCommit(this.revCommit);
 		this.listChange.add(change);
 	}
 	
@@ -388,12 +393,12 @@ public class MethodDiff {
 		//Se ganhou o modificador "final"
 		if((!UtilTools.isFinal(methodVersion1) && UtilTools.isFinal(methodVersion2))){
 			String description = this.description.modifierFinal(nameMethod, nameClass, true);
-			this.addChange(typeVersion1, methodVersion1, Category.METHOD_GAIN_MODIFIER_FINAL, true, description);
+			this.addChange(typeVersion1, methodVersion1, Category.METHOD_ADD_MODIFIER_FINAL, true, description);
 		}
 		else{
 			//Se perdeu o modificador "final"
 			String description = this.description.modifierFinal(nameMethod, nameClass, false);
-			this.addChange(typeVersion1, methodVersion1, Category.METHOD_LOST_MODIFIER_FINAL, false, description);
+			this.addChange(typeVersion1, methodVersion1, Category.METHOD_REMOVE_MODIFIER_FINAL, false, description);
 		}
 	}
 	
@@ -413,12 +418,12 @@ public class MethodDiff {
 		//Se ganhou o modificador "static"
 		if((!UtilTools.isStatic(methodVersion1) && UtilTools.isStatic(methodVersion2))){
 			String description = this.description.modifierStatic(nameMethod, nameClass, true);
-			this.addChange(typeVersion1, methodVersion1, Category.METHOD_GAIN_MODIFIER_STATIC, false, description);
+			this.addChange(typeVersion1, methodVersion1, Category.METHOD_ADD_MODIFIER_STATIC, false, description);
 		}
 		else{
 			//Se perdeu o modificador "static"
 			String description = this.description.modifierStatic(nameMethod, nameClass, false);
-			this.addChange(typeVersion1, methodVersion1, Category.METHOD_LOST_MODIFIER_STATIC, true, description);
+			this.addChange(typeVersion1, methodVersion1, Category.METHOD_REMOVE_MODIFIER_STATIC, true, description);
 		}
 	}
 	

@@ -1,5 +1,7 @@
 package apidiff.analysis;
 
+import org.eclipse.jgit.revwalk.RevCommit;
+
 import apidiff.enums.Category;
 
 /**
@@ -57,6 +59,8 @@ public class Change {
 	private Boolean javadoc;
 	
 	private Boolean depreciated;
+	
+	private RevCommit revCommit;
 
 	public String getPath() {
 		return path;
@@ -136,6 +140,14 @@ public class Change {
 
 	public Boolean getBreakingChange() {
 		return breakingChange;
+	}
+
+	public RevCommit getRevCommit() {
+		return revCommit;
+	}
+
+	public void setRevCommit(RevCommit revCommit) {
+		this.revCommit = revCommit;
 	}
 	
 }

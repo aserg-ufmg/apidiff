@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,9 +33,12 @@ public class FieldDiff {
 	
 	private FieldDescription description = new FieldDescription();
 	
-	public List<Change> detectChange(final APIVersion version1, final APIVersion version2, final Map<RefactoringType, List<SDRefactoring>> refactorings){
+	private RevCommit revCommit;
+	
+	public List<Change> detectChange(final APIVersion version1, final APIVersion version2, final Map<RefactoringType, List<SDRefactoring>> refactorings, final RevCommit revCommit){
 		this.logger.info("Processing Filds...");
 		this.refactorings = refactorings;
+		this.revCommit = revCommit;
 		this.findDefaultValueFields(version1, version2);
 		this.findChangedTypeFields(version1, version2);
 		this.findRemoveAndRefactoringFields(version1, version2);
@@ -57,6 +61,7 @@ public class FieldDiff {
 			change.setStruture(name);
 			change.setCategory(category);
 			change.setDescription(description);
+			change.setRevCommit(this.revCommit);
 			isBreakingChange = this.isDeprecated(field, type) ? false : isBreakingChange;
 			this.listChange.add(change);
 		}
@@ -365,12 +370,12 @@ public class FieldDiff {
 		//Se ganhou o modificador "final"
 		if((!UtilTools.isFinal(fieldVersion1) && UtilTools.isFinal(fieldVersion2))){
 			description = this.description.modifierFinal(UtilTools.getFieldName(fieldVersion2), UtilTools.getPath(typeVersion1), true);
-			this.addChange(typeVersion1, fieldVersion2, Category.FIELD_GAIN_MODIFIER_FINAL, true, description);
+			this.addChange(typeVersion1, fieldVersion2, Category.FIELD_ADD_MODIFIER_FINAL, true, description);
 		}
 		else{
 			//Se perdeu o modificador "final"
 			description = this.description.modifierFinal(UtilTools.getFieldName(fieldVersion2), UtilTools.getPath(typeVersion1), false);
-			this.addChange(typeVersion1, fieldVersion2, Category.FIELD_LOST_MODIFIER_FINAL, false, description);
+			this.addChange(typeVersion1, fieldVersion2, Category.FIELD_REMOVE_MODIFIER_FINAL, false, description);
 		}
 	}
 	
