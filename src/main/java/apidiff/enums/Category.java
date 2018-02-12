@@ -4,7 +4,7 @@ public enum Category {
 	
 	TYPE_RENAME("Rename Type"),
 	TYPE_MOVE("Move Type"),
-	TYPE_ADD("Add Type"),
+	TYPE_ADD("Addition Type"),
 	TYPE_MOVE_AND_RENAME("Move and Rename Type"),
 	TYPE_EXTRACT_SUPERTYPE("Extract Supertype"),
 	TYPE_REMOVE("Remove Type"),
@@ -16,7 +16,7 @@ public enum Category {
 	TYPE_GAIN_MODIFIER_STATIC("Gain Static Modifier in Type"),
 	TYPE_CHANGE_SUPERCLASS("Change Superclass"),
 	TYPE_REMOVE_SUPERCLASS("Remove Superclass"),
-	TYPE_ADD_SUPER_CLASS("Add Superclass"),
+	TYPE_ADD_SUPER_CLASS("Addition Superclass"),
 	TYPE_DEPRECIATE("Depreciate Type"),
 	
 	METHOD_MOVE("Move Method"),
@@ -41,7 +41,7 @@ public enum Category {
 	FIELD_MOVE("Move Field"),
 	FIELD_PULL_UP("Pull Up Field"),
 	FIELD_PUSH_DOWN("Push Down Field"),
-	FIELD_ADD("Add Field"),
+	FIELD_ADD("Addition Field"),
 	FIELD_DEPRECIATE("Depreciate Field"),
 	FIELD_CHANGE_DEFAULT_VALUE("Change in Default Value"),
 	FIELD_CHANGE_TYPE("Change in Type Field"),

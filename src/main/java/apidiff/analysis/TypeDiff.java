@@ -47,7 +47,7 @@ public class TypeDiff {
 		this.findAddedTypes();
 		this.findChangedVisibilityTypes();
 		this.findAddTypeDeprecate();
-		this.changedSuperTypes();
+		this.findChangedSuperTypes();
 		this.findChangedFinalAndStatic();
 		return this.listChange;
 	}
@@ -156,7 +156,7 @@ public class TypeDiff {
 	 * @param version1
 	 * @param version2
 	 */
-	private void changedSuperTypes() {
+	private void findChangedSuperTypes() {
 		for(AbstractTypeDeclaration accessibleTypeVersion1 : version1.getTypesPublicAndProtected()){
 			AbstractTypeDeclaration accessibleTypeVersion2 = version2.getVersionAccessibleType(accessibleTypeVersion1);
 			if(accessibleTypeVersion2 != null){
@@ -166,19 +166,20 @@ public class TypeDiff {
 				if(super1 != null && super2 != null){
 					Boolean isBreakingChange = true;
 					String nameClassComplete = UtilTools.getPath(accessibleTypeVersion2);
-					
+					String description = "";
 					//Se tinha super classe, e foi removida.
 					if(this.containsSuperClass(accessibleTypeVersion1) && !this.containsSuperClass(accessibleTypeVersion2)){
-						String description = this.description.removeSuperClass(nameClassComplete, super1);
+						description = this.description.changeSuperType(nameClassComplete, super1, "");
 						this.addChange(accessibleTypeVersion2, Category.TYPE_REMOVE_SUPERCLASS, isBreakingChange, description);
 					}
 					//Se não tinha super classe, e foi adicionada.
 					if(!this.containsSuperClass(accessibleTypeVersion1) && this.containsSuperClass(accessibleTypeVersion2)){
-						this.addChange(accessibleTypeVersion2, Category.TYPE_ADD_SUPER_CLASS, false, "");
+						description = this.description.changeSuperType(nameClassComplete, "", super2);
+						this.addChange(accessibleTypeVersion2, Category.TYPE_ADD_SUPER_CLASS, false, description);
 					}
 					//Se tinha super classe, e foi modificada.
 					if(this.containsSuperClass(accessibleTypeVersion1) && this.containsSuperClass(accessibleTypeVersion2) && !super1.equals(super2)){
-						String description = this.description.changeSuperClass(nameClassComplete, super1, super2);
+						description = this.description.changeSuperType(nameClassComplete, super1, super2);
 						this.addChange(accessibleTypeVersion2, Category.TYPE_CHANGE_SUPERCLASS, false, description);
 					}
 				}
@@ -196,7 +197,8 @@ public class TypeDiff {
 			AbstractTypeDeclaration accessibleTypeVersion2 = version2.getVersionAccessibleType(accessibleTypeVersion1);
 			if(accessibleTypeVersion2 != null){
 				if(!this.isDeprecated(accessibleTypeVersion1) && this.isDeprecated(accessibleTypeVersion2)){
-					this.addChange(accessibleTypeVersion1, Category.TYPE_DEPRECIATE, false, "");
+					String description = this.description.deprecate(UtilTools.getPath(accessibleTypeVersion2));
+					this.addChange(accessibleTypeVersion1, Category.TYPE_DEPRECIATE, false, description);
 				}
 			}
 		}
@@ -237,7 +239,7 @@ public class TypeDiff {
 				String visibilityType1 = UtilTools.getVisibility(type1);
 				String visibilityType2 = UtilTools.getVisibility(type2);
 				if(!visibilityType1.equals(visibilityType2)){ //Se visibilidade mudou, verifica se houve perda ou ganho.
-					String description = this.description.visibility(this.getSimpleNameClass(type2), this.getNamePackage(type2), visibilityType1, visibilityType2);
+					String description = this.description.visibility(UtilTools.getPath(type2), visibilityType1, visibilityType2);
 					//Breaking change: public --> qualquer modificador de acesso, protected --> qualquer modificador de acesso, exceto public.
 					if(UtilTools.isVisibilityPublic(type1) || (UtilTools.isVisibilityProtected(type1) && !UtilTools.isVisibilityPublic(type2))){
 						this.addChange(type2, Category.TYPE_LOST_VISIBILITY, true, description);
@@ -263,7 +265,8 @@ public class TypeDiff {
 		for (AbstractTypeDeclaration typeVersion2 : listTypesVersion2) {
 			//Busca entre os types acessíveis e não acessíveis porque pode ser um type que já existia e ganhou visibilidade.
 			if(!version1.containsAccessibleType(typeVersion2) && !version1.containsNonAccessibleType(typeVersion2) && !this.typesWithPathChanged.contains(UtilTools.getPath(typeVersion2))){
-				this.addChange(typeVersion2, Category.TYPE_ADD, false, "");
+				String description = this.description.addition(UtilTools.getPath(typeVersion2));
+				this.addChange(typeVersion2, Category.TYPE_ADD, false, description);
 			}
 		}
 	}
@@ -343,12 +346,12 @@ public class TypeDiff {
 		}
 		//Se ganhou o modificador "final"
 		if((!UtilTools.isFinal(typeVersion1) && UtilTools.isFinal(typeVersion2))){
-			String description = this.description.modifierFinal(this.getSimpleNameClass(typeVersion2), this.getNamePackage(typeVersion2), true);
+			String description = this.description.modifierFinal(UtilTools.getPath(typeVersion2), true);
 			this.addChange(typeVersion2, Category.TYPE_GAIN_MODIFIER_FINAL, true, description);
 		}
 		else{
 			//Se perdeu o modificador "final"
-			String description = this.description.modifierFinal(this.getSimpleNameClass(typeVersion2), this.getNamePackage(typeVersion2), false);
+			String description = this.description.modifierFinal(UtilTools.getPath(typeVersion2), false);
 			this.addChange(typeVersion2, Category.TYPE_LOST_MODIFIER_FINAL, false, description);
 		}
 	}
@@ -368,16 +371,14 @@ public class TypeDiff {
 		if((UtilTools.isStatic(typeVersion1) && UtilTools.isStatic(typeVersion2)) || ((!UtilTools.isStatic(typeVersion1) && !UtilTools.isStatic(typeVersion2)))){
 			return;
 		}
-		String simpleNameClass = this.getSimpleNameClass(typeVersion2);
-		String namePackage = this.getNamePackage(typeVersion2);
 		//Se ganhou o modificador "static"
 		if((!UtilTools.isStatic(typeVersion1) && UtilTools.isStatic(typeVersion2))){
-			String description = this.description.modifierStatic(simpleNameClass, namePackage, true);
+			String description = this.description.modifierStatic(UtilTools.getPath(typeVersion2), true);
 			this.addChange(typeVersion2, Category.TYPE_GAIN_MODIFIER_STATIC, false, description);
 		}
 		else{
 			//Se perdeu o modificador "static"
-			String description = this.description.modifierStatic(simpleNameClass, namePackage, false);
+			String description = this.description.modifierStatic(UtilTools.getPath(typeVersion2), false);
 			this.addChange(typeVersion2, Category.TYPE_LOST_MODIFIER_STATIC, true, description);
 		}
 		

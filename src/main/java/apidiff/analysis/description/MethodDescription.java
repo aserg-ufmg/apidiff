@@ -36,11 +36,11 @@ public class MethodDescription extends TemplateDescription {
 		}
 		
 		if(UtilTools.isNullOrEmpty(listBefore) && !UtilTools.isNullOrEmpty(listAfter)){
-			message += "<br>added list exception " + listExceptionBefore + "</code>";
+			message += "<br>added list exception " + listAfter + "</code>";
 		}
 		
 		if(!UtilTools.isNullOrEmpty(listBefore) && UtilTools.isNullOrEmpty(listAfter)){
-			message += "<br>removed list exception " + listExceptionBefore + "</code>";
+			message += "<br>removed list exception " + listBefore + "</code>";
 		}
 
 		message += "<br>in <code>" + nameClassBefore +"</code>";
