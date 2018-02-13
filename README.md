@@ -19,7 +19,7 @@ The following _Non-breaking Changes_ (NBC) are supported:
 
 | Element  | NBC |
 | ------------- | ------------- |
-| Type  | Add Type, Extract Supertype, Gain Visibility, Remove Final Modifier, Add Static Modifier, Add Supertype, Depreciate Type, Extract Supertype |
+| Type  | Add Type, Extract Supertype, Gain Visibility, Remove Final Modifier, Add Static Modifier, Add Supertype, Depreciate Type |
 | Method  | Pull Up Method, Gain Visibility, Remove Final Modifier, Add Static Modifier, Depreciate Method, Add Method | 
 | Field  | Pull Up Field, Add Field, Depreciate Field, Gain Visibility, Remove Final Modifier|
 
