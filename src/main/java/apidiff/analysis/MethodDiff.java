@@ -78,6 +78,9 @@ public class MethodDiff {
 		if(this.refactorings.containsKey(RefactoringType.RENAME_METHOD)){
 			listMove.addAll(this.refactorings.get(RefactoringType.RENAME_METHOD));
 		}
+		if(this.refactorings.containsKey(RefactoringType.EXTRACT_OPERATION)){
+			listMove.addAll(this.refactorings.get(RefactoringType.EXTRACT_OPERATION));
+		}
 		return listMove;
 	}
 	
@@ -100,6 +103,10 @@ public class MethodDiff {
 				category = Category.METHOD_RENAME;
 				break;
 				
+			case EXTRACT_OPERATION:
+				category = Category.METHOD_EXTRACT;
+				break;
+				
 			default:
 				category = Category.METHOD_PULL_UP;
 				break;
@@ -119,7 +126,7 @@ public class MethodDiff {
 			for(SDRefactoring ref : listMove){
 				String fullNameAndPath = this.getFullNameMethodAndPath(method, type);
 				if(fullNameAndPath.equals(ref.getEntityBefore().fullName())){
-					Boolean isBreakingChange = RefactoringType.PULL_UP_OPERATION.equals(ref.getRefactoringType())? false:true;
+					Boolean isBreakingChange = (RefactoringType.PULL_UP_OPERATION.equals(ref.getRefactoringType()) || RefactoringType.EXTRACT_OPERATION.equals(ref.getRefactoringType()))? false:true;
 					Category category = this.getCategory(ref.getRefactoringType());
 					String description = this.description.refactorMethod(category, ref); 
 					this.addChange(type, method, category, isBreakingChange, description);

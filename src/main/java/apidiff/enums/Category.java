@@ -20,6 +20,7 @@ public enum Category {
 	TYPE_DEPRECIATE("Depreciate Type"),
 	
 	METHOD_MOVE("Move Method"),
+	METHOD_EXTRACT("Extract Method"),
 	METHOD_RENAME("Rename Method"),
 	METHOD_REMOVE("Remove Method"),
 	METHOD_PULL_UP("Pull Up Method"),
@@ -43,8 +44,8 @@ public enum Category {
 	FIELD_PUSH_DOWN("Push Down Field"),
 	FIELD_ADD("Add Field"),
 	FIELD_DEPRECIATE("Depreciate Field"),
-	FIELD_CHANGE_DEFAULT_VALUE("Change in Default Value"),
-	FIELD_CHANGE_TYPE("Change in Type Field"),
+	FIELD_CHANGE_DEFAULT_VALUE("Change in Field Default Value"),
+	FIELD_CHANGE_TYPE("Change in Field Type"),
 	FIELD_LOST_VISIBILITY("Lost Visibility in Field"),
 	FIELD_GAIN_VISIBILITY("Gain Visibility in Field"),
 	FIELD_REMOVE_MODIFIER_FINAL("Remove Final Modifier in Field"),
