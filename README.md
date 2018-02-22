@@ -9,7 +9,7 @@ The project has been maintained by [Aline Brito](https://github.com/alinebrito) 
 
 The following _Breaking Changes_ (BC) are supported: 
 
-| Element  | BC |
+| Element  | Breaking Changes (BC) |
 | ------------- | ------------- |
 | Type  | Rename Type, Move Type, Move and Rename Type, Remove Type, Lost Visibility, Add Final Modifier,  Remove Static Modifier, Change in Supertype, Remove Supertype |
 | Method  | Move Method, Rename Method, Remove Method, Push Down Method, Inline Method, Change in Parameter List, Change in Exception List, Change in Return Type Method, Lost Visibility, Add Final Modifier, Remove Static Modifier  | 
@@ -17,7 +17,7 @@ The following _Breaking Changes_ (BC) are supported:
 
 The following _Non-breaking Changes_ (NBC) are supported: 
 
-| Element  | NBC |
+| Element  | Non-breaking Changes (NB) |
 | ------------- | ------------- |
 | Type  | Add Type, Extract Supertype, Gain Visibility, Remove Final Modifier, Add Static Modifier, Add Supertype, Depreciate Type |
 | Method  | Pull Up Method, Gain Visibility, Remove Final Modifier, Add Static Modifier, Depreciate Method, Add Method, Extract Method| 
@@ -95,3 +95,9 @@ for(Change changeMethod : result.getChangeMethod()){
 }
 UtilFile.writeFile("output.csv", listChanges);
 ```
+
+### Publications
+
+Aline Brito, Laerte Xavier, Andre Hora, Marco Tulio Valente. [APIDiff: Detecting API Breaking Changes](http://homepages.dcc.ufmg.br/~mtov/pub/2018-saner-apidiff.pdf). In 25th International Conference on Software Analysis, Evolution and Reengineering (SANER), Tool Track, pages 1-5, 2018.
+
+Learn more about our research group at http://aserg.labsoft.dcc.ufmg.br/
