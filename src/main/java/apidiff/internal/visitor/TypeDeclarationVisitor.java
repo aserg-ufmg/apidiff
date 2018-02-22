@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-import apidiff.util.UtilTools;
+import apidiff.internal.util.UtilTools;
 
 public class TypeDeclarationVisitor extends ASTVisitor{
 	private ArrayList<TypeDeclaration> acessibleTypes = new ArrayList<TypeDeclaration>();

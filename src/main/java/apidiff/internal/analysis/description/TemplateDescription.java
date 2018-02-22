@@ -1,6 +1,6 @@
 package apidiff.internal.analysis.description;
 
-import apidiff.util.UtilTools;
+import apidiff.internal.util.UtilTools;
 
 public class TemplateDescription {
 	

@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import apidiff.enums.Classifier;
 import apidiff.internal.analysis.comparator.ComparatorMethod;
 import apidiff.internal.service.git.GitFile;
-import apidiff.util.UtilTools;
+import apidiff.internal.util.UtilTools;
 
 public class APIVersion {
 	

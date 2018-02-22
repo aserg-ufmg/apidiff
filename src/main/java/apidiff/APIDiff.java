@@ -19,8 +19,8 @@ import apidiff.internal.analysis.DiffProcessorImpl;
 import apidiff.internal.service.git.GitFile;
 import apidiff.internal.service.git.GitService;
 import apidiff.internal.service.git.GitServiceImpl;
+import apidiff.internal.util.UtilTools;
 import apidiff.internal.visitor.APIVersion;
-import apidiff.util.UtilTools;
 
 public class APIDiff implements DiffDetector{
 	

@@ -29,7 +29,7 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import apidiff.util.UtilTools;
+import apidiff.internal.util.UtilTools;
 
 public class GitServiceImpl implements GitService {
 	

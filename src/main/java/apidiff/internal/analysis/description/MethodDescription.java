@@ -5,7 +5,7 @@ import java.util.List;
 import org.eclipse.jdt.core.dom.SimpleType;
 
 import apidiff.enums.Category;
-import apidiff.util.UtilTools;
+import apidiff.internal.util.UtilTools;
 import refdiff.core.rm2.model.refactoring.SDRefactoring;
 
 public class MethodDescription extends TemplateDescription {

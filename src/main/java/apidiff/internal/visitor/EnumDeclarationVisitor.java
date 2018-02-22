@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 
-import apidiff.util.UtilTools;
+import apidiff.internal.util.UtilTools;
 
 public class EnumDeclarationVisitor extends ASTVisitor{
 	private ArrayList<EnumDeclaration> acessibleEnums = new ArrayList<EnumDeclaration>();

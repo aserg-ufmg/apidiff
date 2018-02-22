@@ -17,8 +17,8 @@ import apidiff.Change;
 import apidiff.enums.Category;
 import apidiff.internal.analysis.description.FieldDescription;
 import apidiff.internal.exception.BindingException;
+import apidiff.internal.util.UtilTools;
 import apidiff.internal.visitor.APIVersion;
-import apidiff.util.UtilTools;
 import refdiff.core.api.RefactoringType;
 import refdiff.core.rm2.model.refactoring.SDRefactoring;
 
