@@ -1,4 +1,4 @@
-package apidiff.analysis;
+package apidiff.internal.analysis;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,10 +13,10 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import apidiff.analysis.description.MethodDescription;
 import apidiff.enums.Category;
+import apidiff.internal.analysis.description.MethodDescription;
+import apidiff.internal.visitor.APIVersion;
 import apidiff.util.UtilTools;
-import apidiff.visitor.APIVersion;
 import refdiff.core.api.RefactoringType;
 import refdiff.core.rm2.model.refactoring.SDRefactoring;
 

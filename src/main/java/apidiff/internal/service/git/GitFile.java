@@ -1,4 +1,4 @@
-package apidiff.service.git;
+package apidiff.internal.service.git;
 
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 

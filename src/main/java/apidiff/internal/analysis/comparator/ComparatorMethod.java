@@ -1,4 +1,4 @@
-package apidiff.analysis.comparator;
+package apidiff.internal.analysis.comparator;
 
 import java.util.ArrayList;
 import java.util.Arrays;

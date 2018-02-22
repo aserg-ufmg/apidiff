@@ -1,4 +1,4 @@
-package apidiff.analysis.description;
+package apidiff.internal.analysis.description;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package apidiff.visitor;
+package apidiff.internal.visitor;
 
 public class VisitorProcessor {
 

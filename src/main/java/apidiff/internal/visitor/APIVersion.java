@@ -1,4 +1,4 @@
-package apidiff.visitor;
+package apidiff.internal.visitor;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,9 +23,9 @@ import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import apidiff.analysis.comparator.ComparatorMethod;
 import apidiff.enums.Classifier;
-import apidiff.service.git.GitFile;
+import apidiff.internal.analysis.comparator.ComparatorMethod;
+import apidiff.internal.service.git.GitFile;
 import apidiff.util.UtilTools;
 
 public class APIVersion {

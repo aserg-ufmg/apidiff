@@ -20,7 +20,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import apidiff.enums.Classifier;
-import apidiff.visitor.APIVersion;
+import apidiff.internal.visitor.APIVersion;
 
 public class UtilTools {
 	

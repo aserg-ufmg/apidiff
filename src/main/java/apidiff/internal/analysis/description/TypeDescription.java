@@ -1,4 +1,4 @@
-package apidiff.analysis.description;
+package apidiff.internal.analysis.description;
 
 import apidiff.util.UtilTools;
 

@@ -13,15 +13,15 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import apidiff.analysis.DiffProcessor;
-import apidiff.analysis.DiffProcessorImpl;
-import apidiff.analysis.Result;
 import apidiff.enums.Classifier;
-import apidiff.service.git.GitFile;
-import apidiff.service.git.GitService;
-import apidiff.service.git.GitServiceImpl;
+import apidiff.internal.analysis.DiffProcessor;
+import apidiff.internal.analysis.DiffProcessorImpl;
+import apidiff.internal.analysis.Result;
+import apidiff.internal.service.git.GitFile;
+import apidiff.internal.service.git.GitService;
+import apidiff.internal.service.git.GitServiceImpl;
+import apidiff.internal.visitor.APIVersion;
 import apidiff.util.UtilTools;
-import apidiff.visitor.APIVersion;
 
 public class APIDiff implements DiffDetector{
 	

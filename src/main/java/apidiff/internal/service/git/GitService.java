@@ -1,4 +1,4 @@
-package apidiff.service.git;
+package apidiff.internal.service.git;
 
 import java.util.List;
 import java.util.Map;

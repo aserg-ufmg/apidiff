@@ -1,4 +1,4 @@
-package apidiff.visitor;
+package apidiff.internal.visitor;
 import java.util.ArrayList;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;

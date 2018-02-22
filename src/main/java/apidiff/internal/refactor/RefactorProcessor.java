@@ -1,4 +1,4 @@
-package apidiff.refactor;
+package apidiff.internal.refactor;
 
 import java.util.List;
 import java.util.Map;

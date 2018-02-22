@@ -1,4 +1,4 @@
-package apidiff.analysis;
+package apidiff.internal.analysis;
 
 import org.eclipse.jgit.revwalk.RevCommit;
 
