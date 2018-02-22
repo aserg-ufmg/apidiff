@@ -2,10 +2,10 @@
 
 A tool to identify API breaking and non-breaking changes between two versions of a Java library. APIDiff analyses libraries hosted on the distributed version control system _git_.
 
-### Contributors
+## Contributors
 The project has been maintained by [Aline Brito](https://github.com/alinebrito) and [Laerte Xavier](https://github.com/xavierlaerte) under supervision of Professor [Marco Tulio Valente](https://github.com/mtov) ([Aserg](http://aserg.labsoft.dcc.ufmg.br/) [UFMG](https://www.ufmg.br/)) and Professor [Andre Hora](https://github.com/andrehora) ([UFMS](https://www.ufms.br/) [FACOM](https://www.facom.ufms.br/)).
 
-### Catalog
+## Catalog
 
 The following _Breaking Changes_ (BC) are supported: 
 
@@ -26,7 +26,7 @@ The following _Non-breaking Changes_ (NBC) are supported:
 
 The refactorings catalog is reused from [RefDiff](https://github.com/aserg-ufmg/RefDiff).
 
-### Filtering Packages
+## Filtering Packages
 
 It is possible to filter in or filter out packages according to their names. 
 
@@ -44,7 +44,7 @@ Classifier.NON_API: Internal, test, example or experimental elements.
 Classifier.API: Elements that are not non-APIs.
 ``` 
 
-### Usage Scenarios
+## Usage Scenarios
 
 Detecting changes in version histories:
 
@@ -96,7 +96,7 @@ for(Change changeMethod : result.getChangeMethod()){
 UtilFile.writeFile("output.csv", listChanges);
 ```
 
-### Publications
+## Publications
 
 Aline Brito, Laerte Xavier, Andre Hora, Marco Tulio Valente. [APIDiff: Detecting API Breaking Changes](http://homepages.dcc.ufmg.br/~mtov/pub/2018-saner-apidiff.pdf). In 25th International Conference on Software Analysis, Evolution and Reengineering (SANER), Tool Track, pages 1-5, 2018.
 
