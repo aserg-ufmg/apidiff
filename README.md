@@ -17,7 +17,7 @@ The following _Breaking Changes_ (BC) are supported:
 
 The following _Non-breaking Changes_ (NBC) are supported: 
 
-| Element  | Non-breaking Changes (NB) |
+| Element  | Non-breaking Changes (NBC) |
 | ------------- | ------------- |
 | Type  | Add Type, Extract Supertype, Gain Visibility, Remove Final Modifier, Add Static Modifier, Add Supertype, Depreciate Type |
 | Method  | Pull Up Method, Gain Visibility, Remove Final Modifier, Add Static Modifier, Depreciate Method, Add Method, Extract Method| 
