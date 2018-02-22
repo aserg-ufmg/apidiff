@@ -13,6 +13,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import apidiff.Change;
 import apidiff.enums.Category;
 import apidiff.internal.analysis.description.FieldDescription;
 import apidiff.internal.exception.BindingException;

@@ -6,6 +6,7 @@ import java.util.Map;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import apidiff.Result;
 import apidiff.internal.refactor.RefactorProcessor;
 import apidiff.internal.refactor.RefactoringProcessorImpl;
 import apidiff.internal.visitor.APIVersion;

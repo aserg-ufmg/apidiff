@@ -3,7 +3,6 @@ package apidiff;
 import java.util.List;
 
 import apidiff.enums.Classifier;
-import apidiff.internal.analysis.Result;
 
 public interface DiffDetector {
 	

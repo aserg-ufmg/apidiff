@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import apidiff.enums.Classifier;
 import apidiff.internal.analysis.DiffProcessor;
 import apidiff.internal.analysis.DiffProcessorImpl;
-import apidiff.internal.analysis.Result;
 import apidiff.internal.service.git.GitFile;
 import apidiff.internal.service.git.GitService;
 import apidiff.internal.service.git.GitServiceImpl;
