@@ -13,11 +13,11 @@ public interface DiffDetector {
 	 * @return Result
 	 * @throws Exception
 	 */
-	public Result detectChangeAtCommit(String commitId, Classifier classifier) throws Exception;;
+	public Result detectChangeAtCommit(String commitId, Classifier classifier) throws Exception;
 	
 	/**
 	 * Analyzing changes performed in whole history.
-	 * @param branch
+	 * @param branch - branch name (i.e., "master")
 	 * @param classifiers
 	 * @return Result
 	 * @throws Exception
@@ -26,7 +26,7 @@ public interface DiffDetector {
 	
 	/**
 	 * Analyzing changes performed in whole history.
-	 * @param branch
+	 * @param branch - branch name (i.e., "master")
 	 * @param classifier
 	 * @return
 	 * @throws Exception
