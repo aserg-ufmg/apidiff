@@ -55,7 +55,7 @@ public class MethodDiff {
 		change.setDepreciated(this.isDeprecated(method, type));
 		change.setBreakingChange(this.isDeprecated(method, type) ? false : isBreakingChange);
 		change.setPath(UtilTools.getPath(type));
-		change.setStruture(this.getFullNameMethod(method));
+		change.setElement(this.getFullNameMethod(method));
 		change.setCategory(category);
 		change.setDescription(description);
 		change.setRevCommit(this.revCommit);

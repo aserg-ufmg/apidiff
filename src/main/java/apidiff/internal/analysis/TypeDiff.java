@@ -63,7 +63,7 @@ public class TypeDiff {
 		change.setDepreciated(this.isDeprecated(type));
 		change.setBreakingChange(this.isDeprecated(type) ? false : isBreakingChange);
 		change.setPath(UtilTools.getPath(type));
-		change.setStruture(type.getName().toString());
+		change.setElement(type.getName().toString());
 		change.setCategory(category);
 		change.setDescription(description);
 		change.setRevCommit(this.revCommit);

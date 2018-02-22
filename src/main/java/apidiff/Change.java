@@ -5,9 +5,8 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import apidiff.enums.Category;
 
 /**
- * Classe para armazenar a saída
+ * Information about the change.
  * @author aline
- *
  */
 public class Change {
 	
@@ -17,7 +16,7 @@ public class Change {
 	
 	public Change(final String path, final String struture, final Category category, final Boolean isBreakingChange, final String description){
 		this.path = path;
-		this.struture = struture;
+		this.element = struture;
 		this.category = category;
 		this.description = description;
 		this.breakingChange = isBreakingChange;
@@ -25,7 +24,7 @@ public class Change {
 	
 	public Change(final String path, final String struture, final Category category, final Boolean isBreakingChange){
 		this.path = path;
-		this.struture = struture;
+		this.element = struture;
 		this.category = category;
 		this.breakingChange = isBreakingChange;
 		this.description = "";
@@ -33,35 +32,30 @@ public class Change {
 	
 	public Change(final String path, final String struture, final Category category) {
 		this.path = path;
-		this.struture = struture;
+		this.element = struture;
 		this.category = category;
 	}
 	
-	/**
-	 * Caminho completo da classe/elemento.
-	 */
+
 	private String path;
-	
-	/**
-	 * Estrutura onde a breaking change foi detectada.
-	 */
-	private String struture;
-	
-	/**
-	 * Categoria da breaking change. 
-	 */
+
+	private String element;
+
 	private Category category;
-	
+
 	private Boolean breakingChange;
-	
+
 	private String description;
 	
 	private Boolean javadoc;
-	
+
 	private Boolean depreciated;
-	
+
 	private RevCommit revCommit;
 
+	/**
+	 * Element path (i.e, java.util.ArrayList).
+	 */
 	public String getPath() {
 		return path;
 	}
@@ -70,24 +64,20 @@ public class Change {
 		this.path = path;
 	}
 	
-	public Change path(String path) {
-		this.path = path;
-		return this;
+	/**
+	 * Struture name (i.e., public void setName(String)).
+	 */
+	public String getElement() {
+		return element;
 	}
 
-	public String getStruture() {
-		return struture;
-	}
-
-	public void setStruture(String struture) {
-		this.struture = struture;
+	public void setElement(String element) {
+		this.element = element;
 	}
 	
-	public Change struture(String struture) {
-		this.struture = struture;
-		return this;
-	}
-
+	/**
+	 * If it is breaking change (BC) is true, otherwise is false.
+	 */
 	public Boolean isBreakingChange() {
 		return breakingChange;
 	}
@@ -96,11 +86,9 @@ public class Change {
 		this.breakingChange = breakingChange;
 	}
 	
-	public Change isBreakingChange(Boolean breakingChange) {
-		this.breakingChange = breakingChange;
-		return this;
-	}
-
+	/**
+	 * Description about the change.
+	 */
 	public String getDescription() {
 		return description;
 	}
@@ -108,12 +96,10 @@ public class Change {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	
-	public Change description(String description) {
-		this.description = description;
-		return this;
-	}
 
+	/**
+	 * If element has JavaDoc is true, otherwise is false.
+	 */
 	public Boolean getJavadoc() {
 		return this.javadoc;
 	}
@@ -122,7 +108,10 @@ public class Change {
 		this.javadoc = javadoc;
 	}
 
-	public Boolean getDepreciated() {
+	/**
+	 * If element is deprecated is true, otherwise is false.
+	 */
+	public Boolean isDepreciated() {
 		return this.depreciated;
 	}
 
@@ -130,6 +119,9 @@ public class Change {
 		this.depreciated = depreciated;
 	}
 
+	/**
+	 * Change category.For more details {@link Category}
+	 */
 	public Category getCategory() {
 		return category;
 	}
@@ -138,10 +130,9 @@ public class Change {
 		this.category = category;
 	}
 
-	public Boolean getBreakingChange() {
-		return breakingChange;
-	}
-
+	/**
+	 * Information about commit (i.e., author, email, commit hash, date).
+	 */
 	public RevCommit getRevCommit() {
 		return revCommit;
 	}

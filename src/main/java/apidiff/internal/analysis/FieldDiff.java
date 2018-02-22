@@ -59,7 +59,7 @@ public class FieldDiff {
 			change.setDepreciated(this.isDeprecated(field, type));
 			change.setBreakingChange(this.isDeprecated(field, type) ? false : isBreakingChange);
 			change.setPath(UtilTools.getPath(type));
-			change.setStruture(name);
+			change.setElement(name);
 			change.setCategory(category);
 			change.setDescription(description);
 			change.setRevCommit(this.revCommit);
