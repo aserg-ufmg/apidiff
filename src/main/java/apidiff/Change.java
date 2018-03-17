@@ -49,7 +49,7 @@ public class Change {
 	
 	private Boolean javadoc;
 
-	private Boolean depreciated;
+	private Boolean deprecated;
 
 	private RevCommit revCommit;
 
@@ -100,7 +100,7 @@ public class Change {
 	/**
 	 * If element has JavaDoc is true, otherwise is false.
 	 */
-	public Boolean getJavadoc() {
+	public Boolean containsJavadoc() {
 		return this.javadoc;
 	}
 
@@ -111,12 +111,12 @@ public class Change {
 	/**
 	 * If element is deprecated is true, otherwise is false.
 	 */
-	public Boolean isDepreciated() {
-		return this.depreciated;
+	public Boolean isDeprecated() {
+		return this.deprecated;
 	}
 
-	public void setDepreciated(Boolean depreciated) {
-		this.depreciated = depreciated;
+	public void setDeprecated(Boolean depreciated) {
+		this.deprecated = depreciated;
 	}
 
 	/**

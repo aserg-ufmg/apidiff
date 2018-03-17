@@ -56,7 +56,7 @@ public class FieldDiff {
 		if(name != null){
 			Change change = new Change();
 			change.setJavadoc(UtilTools.containsJavadoc(type, field));
-			change.setDepreciated(this.isDeprecated(field, type));
+			change.setDeprecated(this.isDeprecated(field, type));
 			change.setBreakingChange(this.isDeprecated(field, type) ? false : isBreakingChange);
 			change.setPath(UtilTools.getPath(type));
 			change.setElement(name);

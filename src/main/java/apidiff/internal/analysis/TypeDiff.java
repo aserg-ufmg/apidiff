@@ -60,7 +60,7 @@ public class TypeDiff {
 	private void addChange(final AbstractTypeDeclaration type, Category category, Boolean isBreakingChange, final String description){
 		Change change = new Change();
 		change.setJavadoc(UtilTools.containsJavadoc(type));
-		change.setDepreciated(this.isDeprecated(type));
+		change.setDeprecated(this.isDeprecated(type));
 		change.setBreakingChange(this.isDeprecated(type) ? false : isBreakingChange);
 		change.setPath(UtilTools.getPath(type));
 		change.setElement(type.getName().toString());

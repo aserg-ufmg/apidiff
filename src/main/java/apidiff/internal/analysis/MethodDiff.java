@@ -52,7 +52,7 @@ public class MethodDiff {
 	private void addChange(final TypeDeclaration type, final MethodDeclaration method, Category category, Boolean isBreakingChange, final String description){
 		Change change = new Change();
 		change.setJavadoc(UtilTools.containsJavadoc(type, method));
-		change.setDepreciated(this.isDeprecated(method, type));
+		change.setDeprecated(this.isDeprecated(method, type));
 		change.setBreakingChange(this.isDeprecated(method, type) ? false : isBreakingChange);
 		change.setPath(UtilTools.getPath(type));
 		change.setElement(this.getFullNameMethod(method));

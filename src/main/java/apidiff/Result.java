@@ -10,7 +10,7 @@ public class Result {
 	private List<Change> changeMethod = new ArrayList<Change>();
 	
 	private List<Change> changeField = new ArrayList<Change>();
-
+	
 	public List<Change> getChangeType() {
 		return changeType;
 	}
@@ -34,5 +34,6 @@ public class Result {
 	public void setChangeField(List<Change> changeField) {
 		this.changeField = changeField;
 	}
+	
 	
 }
