@@ -26,7 +26,7 @@ The following _Non-breaking Changes_ (NBC) are supported:
 
 The refactorings catalog is reused from [RefDiff](https://github.com/aserg-ufmg/RefDiff).
 
-## Examples:
+## Examples
 
 * Detecting changes in version histories:
 
