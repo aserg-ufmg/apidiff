@@ -19,14 +19,66 @@ The following _Non-breaking Changes_ (NBC) are supported:
 
 | Element  | Non-breaking Changes (NBC) |
 | ------------- | ------------- |
-| Type  | Add Type, Extract Supertype, Gain Visibility, Remove Final Modifier, Add Static Modifier, Add Supertype, Depreciate Type |
-| Method  | Pull Up Method, Gain Visibility, Remove Final Modifier, Add Static Modifier, Depreciate Method, Add Method, Extract Method| 
-| Field  | Pull Up Field, Add Field, Depreciate Field, Gain Visibility, Remove Final Modifier|
+| Type  | Add Type, Extract Supertype, Gain Visibility, Remove Final Modifier, Add Static Modifier, Add Supertype, Deprecated Type |
+| Method  | Pull Up Method, Gain Visibility, Remove Final Modifier, Add Static Modifier, Deprecated Method, Add Method, Extract Method| 
+| Field  | Pull Up Field, Add Field, Deprecated Field, Gain Visibility, Remove Final Modifier|
 
 
 The refactorings catalog is reused from [RefDiff](https://github.com/aserg-ufmg/RefDiff).
 
-## Filtering Packages
+## Examples:
+
+* Detecting changes in version histories:
+
+```java
+APIDiff diff = new APIDiff("bumptech/glide", "https://github.com/bumptech/glide.git");
+diff.setPath("/home/projects/github");
+
+Result result = diff.detectChangeAllHistory("master", Classifier.API);
+for(Change changeMethod : result.getChangeMethod()){
+    System.out.println("\n" + changeMethod.getCategory().getDisplayName() + " - " + changeMethod.getDescription());
+}
+```
+* Detecting changes in specific commit:
+
+```java
+APIDiff diff = new APIDiff("mockito/mockito", "https://github.com/mockito/mockito.git");
+diff.setPath("/home/projects/github");
+
+Result result = diff.detectChangeAtCommit("4ad5fdc14ca4b979155d10dcea0182c82380aefa", Classifier.API);
+for(Change changeMethod : result.getChangeMethod()){
+    System.out.println("\n" + changeMethod.getCategory().getDisplayName() + " - " + changeMethod.getDescription());
+}
+```
+* Fetching new commits:
+
+```java
+APIDiff diff = new APIDiff("bumptech/glide", "https://github.com/bumptech/glide.git");
+diff.setPath("/home/projects/github");
+    
+Result result = diff.fetchAndDetectChange(Classifier.API);
+for(Change changeMethod : result.getChangeMethod()){
+    System.out.println("\n" + changeMethod.getCategory().getDisplayName() + " - " + changeMethod.getDescription());
+}
+```
+
+* Writing a CSV file:
+
+```java
+APIDiff diff = new APIDiff("mockito/mockito", "https://github.com/mockito/mockito.git");
+diff.setPath("/home/projects/github");
+Result result = diff.detectChangeAtCommit("4ad5fdc14ca4b979155d10dcea0182c82380aefa", Classifier.API);
+		
+List<String> listChanges = new ArrayList<String>();
+listChanges.add("Category;isDeprecated;containsJavadoc");
+for(Change changeMethod : result.getChangeMethod()){
+    String change = changeMethod.getCategory().getDisplayName() + ";" + changeMethod.isDeprecated()  + ";" + changeMethod.containsJavadoc() ;
+    listChanges.add(change);
+}
+UtilFile.writeFile("output.csv", listChanges);
+```
+
+* Filtering Packages:
 
 It is possible to filter in or filter out packages according to their names. 
 
@@ -44,58 +96,15 @@ Classifier.NON_API: Internal, test, example or experimental elements.
 Classifier.API: Elements that are not non-APIs.
 ``` 
 
-## Usage Scenarios
+## Usage
 
-Detecting changes in version histories:
-
-```java
-APIDiff diff = new APIDiff("bumptech/glide", "https://github.com/bumptech/glide.git");
-diff.setPath("/home/projects/github");
-
-Result result = diff.detectChangeAllHistory("master", Classifier.API);
-for(Change changeMethod : result.getChangeMethod()){
-    System.out.println("\n" + changeMethod.getCategory().getDisplayName() + " - " + changeMethod.getDescription());
-}
+```xml
+<dependency>
+    <groupId></groupId>
+    <artifactId></artifactId>
+    <version></version>
+</dependency>
 ```
-Detecting changes in specific commit:
-
-```java
-APIDiff diff = new APIDiff("mockito/mockito", "https://github.com/mockito/mockito.git");
-diff.setPath("/home/projects/github");
-
-Result result = diff.detectChangeAtCommit("4ad5fdc14ca4b979155d10dcea0182c82380aefa", Classifier.API);
-for(Change changeMethod : result.getChangeMethod()){
-    System.out.println("\n" + changeMethod.getCategory().getDisplayName() + " - " + changeMethod.getDescription());
-}
-```
-Fetching new commits:
-
-```java
-APIDiff diff = new APIDiff("bumptech/glide", "https://github.com/bumptech/glide.git");
-diff.setPath("/home/projects/github");
-    
-Result result = diff.fetchAndDetectChange(Classifier.API);
-for(Change changeMethod : result.getChangeMethod()){
-    System.out.println("\n" + changeMethod.getCategory().getDisplayName() + " - " + changeMethod.getDescription());
-}
-```
-
-Writing a CSV file:
-
-```java
-APIDiff diff = new APIDiff("mockito/mockito", "https://github.com/mockito/mockito.git");
-diff.setPath("/home/projects/github");
-Result result = diff.detectChangeAtCommit("4ad5fdc14ca4b979155d10dcea0182c82380aefa", Classifier.API);
-		
-List<String> listChanges = new ArrayList<String>();
-listChanges.add("Category;isDepreciated;containsJavadoc");
-for(Change changeMethod : result.getChangeMethod()){
-    String change = changeMethod.getCategory().getDisplayName() + ";" + changeMethod.getDepreciated()  + ";" + changeMethod.getJavadoc() ;
-    listChanges.add(change);
-}
-UtilFile.writeFile("output.csv", listChanges);
-```
-
 ## Publications
 
 Aline Brito, Laerte Xavier, Andre Hora, Marco Tulio Valente. [APIDiff: Detecting API Breaking Changes](http://homepages.dcc.ufmg.br/~mtov/pub/2018-saner-apidiff.pdf). In 25th International Conference on Software Analysis, Evolution and Reengineering (SANER), Tool Track, pages 1-5, 2018.
