@@ -78,9 +78,7 @@ for(Change changeMethod : result.getChangeMethod()){
 UtilFile.writeFile("output.csv", listChanges);
 ```
 
-* Filtering Packages:
-
-It is possible to filter in or filter out packages according to their names. 
+* Filtering Packages according to their names:
 
 ```java 
 Classifier.INTERNAL: Elements that are in packages with the term "internal".
