@@ -96,6 +96,8 @@ Classifier.API: Elements that are not non-APIs.
 
 ## Usage
 
+APIDiff is available in the Maven Central Repository:
+
 ```xml
 <dependency>
     <groupId></groupId>
