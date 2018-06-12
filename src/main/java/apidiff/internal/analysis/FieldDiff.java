@@ -259,7 +259,7 @@ public class FieldDiff {
 					//Se o field não estava depreciado na versão anterior ou não existia e foi criado depreciado.
 					if(fieldInVersion1 == null || !this.isDeprecated(fieldInVersion1, version1.getVersionAccessibleType(typeVersion2))){
 						String description = this.description.deprecate(UtilTools.getFieldName(fieldVersion2), UtilTools.getPath(typeVersion2));
-						this.addChange(typeVersion2, fieldVersion2, Category.FIELD_DEPRECIATE, false, description);
+						this.addChange(typeVersion2, fieldVersion2, Category.FIELD_DEPRECATED, false, description);
 					}
 				}
 			}

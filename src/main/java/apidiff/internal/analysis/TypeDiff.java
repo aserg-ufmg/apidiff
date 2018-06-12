@@ -204,7 +204,7 @@ public class TypeDiff {
 			if(accessibleTypeVersion2 != null){
 				if(!this.isDeprecated(accessibleTypeVersion1) && this.isDeprecated(accessibleTypeVersion2)){
 					String description = this.description.deprecate(UtilTools.getPath(accessibleTypeVersion2));
-					this.addChange(accessibleTypeVersion1, Category.TYPE_DEPRECIATE, false, description);
+					this.addChange(accessibleTypeVersion1, Category.TYPE_DEPRECATED, false, description);
 				}
 			}
 		}

@@ -328,7 +328,7 @@ public class MethodDiff {
 					MethodDeclaration methodInVersion1 = version1.findMethodByNameAndParametersAndReturn(methodVersion2, typeVersion2);
 					if(methodInVersion1 == null || !this.isDeprecated(methodInVersion1, version1.getVersionAccessibleType(typeVersion2))){
 						String description = this.description.deprecate(this.getSimpleNameMethod(methodVersion2), UtilTools.getPath(typeVersion2));
-						this.addChange(typeVersion2, methodVersion2, Category.METHOD_DEPRECIATE, false, description);
+						this.addChange(typeVersion2, methodVersion2, Category.METHOD_DEPRECATED, false, description);
 					}
 				}
 			}

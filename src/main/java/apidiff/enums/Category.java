@@ -17,7 +17,7 @@ public enum Category {
 	TYPE_CHANGE_SUPERCLASS("Change in Supertype"),
 	TYPE_REMOVE_SUPERCLASS("Remove Supertype"),
 	TYPE_ADD_SUPER_CLASS("Add Supertype"),
-	TYPE_DEPRECIATE("Depreciate Type"),
+	TYPE_DEPRECATED("Deprecated Type"),
 	
 	METHOD_MOVE("Move Method"),
 	METHOD_EXTRACT("Extract Method"),
@@ -35,7 +35,7 @@ public enum Category {
 	METHOD_ADD_MODIFIER_FINAL("Add Final Modifier in Method"),
 	METHOD_REMOVE_MODIFIER_STATIC("Remove Static Modifier in Method"),
 	METHOD_ADD_MODIFIER_STATIC("Add Static Modifier in Method"),
-	METHOD_DEPRECIATE("Depreciate Method"),
+	METHOD_DEPRECATED("Deprecated Method"),
 	METHOD_ADD("Add Method"),
 	
 	FIELD_REMOVE("Remove Field"),
@@ -43,7 +43,7 @@ public enum Category {
 	FIELD_PULL_UP("Pull Up Field"),
 	FIELD_PUSH_DOWN("Push Down Field"),
 	FIELD_ADD("Add Field"),
-	FIELD_DEPRECIATE("Depreciate Field"),
+	FIELD_DEPRECATED("Deprecated Field"),
 	FIELD_CHANGE_DEFAULT_VALUE("Change in Field Default Value"),
 	FIELD_CHANGE_TYPE("Change in Field Type"),
 	FIELD_LOST_VISIBILITY("Lost Visibility in Field"),
