@@ -1,103 +1,112 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>br.ufmg.dcc.labsoft</groupId>
-    <artifactId>APIDiff</artifactId>
-    <version>2.0.0</version>
+	<parent>
+	   <groupId>org.sonatype.oss</groupId>
+	   <artifactId>oss-parent</artifactId>
+	   <version>9</version>
+	</parent>
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.github.aserg-ufmg</groupId>
+	<artifactId>apidiff</artifactId>
+	<version>2.0.0</version>
+	<packaging>jar</packaging>
+	<name>apidiff</name>
+	<description>A tool to detect API breaking and non-breaking changes between two versions of a Java library</description>
+	<url>https://github.com/aserg-ufmg/apidiff</url>
+
+	<scm>
+	  <connection>scm:git:git@github.com:aserg-ufmg/${project.artifactId}.git</connection>
+	  <developerConnection>scm:git:git@github.com:aserg-ufmg/${project.artifactId}.git</developerConnection>
+	  <url>https://github.com/aserg-ufmg/apidiff</url>
+	</scm>
+
+	<licenses>
+	  <license>
+	    <name>MIT License</name>
+	    <url>https://opensource.org/licenses/MIT</url>
+	  </license>
+	</licenses>
+  
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
     
+  
     <dependencies>
-
     	<dependency>
 		    <groupId>com.jcabi</groupId>
 		    <artifactId>jcabi-github</artifactId>
 		    <version>0.29</version>
 		</dependency>
-
 		<dependency>
 		    <groupId>org.eclipse.jgit</groupId>
 		    <artifactId>org.eclipse.jgit</artifactId>
 		    <version>4.6.0.201612231935-r</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.eclipse.core</groupId>
 			<artifactId>contenttype</artifactId>
 			<version>3.4.200-v20140207-1251</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.eclipse.birt.runtime</groupId>
 			<artifactId>org.eclipse.core.jobs</artifactId>
 			<version>3.6.1.v20141014-1248</version>
 		</dependency>
-		
 		<dependency>
 		    <groupId>org.eclipse.birt.runtime</groupId>
 		    <artifactId>org.eclipse.core.resources</artifactId>
 		    <version>3.9.1.v20140825-1431</version>
 		</dependency>
-		
 		<dependency>
 		    <groupId>org.eclipse.core</groupId>
 		    <artifactId>runtime</artifactId>
 		    <version>3.10.0-v20140318-2214</version>
 		</dependency>
-		
 		<dependency>
 		    <groupId>org.eclipse.equinox</groupId>
 		    <artifactId>common</artifactId>
 		    <version>3.6.200-v20130402-1505</version>
 		</dependency>
-		
 		<dependency>
 		    <groupId>org.eclipse.equinox</groupId>
 		    <artifactId>preferences</artifactId>
 		    <version>3.5.200-v20140224-1527</version>
 		</dependency>
-		
 		<dependency>
 		    <groupId>org.eclipse.jdt</groupId>
 		    <artifactId>org.eclipse.jdt.core</artifactId>
 		    <version>3.10.0</version>
 		</dependency>
-		
 		<dependency>
 		    <groupId>org.eclipse.birt.runtime</groupId>
 		    <artifactId>org.eclipse.osgi</artifactId>
 		    <version>3.10.2.v20150203-1939</version>
 		</dependency>
-		
 		<dependency>
 		    <groupId>org.apache.maven.plugins</groupId>
 		    <artifactId>maven-compiler-plugin</artifactId>
 		    <version>3.6.1</version>
 		</dependency>
-
 	   <dependency>
 	       <groupId>org.slf4j</groupId>
 	       <artifactId>slf4j-api</artifactId>
 	       <version>1.7.5</version>
 	   </dependency>
-	   
 	   <dependency>
 	       <groupId>org.slf4j</groupId>
 	       <artifactId>slf4j-log4j12</artifactId>
 	       <version>1.7.5</version>
 	   </dependency>
-	   
 		<dependency>
 			<groupId>com.github.aserg-ufmg</groupId>
 			<artifactId>refdiff-core</artifactId>
 			<version>0.1.1</version>
 		</dependency>
-
     </dependencies>
-    
     <build>
         <plugins>
             <plugin>
@@ -105,29 +114,32 @@
                 <configuration>
 	                  <archive>
 	                    <manifest>
-	                      <mainClass>br.ufmg.dcc.labsoft.apidiff.Main</mainClass>
+	                      <mainClass>apidiff.Main</mainClass>
 	                    </manifest>
 	                  </archive>
-	                  
 	                  <descriptorRefs>
 	                    <descriptorRef>jar-with-dependencies</descriptorRef>
 	                  </descriptorRefs>
-	                  
-	                  <finalName>APIDiff</finalName>
+	                  <finalName>apidiff</finalName>
 	                  <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
             </plugin>
-            
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.0.2</version>
                   <configuration>
-                      <finalName>APIDiff</finalName>                   
+                      <finalName>apidiff</finalName>                   
                  </configuration>
-            </plugin>    
+            </plugin>  
+            <plugin>
+		         <groupId>org.apache.maven.plugins</groupId>
+		         <artifactId>maven-release-plugin</artifactId>
+		         <version>2.5.3</version>
+		         <configuration>
+		            <pushChanges>false</pushChanges>
+		         </configuration>
+     		</plugin>  
         </plugins>
-        
     </build>
-    
 </project>
