@@ -13,7 +13,7 @@
 	<version>2.0.0</version>
 	<packaging>jar</packaging>
 	<name>apidiff</name>
-	<description>A tool to detect API breaking and non-breaking changes between two versions of a Java library</description>
+	<description>A tool to identify API breaking and non-breaking changes between two versions of a Java library</description>
 	<url>https://github.com/aserg-ufmg/apidiff</url>
 
 	<scm>
@@ -109,21 +109,6 @@
 	</dependencies>
 	<build>
 		<plugins>
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-							<mainClass>apidiff.Main</mainClass>
-						</manifest>
-					</archive>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-					<finalName>apidiff</finalName>
-					<appendAssemblyId>false</appendAssemblyId>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
