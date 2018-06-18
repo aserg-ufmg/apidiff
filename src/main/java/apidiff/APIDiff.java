@@ -69,7 +69,7 @@ public class APIDiff implements DiffDetector{
 		GitService service = new GitServiceImpl();
 		Repository repository = service.openRepositoryAndCloneIfNotExists(this.path, this.nameProject, this.url);
 		RevWalk revWalk = service.createAllRevsWalk(repository, branch);
-		//Itera sobre os commits.
+		//Commits.
 		Iterator<RevCommit> i = revWalk.iterator();
 		while(i.hasNext()){
 			RevCommit currentCommit = i.next();
@@ -96,7 +96,7 @@ public class APIDiff implements DiffDetector{
 			GitService service = new GitServiceImpl();
 			Repository repository = service.openRepositoryAndCloneIfNotExists(this.path, this.nameProject, this.url);
 			RevWalk revWalk = service.fetchAndCreateNewRevsWalk(repository, null);
-			//Itera sobre os commits.
+			//Commits.
 			Iterator<RevCommit> i = revWalk.iterator();
 			while(i.hasNext()){
 				RevCommit currentCommit = i.next();
@@ -132,14 +132,14 @@ public class APIDiff implements DiffDetector{
 	
 	private Result diffCommit(final RevCommit currentCommit, final Repository repository, String nameProject, Classifier classifierAPI) throws Exception{
 		File projectFolder = new File(UtilTools.getPathProject(this.path, nameProject));
-		if(currentCommit.getParentCount() != 0){//Se commit tem pelo menos um pai.
+		if(currentCommit.getParentCount() != 0){//there is at least one parent
 			try {
-				APIVersion version1 = this.getAPIVersionByCommit(currentCommit.getParent(0).getName(), projectFolder, repository, currentCommit, classifierAPI);//versao antiga
-				APIVersion version2 = this.getAPIVersionByCommit(currentCommit.getId().getName(), projectFolder, repository, currentCommit, classifierAPI); //versao atual
+				APIVersion version1 = this.getAPIVersionByCommit(currentCommit.getParent(0).getName(), projectFolder, repository, currentCommit, classifierAPI);//old version
+				APIVersion version2 = this.getAPIVersionByCommit(currentCommit.getId().getName(), projectFolder, repository, currentCommit, classifierAPI); //new version
 				DiffProcessor diff = new DiffProcessorImpl();
 				return diff.detectChange(version1, version2, repository, currentCommit);
 			} catch (Exception e) {
-				this.logger.error("Ocorreu um errro durante o checkout commit=[" + currentCommit + "]");
+				this.logger.error("Error during checkout [commit=" + currentCommit + "]");
 			}
 		}
 		return new Result();
@@ -149,7 +149,7 @@ public class APIDiff implements DiffDetector{
 		
 		GitService service = new GitServiceImpl();
 		
-		//Busca a lista de arquivos modificados entre o commit atual e o commit pai.
+		//Finding changed files between current commit and parent commit.
 		Map<ChangeType, List<GitFile>> mapModifications = service.fileTreeDiff(repository, currentCommit);
 		
 		service.checkout(repository, commit);

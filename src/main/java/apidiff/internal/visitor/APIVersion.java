@@ -11,8 +11,6 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
-import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
-import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
@@ -67,11 +65,6 @@ public class APIVersion {
 		}
 	}
 	
-	/**
-	 * Retorna uma APIVersion com os arquivos do projeto.
-	 * @param path - path da biblioteca analisada.
-	 * @param classifierAPI - tipo da API analisada.
-	 */
 	public APIVersion(final String nameProject, Classifier classifierAPI) {
 		try {
 			this.nameProject = nameProject;
@@ -84,11 +77,6 @@ public class APIVersion {
 		
 	}
 
-	/**
-	 * @param Path - path da biblioteca analisada.
-	 * @param ignoreTreeDiff - true para ignorar a árvore de modificações (comparação de projetos). False para considerar a árvore de modificações (análise em nível de commit).
-	 * @throws IOException
-	 */
 	public void parseFilesInDir(File file, final Boolean ignoreTreeDiff) throws IOException {
 		if (file.isFile()) {
 			String simpleNameFile = UtilTools.getSimpleNameFileWithouPackageWithNameLibrary(this.path, file.getAbsolutePath(), this.nameProject);
@@ -145,32 +133,16 @@ public class APIVersion {
 
 	}
 	
-	/**
-	 *  Salva os types acessíveis para o cliente externo são (public ou protected) e não acessíveis (default e private).
-	 * @param visitorType
-	 */
 	private void configureAcessiblesAndNonAccessibleTypes(TypeDeclarationVisitor visitorType){
 		this.apiNonAccessibleTypes.addAll(visitorType.getNonAcessibleTypes());
 		this.apiAccessibleTypes.addAll(visitorType.getAcessibleTypes());
 	}
 	
-	/**
-	 *  Salva os enums acessíveis para o cliente externo são (public ou protected) e não acessíveis (default e private).
-	 * @param visitorType
-	 */
 	private void configureAcessiblesAndNonAccessibleEnums(EnumDeclarationVisitor visitorType){
 		this.apiNonAccessibleEnums.addAll(visitorType.getNonAcessibleEnums());
 		this.apiAccessibleEnums.addAll(visitorType.getAcessibleEnums());
 	}
 	
-	
-	/**
-	 *  Retorna verdadeiro se o arquivo está na lista de arquivos modificados na última versão, ou se a lista de midificações não for considerada na análise.
-	 *  Falso caso contrário.
-	 * @param source - Arquivo analisado.
-	 * @param ignoreTreeDiff - Se verdadeiro ignora a lista de modificações. Se falso, verifica se o arquivo pertence está contido na lista de arquivos modificados.
-	 * @return - Verdadeiro se é um arquivo que deve ser incluído no diff, falso caso contrário.
-	 */
 	private Boolean isFileModification(final File source, final Boolean ignoreTreeDiff){
 		return (ignoreTreeDiff || this.listFilesMofify.contains(source.getAbsolutePath()))? true: false;
 	}
@@ -205,27 +177,6 @@ public class APIVersion {
 		list.addAll(this.getApiNonAccessibleEnums());
 		return list;
 	}
-
-	/**
-	 * Retorna a lista de types de foram removidos.
-	 * @return
-	 * TODO: Pendente
-	 */
-	public List<TypeDeclaration> getApiRemovedTypes(){
-		List<TypeDeclaration> list = new ArrayList<>();
-		return list;
-	}
-	
-	/**
-	 * Retorna a lista de types que foram renomeados.
-	 * @return
-	 * TODO: Pendente
-	 */
-	public List<TypeDeclaration> getApiRenamedTypes(){
-		List<TypeDeclaration> list = new ArrayList<>();
-		return list;
-	}
-
 
 	public EnumDeclaration getVersionNonAccessibleEnum(EnumDeclaration enumVersrionReference){
 		for (EnumDeclaration enumDeclarion : this.apiNonAccessibleEnums) {
@@ -323,12 +274,6 @@ public class APIVersion {
 		return result;
 	}
 	
-	/**
-	 * Retorna o método da classe que possui o mesmo nome, retorno e assinatura. Retorna nulo se o método não for encontrado.
-	 * @param method
-	 * @param type
-	 * @return
-	 */
 	public MethodDeclaration findMethodByNameAndParametersAndReturn(MethodDeclaration method, TypeDeclaration type){
 		MethodDeclaration methodVersionOld = null;
 		for (TypeDeclaration versionType : this.apiAccessibleTypes) {
@@ -343,12 +288,6 @@ public class APIVersion {
 		return methodVersionOld;
 	}
 	
-	/**
-	 * Retorna o método da classe que possui o mesmo nome e tipo de  retorno. Retorna nulo se o método não for encontrado.
-	 * @param method
-	 * @param type
-	 * @return
-	 */
 	private MethodDeclaration findMethodByNameAndReturn(MethodDeclaration method, TypeDeclaration type){
 		MethodDeclaration methodVersionOld = null;
 		for (TypeDeclaration versionType : this.apiAccessibleTypes) {
@@ -363,12 +302,6 @@ public class APIVersion {
 		return methodVersionOld;
 	}
 	
-	/**
-	 * Retorna o método da classe que possui o mesmo nome e assinatura. Retorna nulo se o método não for encontrado.
-	 * @param method
-	 * @param type
-	 * @return
-	 */
 	public MethodDeclaration findMethodByNameAndParameters(MethodDeclaration method, TypeDeclaration type){
 		MethodDeclaration methodVersionOld = null;
 		for (TypeDeclaration versionType : this.apiAccessibleTypes) {
@@ -383,13 +316,6 @@ public class APIVersion {
 		return methodVersionOld;
 	}
 
-	/**
-	 * Retorna o método na versão corrente que possuem o mesmo nome do método recebido como parâmetro.
-	 * Retorna nulo se o método não for encontrado.
-	 * @param method
-	 * @param type
-	 * @return
-	 */
 	public MethodDeclaration getEqualVersionMethod(MethodDeclaration method, TypeDeclaration type){
 		for(MethodDeclaration methodInThisVersion : this.getAllEqualMethodsByName(method, type)){
 			if(UtilTools.isEqualMethod(method, methodInThisVersion)){
@@ -409,11 +335,6 @@ public class APIVersion {
 		return null;
 	}
 	
-	/**
-	 * Retorna a lista de todos os types de uma versão.
-	 * @param version
-	 * @return
-	 */
 	public List<AbstractTypeDeclaration> getAllTypes(){
 		List<AbstractTypeDeclaration> listTypesVersion = new ArrayList<AbstractTypeDeclaration>();
 		listTypesVersion.addAll(this.getTypesPublicAndProtected());

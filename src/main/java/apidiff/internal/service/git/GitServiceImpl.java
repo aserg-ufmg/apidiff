@@ -44,11 +44,6 @@ public class GitServiceImpl implements GitService {
 	private static final Long DAY = HOUR * 24;
 	private static final Long SEVEN_DAYS = DAY * 7; //7 dias em milissegundos.
 	
-	/**
-	 * Filtra commits que possui mais de um parent, ou seja, são merges.
-	 * Filtra commits que velhos (adicionados a mais de 7 dias).
-	 * @author aline
-	 */
 	private class RevFilterCommitValid extends RevFilter {
 		
 		@Override
@@ -107,7 +102,7 @@ public class GitServiceImpl implements GitService {
 	public Repository openRepositoryAndCloneIfNotExists(String path, String projectName, String cloneUrl) throws Exception {
 		File folder = new File(UtilTools.getPathProject(path , projectName));
 		Repository repository = null;
-		//Se repositório existe, carrega as propriedades.
+		
 		if (folder.exists()) {
 			this.logger.info(projectName + " exists. Reading properties ... (wait)");
 			RepositoryBuilder builder = new RepositoryBuilder();

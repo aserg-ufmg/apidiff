@@ -44,6 +44,5 @@ public class GitFile {
 		System.out.println("["+this.chageType+"]["+this.pathOld+"]["+this.pathNew+"]");
 	}
 	
-	
 }
 

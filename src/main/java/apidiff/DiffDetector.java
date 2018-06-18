@@ -7,7 +7,7 @@ import apidiff.enums.Classifier;
 public interface DiffDetector {
 	
 	/**
-	 * Analyzing changes performed in specific commit.
+	 * Analyzing changes performed in specific commit
 	 * @param commitId - SHA key
 	 * @param classifier
 	 * @return Result
@@ -16,7 +16,7 @@ public interface DiffDetector {
 	public Result detectChangeAtCommit(String commitId, Classifier classifier) throws Exception;
 	
 	/**
-	 * Analyzing changes performed in whole history.
+	 * Analyzing changes performed in several commits
 	 * @param branch - branch name (i.e., "master")
 	 * @param classifiers
 	 * @return Result
@@ -25,7 +25,7 @@ public interface DiffDetector {
 	public Result detectChangeAllHistory(String branch, List<Classifier> classifiers) throws Exception;
 	
 	/**
-	 * Analyzing changes performed in whole history.
+	 * Analyzing changes performed in several commits
 	 * @param branch - branch name (i.e., "master")
 	 * @param classifier
 	 * @return
@@ -34,7 +34,7 @@ public interface DiffDetector {
 	public Result detectChangeAllHistory(String branch, Classifier classifier) throws Exception;
 	
 	/**
-	 * Analyzing changes performed in whole history.
+	 * AAnalyzing changes performed in several commits
 	 * @param classifiers
 	 * @return
 	 * @throws Exception
@@ -42,7 +42,7 @@ public interface DiffDetector {
 	public Result detectChangeAllHistory(List<Classifier> classifiers) throws Exception;
 	
 	/**
-	 * Analyzing changes performed in whole history.
+	 * Analyzing changes performed in several commits
 	 * @param classifier
 	 * @return Result
 	 * @throws Exception
@@ -50,7 +50,7 @@ public interface DiffDetector {
 	public Result detectChangeAllHistory(Classifier classifier) throws Exception;
 	
 	/**
-	 * Analyzing changes performed in new commits.
+	 * Fetching new commits from a repository
 	 * @param classifiers
 	 * @return Result
 	 * @throws Exception
@@ -58,7 +58,7 @@ public interface DiffDetector {
 	public Result fetchAndDetectChange(List<Classifier> classifiers) throws Exception;
 	
 	/**
-	 * Analyzing changes performed in new commits.
+	 * Fetching new commits from a repository
 	 * @param classifier
 	 * @return Result
 	 * @throws Exception

@@ -147,6 +147,4 @@ public class MethodDescription extends TemplateDescription {
 		return this.messageMoveTemplate("method", nameMethodAfter, nameClassBefore, nameClassAfter);
 	}
 	
-
-	
 }

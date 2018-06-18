@@ -4,14 +4,6 @@ import apidiff.internal.util.UtilTools;
 
 public class TemplateDescription {
 	
-	/**
-	 * Template para mensagem de recursos removido.
-	 * @param typeStruture
-	 * @param nameStruture
-	 * @param typePath
-	 * @param path
-	 * @return
-	 */
 	protected String messageRemoveTemplate(final String typeStruture, final String nameStruture, final String path){
 		String message = "";
 		message += "<br>" + typeStruture + " <code>" + nameStruture +"</code>";
@@ -20,16 +12,6 @@ public class TemplateDescription {
 		return message;
 	}
 
-	/**
-	 * Template para mensagem de perda de visibilidade.
-	 * @param typeStruture
-	 * @param nameStruture
-	 * @param typePath
-	 * @param path
-	 * @param visibility1
-	 * @param visibility2
-	 * @return
-	 */
 	protected String messageVisibilityTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path,  final String visibility1, final String visibility2){
 		String message = "";
 		message += "<br> " + typeStruture + " <code>" + nameStruture +"</code>";
@@ -39,16 +21,6 @@ public class TemplateDescription {
 		return message;
 	}
 	
-	/**
-	 * Template para mensagem de mudança de valor default.
-	 * @param typeStruture
-	 * @param nameStruture
-	 * @param typePath
-	 * @param path
-	 * @param value1
-	 * @param value2
-	 * @return
-	 */
 	protected String messageChangeDefaultValueTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path,  final String value1, final String value2){
 		String message = "";
 		message += "<b>Category Default Value:</b>";
@@ -59,16 +31,6 @@ public class TemplateDescription {
 		return message;
 	}
 
-
-	/**
-	 * Template para mensagem de mudança no modificador final.
-	 * @param typeStruture
-	 * @param nameStruture
-	 * @param typePath
-	 * @param path
-	 * @param gain
-	 * @return
-	 */
 	protected String messageFinalTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path, final Boolean gain){
 		String message = "";
 		message += UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
@@ -78,15 +40,6 @@ public class TemplateDescription {
 		return message;
 	}
 	
-	/**
-	 * Template para mensagem de mudança no modificador static.
-	 * @param typeStruture
-	 * @param nameStruture
-	 * @param typePath
-	 * @param path
-	 * @param gain
-	 * @return
-	 */
 	protected String messageStaticTemplate(final String typeStruture, final String nameStruture, final String typePath, final String path, final Boolean gain){
 		String message = "";
 		message += UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
@@ -96,15 +49,6 @@ public class TemplateDescription {
 		return message;
 	}
 	
-	/**
-	 * Template para mensagem de mudança do tipo de retorno.
-	 * @param typeStruture
-	 * @param nameStruture
-	 * @param struture
-	 * @param typePath
-	 * @param path
-	 * @return
-	 */
 	protected String messageReturnTypeTemplate(final String typeStruture,  final String nameStruture, final String typePath, final String path){
 		String message = "";
 		message += "<br>" + UtilTools.downCaseFirstLetter(typeStruture) + " <code>" + nameStruture +"</code>";
@@ -114,14 +58,6 @@ public class TemplateDescription {
 		return message;
 	}
 	
-	/**
-	 * Template para mensagem de mudança da lista de parâmetros.
-	 * @param typeStruture
-	 * @param nameStruture
-	 * @param typePath
-	 * @param path
-	 * @return
-	 */
 	protected String messageParameterTemplate(final String typeStruture, final String nameStrutureAfter, final String nameStrutureBefore, final String typePath, final String path){
 		String message = "";
 		message += "<b>Category " + UtilTools.upperCaseFirstLetter(typeStruture) + " Parameters</b>:";

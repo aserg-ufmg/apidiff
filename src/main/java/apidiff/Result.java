@@ -34,6 +34,4 @@ public class Result {
 	public void setChangeField(List<Change> changeField) {
 		this.changeField = changeField;
 	}
-	
-	
 }

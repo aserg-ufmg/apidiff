@@ -116,7 +116,7 @@ public class MethodDiff {
 	}
 	
 	/**
-	 * Processa refactoring em movimentação de métodos (move, pull up, push down, inline method) and rename.
+	 * Finding refactoring operations in methods (move, pull up, push down, inline method, rename)
 	 * @param method
 	 * @param type
 	 * @return
@@ -168,14 +168,13 @@ public class MethodDiff {
 	}
 	
 	/**
-	 * Verifica se uma exceção está contida na lista recebida.
-	 * @param list
-	 * @param ex
-	 * @return
+	 * @param parameterListException
+	 * @param exception
+	 * @return true, if the list contains the "exception"
 	 */
-	private boolean containsExceptionList(List<SimpleType> list, SimpleType ex){
-		for(SimpleType simpleType : list){
-			if(simpleType.getName().toString().equals(ex.getName().toString())){
+	private boolean containsExceptionList(List<SimpleType> parameterListException, SimpleType exception){
+		for(SimpleType simpleType : parameterListException){
+			if(simpleType.getName().toString().equals(exception.getName().toString())){
 				return true;
 			}
 		}
@@ -183,19 +182,17 @@ public class MethodDiff {
 	}
 	
 	/**
-	 * Retorna verdadeiro se é um método acessível pelo cliente externo ao projeto.
 	 * @param methodDeclaration
-	 * @return
+	 * @return true, if is a accessible field by external systems
 	 */
 	private boolean isMethodAcessible(MethodDeclaration methodDeclaration){
 		return methodDeclaration != null && methodDeclaration.resolveBinding() !=null && (UtilTools.isVisibilityProtected(methodDeclaration) || UtilTools.isVisibilityPublic(methodDeclaration))?true:false;
 	}
 	
 	/**
-	 * Retorna verdadeiro se existe exceções na lista 1 que não estão presentes na lista 2.
 	 * @param listExceptionsVersion1
 	 * @param listExceptionsVersion2
-	 * @return
+	 * @return true, if the exception does not exist in exception list 2.
 	 */
 	private boolean diffListExceptions(List<SimpleType> listExceptionsVersion1, List<SimpleType> listExceptionsVersion2){
 		for(SimpleType exceptionVersion1 : listExceptionsVersion1){
@@ -207,9 +204,9 @@ public class MethodDiff {
 	}
 	
 	/**
-	 * Retorna verdadeiro se o método está depreciado ou a classe do método está depreciada.
+	 * @param method
 	 * @param type
-	 * @return
+	 * @return true, method is deprecated or type is deprecated
 	 */
 	private Boolean isDeprecated(MethodDeclaration method, AbstractTypeDeclaration type){
 		Boolean isMethodDeprecated =  (method != null && method.resolveBinding() != null && method.resolveBinding().isDeprecated()) ? true: false;
@@ -219,7 +216,7 @@ public class MethodDiff {
 	}
 	
 	/**
-	 * Verifica se ocorreu uma mudança na lista de exceções dos métodos. 
+	 * Finding methods with change in exception list 
 	 * @param version1
 	 * @param version2
 	 */
@@ -246,7 +243,7 @@ public class MethodDiff {
 	}
 	
 	/**
-	 * Busca métodos que tiveram o tipo de retorno modificado.
+	 * Finding methods with change in the return type
 	 * @param version1
 	 * @param version2
 	 */
@@ -256,9 +253,9 @@ public class MethodDiff {
 				for(MethodDeclaration methodVersion1 : typeVersion1.getMethods()){
 					if(this.isMethodAcessible(methodVersion1)){
 						MethodDeclaration methodVersion2 = version2.findMethodByNameAndParametersAndReturn(methodVersion1, typeVersion1);
-						if(methodVersion2 == null){//Método não foi encontrado (com mesmo nome, parâmtros e tipo de retorno).
+						if(methodVersion2 == null){
 							methodVersion2 = version2.findMethodByNameAndParameters(methodVersion1, typeVersion1);
-							if(methodVersion2 != null){//Existe um método com mesmo nome e parâmetros, mas tipo de retorno diferente.
+							if(methodVersion2 != null){
 								String description = this.description.returnType(this.getSimpleNameMethod(methodVersion1), UtilTools.getPath(typeVersion1));
 								this.addChange(typeVersion1, methodVersion1, Category.METHOD_CHANGE_RETURN_TYPE, true, description);
 							}
@@ -270,24 +267,23 @@ public class MethodDiff {
 	}
 
 	/**
-	 * Compara duas versões de um métodos e verifica se houve perda ou ganho de visibilidade.
-	 * Resultaodos são registrados na saída.
+	 * Finding methods with changed visibility
 	 * @param typeVersion1
 	 * @param methodVersion1
 	 * @param methodVersion2
 	 */
 	private void checkGainOrLostVisibility(TypeDeclaration typeVersion1, MethodDeclaration methodVersion1, MethodDeclaration methodVersion2){
-		if(methodVersion2 != null && methodVersion1!=null){//Se o método ainda existe na versão atual.
+		if(methodVersion2 != null && methodVersion1!=null){
 			String visibilityMethod1 = UtilTools.getVisibility(methodVersion1);
 			String visibilityMethod2 = UtilTools.getVisibility(methodVersion2);
-			if(!visibilityMethod1.equals(visibilityMethod2)){ // Se o modificador de acesso foi alterado.
+			if(!visibilityMethod1.equals(visibilityMethod2)){
 				String description = this.description.visibility(this.getSimpleNameMethod(methodVersion2), UtilTools.getPath(typeVersion1), visibilityMethod1, visibilityMethod2);
-				//Breaking change: public --> qualquer modificador de acesso, protected --> qualquer modificador de acesso, exceto public.
+				
 				if(this.isMethodAcessible(methodVersion1) && !UtilTools.isVisibilityPublic(methodVersion2)){
 					this.addChange(typeVersion1, methodVersion2, Category.METHOD_LOST_VISIBILITY, true, description);
 				}
 				else{
-					//non-breaking change: private ou default --> qualquer modificador de acesso, demais casos.
+					
 					Category category = UtilTools.isVisibilityDefault(methodVersion1) && UtilTools.isVisibilityPrivate(methodVersion2)? Category.METHOD_LOST_VISIBILITY: Category.METHOD_GAIN_VISIBILITY;
 					this.addChange(typeVersion1, methodVersion2, category, false, description);
 				}
@@ -296,7 +292,7 @@ public class MethodDiff {
 	}
 	
 	/**
-	 * Busca métodos que tiveram ganho ou perda de visibilidade.
+	 * Finding methods with changed visibility
 	 * @param version1
 	 * @param version2
 	 */
@@ -312,18 +308,16 @@ public class MethodDiff {
 	}
 
 	/**
-	 * Busca métodos que foram depreciados.
-	 * Se a classe foi depreciada, o método é considerado depreciado também.
+	 * Finding deprecated methods
 	 * 
 	 * @param version1
 	 * @param version2
 	 */
 	private void findAddedDeprecatedMethods(APIVersion version1, APIVersion version2) {
-		//Percorre todos os types acessíveis da versão 2.
+		
 		for(TypeDeclaration typeVersion2 : version2.getApiAcessibleTypes()){
 			for(MethodDeclaration methodVersion2 : typeVersion2.getMethods()){
-				//Se não estava depreciado na versão anterior, insere na saída.
-				//Se o type foi criado depreciado, insere na saída.
+				
 				if(this.isMethodAcessible(methodVersion2) && this.isDeprecated(methodVersion2, typeVersion2)){
 					MethodDeclaration methodInVersion1 = version1.findMethodByNameAndParametersAndReturn(methodVersion2, typeVersion2);
 					if(methodInVersion1 == null || !this.isDeprecated(methodInVersion1, version1.getVersionAccessibleType(typeVersion2))){
@@ -336,19 +330,17 @@ public class MethodDiff {
 	}
 
 	/**
-	 * Busca métodos que foram removidos.
-	 * Se o type existe ainda, verifica se algum método foi removido.
-	 * Se o type foi removido, os métodos dele não são contabilizados. A remoção do type é a breaking change.
+	 * Finding removed methods. If class was removed, class removal is a breaking change.
 	 * @param version1
 	 * @param version2
 	 */
 	private void findRemoveAndRefactoringMethods(APIVersion version1, APIVersion version2) {
 		for (TypeDeclaration typeInVersion1 : version1.getApiAcessibleTypes()) {
-			if(version2.containsAccessibleType(typeInVersion1)){//Se a classe não foi removida.
+			if(version2.containsAccessibleType(typeInVersion1)){
 				for (MethodDeclaration methodInVersion1 : typeInVersion1.getMethods()) {
 					if(this.isMethodAcessible(methodInVersion1)){
 						MethodDeclaration methodInVersion2 = version2.findMethodByNameAndParameters(methodInVersion1, typeInVersion1);
-						if(methodInVersion2 == null){ //Se método foi removido na última versão.
+						if(methodInVersion2 == null){
 							Boolean refactoring = this.checkAndProcessRefactoring(methodInVersion1, typeInVersion1);
 							if(!refactoring){
 								this.processRemoveMethod(methodInVersion1, typeInVersion1);
@@ -361,14 +353,13 @@ public class MethodDiff {
 	}
 
 	/**
-	 * Busca métodos que foram adicionados.
-	 * Se um type foi adicionado, os métodos dele são contabilizados também.
+	 * Finding added methods
 	 * @param version1
 	 * @param version2
 	 */
 	private void findAddedMethods(APIVersion version1, APIVersion version2) {
 		for (TypeDeclaration typeInVersion2 : version2.getApiAcessibleTypes()) {
-			if(version1.containsType(typeInVersion2)){//Se type já existia, verifica quais são os novos métodos.
+			if(version1.containsType(typeInVersion2)){
 				for(MethodDeclaration methodInVersion2: typeInVersion2.getMethods()){
 					if(this.isMethodAcessible(methodInVersion2)){
 						MethodDeclaration methodInVersion1 = version1.findMethodByNameAndParameters(methodInVersion2, typeInVersion2);
@@ -386,63 +377,60 @@ public class MethodDiff {
 	}
 	
 	/**
-	 * Compara se dois métodos tem ou não o modificador "final".
-	 * Registra na saída, se houver diferença.
+	 * Finding change in final modifier
 	 * @param methodVersion1
 	 * @param methodVersion2
 	 */
 	private void diffModifierFinal(TypeDeclaration typeVersion1, MethodDeclaration methodVersion1, MethodDeclaration methodVersion2){
-		//Se não houve mudança no identificador final.
+		
 		if((UtilTools.isFinal(methodVersion1) && UtilTools.isFinal(methodVersion2)) || ((!UtilTools.isFinal(methodVersion1) && !UtilTools.isFinal(methodVersion2)))){
 			return;
 		}
 		String nameClass = UtilTools.getPath(typeVersion1);
 		String nameMethod = this.getSimpleNameMethod(methodVersion2);
-		//Se ganhou o modificador "final"
+		
 		if((!UtilTools.isFinal(methodVersion1) && UtilTools.isFinal(methodVersion2))){
 			String description = this.description.modifierFinal(nameMethod, nameClass, true);
 			this.addChange(typeVersion1, methodVersion1, Category.METHOD_ADD_MODIFIER_FINAL, true, description);
 		}
 		else{
-			//Se perdeu o modificador "final"
+			
 			String description = this.description.modifierFinal(nameMethod, nameClass, false);
 			this.addChange(typeVersion1, methodVersion1, Category.METHOD_REMOVE_MODIFIER_FINAL, false, description);
 		}
 	}
 	
 	/**
-	 * Verifica se duas versões de um método tiveram mudanças no modificador "static"
-	 * Registra na saída, se houver diferença.
+	 * Finding change in static modifier
 	 * @param methodVersion1
 	 * @param methodVersion2
 	 */
 	private void diffModifierStatic(TypeDeclaration typeVersion1, MethodDeclaration methodVersion1, MethodDeclaration methodVersion2){
-		//Se não houve mudança no identificador final.
+		
 		if((UtilTools.isStatic(methodVersion1) && UtilTools.isStatic(methodVersion2)) || ((!UtilTools.isStatic(methodVersion1) && !UtilTools.isStatic(methodVersion2)))){
 			return;
 		}
 		String nameClass = UtilTools.getPath(typeVersion1);
 		String nameMethod = this.getSimpleNameMethod(methodVersion2);
-		//Se ganhou o modificador "static"
+		
 		if((!UtilTools.isStatic(methodVersion1) && UtilTools.isStatic(methodVersion2))){
 			String description = this.description.modifierStatic(nameMethod, nameClass, true);
 			this.addChange(typeVersion1, methodVersion1, Category.METHOD_ADD_MODIFIER_STATIC, false, description);
 		}
 		else{
-			//Se perdeu o modificador "static"
+			
 			String description = this.description.modifierStatic(nameMethod, nameClass, false);
 			this.addChange(typeVersion1, methodVersion1, Category.METHOD_REMOVE_MODIFIER_STATIC, true, description);
 		}
 	}
 	
 	/**
-	 * Busca modificadores final/static que foram removidos ou adicionados.
-	 * 
+	 * Finding change in final/static modifiers
 	 * @param version1
 	 * @param version2
 	 */
 	private void findChangedFinalAndStatic(APIVersion version1, APIVersion version2) {
-		//Percorre todos os types da versão corrente.
+		
 		for (TypeDeclaration typeVersion1 : version1.getApiAcessibleTypes()) {
 			if(version2.containsType(typeVersion1)){//Se type ainda existe.
 				for(MethodDeclaration methodVersion1: typeVersion1.getMethods()){
@@ -457,7 +445,7 @@ public class MethodDiff {
 	}
 	
 	/**
-	 * Retorna nome completo do método. [modificador de acesso + retorno + nome + ( + listas de paraâmetros + )]
+	 * Returning method full name. [access modifier + return + name + (parameters list)]
 	 * @param methodVersion
 	 * @return
 	 */
@@ -473,7 +461,7 @@ public class MethodDiff {
 	}
 	
 	/**
-	 * Retorna nome do método. [nome + ( + listas de paraâmetros + )]
+	 * Returning method name. Example: [name(parameters list)]
 	 * @param methodVersion
 	 * @return
 	 */
@@ -487,7 +475,7 @@ public class MethodDiff {
 	}
 	
 	/**
-	 * Retorna Type + Método. Exemplo: org.felines.Tiger#setAge(int)
+	 * Returning type + method. Example: org.felines.Tiger#setAge(int)
 	 * @param method
 	 * @param type
 	 * @return

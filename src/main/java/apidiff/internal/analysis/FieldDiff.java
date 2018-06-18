@@ -137,12 +137,11 @@ public class FieldDiff {
 	}
 	
 	/**
-	 * Retorna verdadeiro se existe diferença entre os valores default de dois fields.
 	 * @param fieldInVersion1
 	 * @param fieldInVersion2
-	 * @return
+	 * @return True, if there is a difference between the fields.
 	 */
-	private Boolean diffValueDefaultField(FieldDeclaration fieldInVersion1, FieldDeclaration fieldInVersion2){
+	private Boolean thereAreDifferentDefaultValueField(FieldDeclaration fieldInVersion1, FieldDeclaration fieldInVersion2){
 		
 		List<VariableDeclarationFragment> variable1Fragments = fieldInVersion1.fragments();
 		List<VariableDeclarationFragment> variable2Fragments = fieldInVersion2.fragments();
@@ -150,20 +149,21 @@ public class FieldDiff {
 		Expression valueVersion1 = variable1Fragments.get(0).getInitializer();
 		Expression valueVersion2 = variable2Fragments.get(0).getInitializer();
 		
-		//Se um valor default foi removido ou adicionado.
+		//If default value was removed/changed
 		if((valueVersion1 == null && valueVersion2 != null) || (valueVersion1 != null && valueVersion2 == null)){
 			return true;
 		}
 		
-		//Se as duas versões possuem um valor default, verifica se são diferentes.
+		//If fields have default value and they are different
 		if((valueVersion1 != null && valueVersion2 != null) && (!valueVersion1.toString().equals(valueVersion2.toString()))){
 			return true;
 		}
 		
 		return false;
 	}
+	
 	/**
-	 * Verifica se o valor default do field foi modificado.
+	 * Searching changed default values
 	 * @param version1
 	 * @param version2
 	 */
@@ -173,7 +173,7 @@ public class FieldDiff {
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
 					if(this.isFildAcessible(fieldInVersion1)){
 						FieldDeclaration fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
-						if(this.isFildAcessible(fieldInVersion2) && this.diffValueDefaultField(fieldInVersion1, fieldInVersion2)){
+						if(this.isFildAcessible(fieldInVersion2) && this.thereAreDifferentDefaultValueField(fieldInVersion1, fieldInVersion2)){
 							String description = this.description.changeDefaultValue(UtilTools.getFieldName(fieldInVersion2), UtilTools.getPath(type));
 							this.addChange(type, fieldInVersion2, Category.FIELD_CHANGE_DEFAULT_VALUE, true, description);
 						}
@@ -183,6 +183,11 @@ public class FieldDiff {
 		}
 	}
 
+	/**
+	 * Searching changed fields type
+	 * @param version1
+	 * @param version2
+	 */
 	private void findChangedTypeFields(APIVersion version1, APIVersion version2) {
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
 			if(version2.containsAccessibleType(type)){
@@ -202,24 +207,23 @@ public class FieldDiff {
 	}
 	
 	/**
-	 * Compara duas versões de um field e verifica se houve perda ou ganho de visibilidade.
-	 * Resultados são registrados na saída.
+	 * Finding fields with changed visibility
 	 * @param typeVersion1
 	 * @param fieldVersion1
 	 * @param fieldVersion2
 	 */
 	private void checkGainOrLostVisibility(TypeDeclaration typeVersion1, FieldDeclaration fieldVersion1, FieldDeclaration fieldVersion2){
-		if(fieldVersion2 != null && fieldVersion1!=null){//Se o método ainda existe na versão atual.
+		if(fieldVersion2 != null && fieldVersion1!=null){//The method exists in the current version
 			String visibilityMethod1 = UtilTools.getVisibility(fieldVersion1);
 			String visibilityMethod2 = UtilTools.getVisibility(fieldVersion2);
-			if(!visibilityMethod1.equals(visibilityMethod2)){ // Se o modificador de acesso foi alterado.
+			if(!visibilityMethod1.equals(visibilityMethod2)){ //The access modifier was changed.
 				String description = this.description.visibility(UtilTools.getFieldName(fieldVersion1), UtilTools.getPath(typeVersion1), visibilityMethod1, visibilityMethod2);
-				//Breaking change: public --> qualquer modificador de acesso, protected --> qualquer modificador de acesso, exceto public.
+				//Breaking change: public >> private, default, protected  ||  protected >> private, default
 				if(this.isFildAcessible(fieldVersion1) && !UtilTools.isVisibilityPublic(fieldVersion2)){
 					this.addChange(typeVersion1, fieldVersion1, Category.FIELD_LOST_VISIBILITY, true, description);
 				}
 				else{
-					//non-breaking change: private ou default --> qualquer modificador de acesso, demais casos.
+					//non-breaking change: private or default --> all modifiers
 					Category category = UtilTools.isVisibilityDefault(fieldVersion1) && UtilTools.isVisibilityPrivate(fieldVersion2)? Category.FIELD_LOST_VISIBILITY: Category.FIELD_GAIN_VISIBILITY;
 					this.addChange(typeVersion1, fieldVersion1, category, false, description);
 				}
@@ -228,7 +232,7 @@ public class FieldDiff {
 	}
 
 	/**
-	 * Busca fields que tiveram ganho ou perda de visibilidade.
+	 * Finding fields with changed visibility
 	 * @param version1
 	 * @param version2
 	 */
@@ -244,19 +248,15 @@ public class FieldDiff {
 	}
 
 	/**
-	 * Busca fields que foram depreciados.
+	 * Finding deprecated fields
 	 * @param version1
 	 * @param version2
 	 */
 	private void findAddedDeprecatedFields(APIVersion version1, APIVersion version2) {
-		//Percorre todos os types acessíveis da versão 2.
 		for(TypeDeclaration typeVersion2 : version2.getApiAcessibleTypes()){
 			for(FieldDeclaration fieldVersion2 : typeVersion2.getFields()){
-				//Se não estava depreciado na versão anterior, insere na saída.
-				//Se o type foi criado depreciado, insere na saída.
 				if(this.isFildAcessible(fieldVersion2) && this.isDeprecated(fieldVersion2, typeVersion2)){
 					FieldDeclaration fieldInVersion1 = version1.getVersionField(fieldVersion2, typeVersion2);
-					//Se o field não estava depreciado na versão anterior ou não existia e foi criado depreciado.
 					if(fieldInVersion1 == null || !this.isDeprecated(fieldInVersion1, version1.getVersionAccessibleType(typeVersion2))){
 						String description = this.description.deprecate(UtilTools.getFieldName(fieldVersion2), UtilTools.getPath(typeVersion2));
 						this.addChange(typeVersion2, fieldVersion2, Category.FIELD_DEPRECATED, false, description);
@@ -266,6 +266,11 @@ public class FieldDiff {
 		}
 	}
 
+	/**
+	 * Finding added fields
+	 * @param version1
+	 * @param version2
+	 */
 	private void findAddedFields(APIVersion version1, APIVersion version2) {
 		for (TypeDeclaration typeVersion2 : version2.getApiAcessibleTypes()) {
 			if(version1.containsAccessibleType(typeVersion2)){
@@ -285,8 +290,7 @@ public class FieldDiff {
 	}
 
 	/**
-	 * Busca field que foram removidos.
-	 * Se a classe foi removida, os fields não são analisados. A remoção da classe é a breaking change.
+	 * Finding removed fields. If class was removed, class removal is a breaking change.
 	 * @param version1
 	 * @param version2
 	 */
@@ -308,20 +312,11 @@ public class FieldDiff {
 		}
 	}
 	
-	/**
-	 * Se o type está depreciado, retorna o sufixo.
-	 * @param node
-	 * @return
-	 */
-	private String getSufixDepreciated(final FieldDeclaration field, final AbstractTypeDeclaration type){
-		return this.isDeprecated(field, type) ? " DEPRECIATED" : "";
-	}
 	
 	/**
-	 * Retorna verdadeiro se o field está depreciado ou a classe do field está depreciada.
 	 * @param field
 	 * @param type
-	 * @return
+	 * @return true, type is deprecated or field is deprecated
 	 */
 	private Boolean isDeprecated(FieldDeclaration field, AbstractTypeDeclaration type){
 		Boolean isFildDeprecated = this.isDeprecatedField(field);
@@ -330,7 +325,7 @@ public class FieldDiff {
 	}
 	
 	/**
-	 * Verifica se um field está depreciado.
+	 * Checking deprecated fields
 	 * @param field
 	 * @return
 	 */
@@ -347,47 +342,44 @@ public class FieldDiff {
 	}
 	
 	/**
-	 * Retorna verdadeiro se é um método acessível pelo cliente externo ao projeto.
 	 * @param methodDeclaration
-	 * @return
+	 * @return true, if is a accessible field by external systems
 	 */
 	private boolean isFildAcessible(FieldDeclaration field){
 		return field != null && (UtilTools.isVisibilityProtected(field) || UtilTools.isVisibilityPublic(field))?true:false;
 	}
 	
 	/**
-	 * Compara se dois campos tem ou não o modificador "final".
-	 * Registra na saída, se houver diferença.
+	 * Finding change in final modifier
 	 * @param fieldVersion1
 	 * @param fieldVersion2
 	 * @throws BindingException 
 	 */
 	private void diffModifierFinal(TypeDeclaration typeVersion1, FieldDeclaration fieldVersion1, FieldDeclaration fieldVersion2){
-		//Se não houve mudança no identificador final.
+		//There is not change.
 		if((UtilTools.isFinal(fieldVersion1) && UtilTools.isFinal(fieldVersion2)) || ((!UtilTools.isFinal(fieldVersion1) && !UtilTools.isFinal(fieldVersion2)))){
 			return;
 		}
 		String description = "";
-		//Se ganhou o modificador "final"
+		//Gain "final"
 		if((!UtilTools.isFinal(fieldVersion1) && UtilTools.isFinal(fieldVersion2))){
 			description = this.description.modifierFinal(UtilTools.getFieldName(fieldVersion2), UtilTools.getPath(typeVersion1), true);
 			this.addChange(typeVersion1, fieldVersion2, Category.FIELD_ADD_MODIFIER_FINAL, true, description);
 		}
 		else{
-			//Se perdeu o modificador "final"
+			//Lost "final"
 			description = this.description.modifierFinal(UtilTools.getFieldName(fieldVersion2), UtilTools.getPath(typeVersion1), false);
 			this.addChange(typeVersion1, fieldVersion2, Category.FIELD_REMOVE_MODIFIER_FINAL, false, description);
 		}
 	}
 	
 	/**
-	 * Busca modificador "final" removido ou adicionado.
+	 * Finding change in final modifier
 	 * 
 	 * @param version1
 	 * @param version2
 	 */
 	private void findChangedFinal(APIVersion version1, APIVersion version2) {
-		//Percorre todos os types da versão corrente.
 		for (TypeDeclaration typeInVersion1 : version1.getApiAcessibleTypes()) {
 			if(version2.containsType(typeInVersion1)){//Se type ainda existe.
 				for(FieldDeclaration fieldVersion1: typeInVersion1.getFields()){
