@@ -9,18 +9,18 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.aserg-ufmg</groupId>
 	<artifactId>apidiff</artifactId>
-	<version>2.0.1-SNAPSHOT</version>
+	<version>2.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>apidiff</name>
 	<description>A tool to identify API breaking and non-breaking changes between two versions of a Java library</description>
 	<url>https://github.com/aserg-ufmg/apidiff</url>
 
 	<scm>
-		<connection>scm:git:git@github.com:aserg-ufmg/apidiff.git</connection>
-		<developerConnection>scm:git:git@github.com/aserg-ufmg/apidiff.git</developerConnection>
-		<url>https://github.com/aserg-ufmg/apidiff</url>
-		<tag>apidiff-2.0.0</tag>
-  </scm>
+		<connection>scm:git:https://github.com/aserg-ufmg/apidiff.git</connection>
+		<developerConnection>scm:git:https://github.com/aserg-ufmg/apidiff.git</developerConnection>
+		<url>https://github.com/aserg-ufmg/apidiff.git</url>
+		<tag>2.0.0</tag>
+  	</scm>
 
 	<licenses>
 		<license>
