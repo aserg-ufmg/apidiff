@@ -17,7 +17,7 @@ public class UtilFile {
 	/**
 	 * Writing the list in the CSV files, a position for line.
 	 * @param fileName - File name (i.e., "output.csv")
-	 * @param listMsg
+	 * @param listMsg - Message list
 	 */
 	public static void writeFile(final String fileName, final List<String> listMsg){
 		try {
@@ -33,10 +33,10 @@ public class UtilFile {
 	
 	/**
 	 * Converting a CSV file with  two columns to a map. The separator is ";".
-	 * For example, "nameProject;URL" ==> {{"nameProject" : "URL"}}
+	 * For example, "nameProject;URL" = {{"nameProject" : "URL"}}
 	 * @param fileName - File name (i.e., "output.csv")
 	 * @return - map
-	 * @throws IOException
+	 * @throws IOException - Exception for file operations
 	 */
 	public static Map<String, String> convertCSVFileToMap(final String fileName) throws IOException{
 		BufferedReader br = new BufferedReader(new FileReader(fileName));
@@ -78,7 +78,7 @@ public class UtilFile {
 	 * 
 	 * @param fileName - File name (i.e., "output.csv")
 	 * @return - list of maps
-	 * @throws IOException
+	 * @throws IOException - Exception for file operations
 	 */
 	public static List<Map<String, String>> convertCSVFileToListofMaps(final String fileName) throws IOException{
 		BufferedReader br = new BufferedReader(new FileReader(fileName));

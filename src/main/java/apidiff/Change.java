@@ -54,7 +54,7 @@ public class Change {
 	private RevCommit revCommit;
 
 	/**
-	 * Element path (i.e, java.util.ArrayList).
+	 * @return Element path (i.e, java.util.ArrayList).
 	 */
 	public String getPath() {
 		return path;
@@ -65,7 +65,7 @@ public class Change {
 	}
 	
 	/**
-	 * Struture name (i.e., public void setName(String)).
+	 * @return Struture name (i.e., public void setName(String)).
 	 */
 	public String getElement() {
 		return element;
@@ -76,7 +76,7 @@ public class Change {
 	}
 	
 	/**
-	 * If it is breaking change (BC) is true, otherwise is false.
+	 * @return If it is breaking change (BC) is true, otherwise is false.
 	 */
 	public Boolean isBreakingChange() {
 		return breakingChange;
@@ -87,7 +87,7 @@ public class Change {
 	}
 	
 	/**
-	 * Description about the change.
+	 * @return Description about the change.
 	 */
 	public String getDescription() {
 		return description;
@@ -98,7 +98,7 @@ public class Change {
 	}
 
 	/**
-	 * If element has JavaDoc is true, otherwise is false.
+	 * @return If element has JavaDoc is true, otherwise is false.
 	 */
 	public Boolean containsJavadoc() {
 		return this.javadoc;
@@ -109,7 +109,7 @@ public class Change {
 	}
 
 	/**
-	 * If element is deprecated is true, otherwise is false.
+	 * @return If element is deprecated is true, otherwise is false.
 	 */
 	public Boolean isDeprecated() {
 		return this.deprecated;
@@ -120,7 +120,7 @@ public class Change {
 	}
 
 	/**
-	 * Change category.For more details {@link Category}
+	 * @return Change category.For more details {@link Category}
 	 */
 	public Category getCategory() {
 		return category;
@@ -131,7 +131,7 @@ public class Change {
 	}
 
 	/**
-	 * Information about commit (i.e., author, email, commit hash, date).
+	 * @return Information about commit (i.e., author, email, commit hash, date).
 	 */
 	public RevCommit getRevCommit() {
 		return revCommit;
