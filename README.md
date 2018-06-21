@@ -96,13 +96,13 @@ Classifier.API: Elements that are not non-APIs.
 
 ## Usage
 
-APIDiff is available in the Maven Central Repository:
+APIDiff is available in the [Maven Central Repository](https://mvnrepository.com/artifact/com.github.aserg-ufmg/apidiff/2.0.0):
 
 ```xml
 <dependency>
-    <groupId></groupId>
-    <artifactId></artifactId>
-    <version></version>
+    <groupId>com.github.aserg-ufmg</groupId>
+    <artifactId>apidiff</artifactId>
+    <version>2.0.0</version>
 </dependency>
 ```
 ## Publications
