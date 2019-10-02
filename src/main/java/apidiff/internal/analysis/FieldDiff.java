@@ -37,7 +37,7 @@ public class FieldDiff {
 	private RevCommit revCommit;
 	
 	public List<Change> detectChange(final APIVersion version1, final APIVersion version2, final Map<RefactoringType, List<SDRefactoring>> refactorings, final RevCommit revCommit){
-		this.logger.info("Processing Filds...");
+		this.logger.info("Processing Fields...");
 		this.refactorings = refactorings;
 		this.revCommit = revCommit;
 		this.findDefaultValueFields(version1, version2);
@@ -171,9 +171,9 @@ public class FieldDiff {
 		for (TypeDeclaration type : version1.getApiAcessibleTypes()) {
 			if(version2.containsAccessibleType(type)){
 				for (FieldDeclaration fieldInVersion1 : type.getFields()) {
-					if(this.isFildAcessible(fieldInVersion1)){
+					if(this.isFieldAccessible(fieldInVersion1)){
 						FieldDeclaration fieldInVersion2 = version2.getVersionField(fieldInVersion1, type);
-						if(this.isFildAcessible(fieldInVersion2) && this.thereAreDifferentDefaultValueField(fieldInVersion1, fieldInVersion2)){
+						if(this.isFieldAccessible(fieldInVersion2) && this.thereAreDifferentDefaultValueField(fieldInVersion1, fieldInVersion2)){
 							String description = this.description.changeDefaultValue(UtilTools.getFieldName(fieldInVersion2), UtilTools.getPath(type));
 							this.addChange(type, fieldInVersion2, Category.FIELD_CHANGE_DEFAULT_VALUE, true, description);
 						}
@@ -219,7 +219,7 @@ public class FieldDiff {
 			if(!visibilityMethod1.equals(visibilityMethod2)){ //The access modifier was changed.
 				String description = this.description.visibility(UtilTools.getFieldName(fieldVersion1), UtilTools.getPath(typeVersion1), visibilityMethod1, visibilityMethod2);
 				//Breaking change: public >> private, default, protected  ||  protected >> private, default
-				if(this.isFildAcessible(fieldVersion1) && !UtilTools.isVisibilityPublic(fieldVersion2)){
+				if(this.isFieldAccessible(fieldVersion1) && !UtilTools.isVisibilityPublic(fieldVersion2)){
 					this.addChange(typeVersion1, fieldVersion1, Category.FIELD_LOST_VISIBILITY, true, description);
 				}
 				else{
@@ -255,7 +255,7 @@ public class FieldDiff {
 	private void findAddedDeprecatedFields(APIVersion version1, APIVersion version2) {
 		for(TypeDeclaration typeVersion2 : version2.getApiAcessibleTypes()){
 			for(FieldDeclaration fieldVersion2 : typeVersion2.getFields()){
-				if(this.isFildAcessible(fieldVersion2) && this.isDeprecated(fieldVersion2, typeVersion2)){
+				if(this.isFieldAccessible(fieldVersion2) && this.isDeprecated(fieldVersion2, typeVersion2)){
 					FieldDeclaration fieldInVersion1 = version1.getVersionField(fieldVersion2, typeVersion2);
 					if(fieldInVersion1 == null || !this.isDeprecated(fieldInVersion1, version1.getVersionAccessibleType(typeVersion2))){
 						String description = this.description.deprecate(UtilTools.getFieldName(fieldVersion2), UtilTools.getPath(typeVersion2));
@@ -319,9 +319,9 @@ public class FieldDiff {
 	 * @return true, type is deprecated or field is deprecated
 	 */
 	private Boolean isDeprecated(FieldDeclaration field, AbstractTypeDeclaration type){
-		Boolean isFildDeprecated = this.isDeprecatedField(field);
+		Boolean isFieldDeprecated = this.isDeprecatedField(field);
 		Boolean isTypeDeprecated = (type != null && type.resolveBinding() != null && type.resolveBinding().isDeprecated()) ? true: false;
-		return isFildDeprecated || isTypeDeprecated;
+		return isFieldDeprecated || isTypeDeprecated;
 	}
 	
 	/**
@@ -342,10 +342,10 @@ public class FieldDiff {
 	}
 	
 	/**
-	 * @param methodDeclaration
+	 * @param field
 	 * @return true, if is a accessible field by external systems
 	 */
-	private boolean isFildAcessible(FieldDeclaration field){
+	private boolean isFieldAccessible(FieldDeclaration field){
 		return field != null && (UtilTools.isVisibilityProtected(field) || UtilTools.isVisibilityPublic(field))?true:false;
 	}
 	
@@ -384,7 +384,7 @@ public class FieldDiff {
 			if(version2.containsType(typeInVersion1)){//Se type ainda existe.
 				for(FieldDeclaration fieldVersion1: typeInVersion1.getFields()){
 					FieldDeclaration fieldVersion2 = version2.getVersionField(fieldVersion1, typeInVersion1);
-					if(this.isFildAcessible(fieldVersion1) && (fieldVersion2 != null)){
+					if(this.isFieldAccessible(fieldVersion1) && (fieldVersion2 != null)){
 						this.diffModifierFinal(typeInVersion1, fieldVersion1, fieldVersion2);
 					}
 				}

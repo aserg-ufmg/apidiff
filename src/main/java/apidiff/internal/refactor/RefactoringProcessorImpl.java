@@ -40,7 +40,7 @@ public class RefactoringProcessorImpl implements RefactorProcessor {
 			RefDiff refDiff = new RefDiff();
 			result = this.format(refDiff.detectAtCommit(repository, commit));
 		} catch (Exception e) {
-			this.logger.error("Erro in refactoring process [repository=" + repository + "][commit=" + commit + "]", e);
+			this.logger.error("Error in refactoring process [repository=" + repository + "][commit=" + commit + "]", e);
 		}
 		return result;
 	}
