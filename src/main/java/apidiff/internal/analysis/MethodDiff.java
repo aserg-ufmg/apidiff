@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import apidiff.Change;
 import apidiff.enums.Category;
+import apidiff.enums.ElementType;
 import apidiff.internal.analysis.description.MethodDescription;
 import apidiff.internal.util.UtilTools;
 import apidiff.internal.visitor.APIVersion;
@@ -59,6 +60,7 @@ public class MethodDiff {
 		change.setCategory(category);
 		change.setDescription(description);
 		change.setRevCommit(this.revCommit);
+		change.setElementType(method.isConstructor()? ElementType.CONSTRUCTOR: ElementType.METHOD);
 		this.listChange.add(change);
 	}
 	

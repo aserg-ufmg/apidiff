@@ -3,6 +3,7 @@ package apidiff;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 import apidiff.enums.Category;
+import apidiff.enums.ElementType;
 
 /**
  * Information about the change.
@@ -52,6 +53,8 @@ public class Change {
 	private Boolean deprecated;
 
 	private RevCommit revCommit;
+	
+	private ElementType elementType;
 
 	/**
 	 * @return Element path (i.e, java.util.ArrayList).
@@ -139,6 +142,14 @@ public class Change {
 
 	public void setRevCommit(RevCommit revCommit) {
 		this.revCommit = revCommit;
+	}
+
+	public ElementType getElementType() {
+		return elementType;
+	}
+
+	public void setElementType(ElementType elementType) {
+		this.elementType = elementType;
 	}
 	
 }
