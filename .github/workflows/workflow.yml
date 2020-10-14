@@ -1,0 +1,18 @@
+on: [pull_request] # Trigger RefDiff after each pull request
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    name: Refactoring Detection
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+        - name: raid
+          env:
+            LANGUAGE: ${{ github.event.repository.language }} # Supports Java, Javascrit, C and Go.
+            REV_BEFORE: ${{ github.event.pull_request.base.sha }}
+            REV_AFTER: ${{ github.event.pull_request.head.sha }}
+          uses: rodrigo-brito/refactoring-aware-diff@action
