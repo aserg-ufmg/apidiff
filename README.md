@@ -2,26 +2,23 @@
 
 A tool to identify API breaking and non-breaking changes between two versions of a Java library. APIDiff analyses libraries hosted on the distributed version control system _git_.
 
-## Contributors
-The project has been maintained by [Aline Brito](https://github.com/alinebrito) and [Laerte Xavier](https://github.com/xavierlaerte) under supervision of Professor [Marco Tulio Valente](https://github.com/mtov) ([Aserg](http://aserg.labsoft.dcc.ufmg.br/) [UFMG](https://www.ufmg.br/)) and Professor [Andre Hora](http://dcc.ufmg.br/~andrehora) ([Aserg](http://aserg.labsoft.dcc.ufmg.br/) [UFMG](https://www.ufmg.br/)).
-
 ## Catalog
 
-The following _Breaking Changes_ (BC) are supported: 
+_Breaking Changes_ are modifications performed in API elements such as types, methods, and fields that may break client applications:
 
 | Element  | Breaking Changes (BC) |
 | ------------- | ------------- |
-| Type  | Rename Type, Move Type, Move and Rename Type, Remove Type, Lost Visibility, Add Final Modifier,  Remove Static Modifier, Change in Supertype, Remove Supertype |
-| Method  | Move Method, Rename Method, Remove Method, Push Down Method, Inline Method, Change in Parameter List, Change in Exception List, Change in Return Type Method, Lost Visibility, Add Final Modifier, Remove Static Modifier  | 
-| Field  |  Remove Field, Move Field, Push Down Field, Change in Default Value, Change in Type Field,  Lost Visibility, Add Final Modifier | 
+| Type  | rename, move, move and rename, remove, lost visibility, add final modifier,  remove static modifier, change in supertype, remove supertype |
+| Method  | move, rename, remove, push down, inline, change in parameter list, change in exception list, change in return type, lost visibility, add final modifier, remove static modifier  | 
+| Field  |  remove, move, push down field, change in default value, change in type field,  lost visibility, add final modifier | 
 
-The following _Non-breaking Changes_ (NBC) are supported: 
+_Non-breaking Changes_ are modifications that do not break clients:
 
 | Element  | Non-breaking Changes (NBC) |
 | ------------- | ------------- |
-| Type  | Add Type, Extract Supertype, Gain Visibility, Remove Final Modifier, Add Static Modifier, Add Supertype, Deprecated Type |
-| Method  | Pull Up Method, Gain Visibility, Remove Final Modifier, Add Static Modifier, Deprecated Method, Add Method, Extract Method| 
-| Field  | Pull Up Field, Add Field, Deprecated Field, Gain Visibility, Remove Final Modifier|
+| Type  | add, extract supertype, gain visibility, remove final modifier, add static modifier, add supertype, deprecated type|
+| Method  | pull up, vain visibility, remove final modifier, add static modifier, deprecated method, add, extract| 
+| Field  | pull up, add, deprecated field, gain visibility, remove final modifier|
 
 
 The refactorings catalog is reused from [RefDiff](https://github.com/aserg-ufmg/RefDiff).
