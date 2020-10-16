@@ -17,7 +17,7 @@ _Non-breaking Changes_ are modifications that do not break clients:
 | Element  | Non-breaking Changes (NBC) |
 | ------------- | ------------- |
 | Type  | add, extract supertype, gain visibility, remove final modifier, add static modifier, add supertype, deprecated type|
-| Method  | pull up, vain visibility, remove final modifier, add static modifier, deprecated method, add, extract| 
+| Method  | pull up, gain visibility, remove final modifier, add static modifier, deprecated method, add, extract| 
 | Field  | pull up, add, deprecated field, gain visibility, remove final modifier|
 
 
