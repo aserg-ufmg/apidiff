@@ -94,7 +94,7 @@ public class MethodDiff {
 				category = Category.METHOD_MOVE;
 				break;
 	
-			case PUSH_DOWN_ATTRIBUTE:
+			case PUSH_DOWN_OPERATION:
 				category = Category.METHOD_PUSH_DOWN;
 				break;
 				
